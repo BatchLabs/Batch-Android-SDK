@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ba_darkBackground"
+    android:id="@+id/layout1container" >
+     
+    <LinearLayout 
+        android:layout_width="match_parent"
+    	android:layout_height="match_parent"
+    	android:orientation="vertical"
+    	android:paddingTop="15dp" >
+            
+        	<com.batch.android.view.PagerContainer android:id="@+id/layout1ScreenshotPager"  
+        	    android:layout_width="match_parent"
+        	    android:layout_gravity="center"  
+	          	android:layout_height="0dp"
+	          	android:layout_weight="0.5"
+	          	android:clipChildren="false">
+        	    
+        	    <com.batch.android.view.ViewPager
+		          android:layout_width="@dimen/ba_view_pager_width"  
+		          android:layout_height="match_parent"
+		          android:background="@android:color/transparent"
+		          android:clipChildren="false"
+		          android:layout_gravity="center"
+		          android:overScrollMode="never" />
+        	    
+        	</com.batch.android.view.PagerContainer>
+            
+            
+            <LinearLayout android:layout_width="match_parent"
+	            android:layout_height="0dp"
+	            android:layout_weight="0.5"
+	            android:layout_marginTop="@dimen/ba_icon_margin_port"
+	            android:orientation="vertical"
+	            android:layout_marginBottom="@dimen/ba_ad_unit_margin_bottom_port" >
+	            
+	            <ImageView android:id="@+id/layout1icon"
+				    android:layout_width="@dimen/ba_icon"
+				    android:layout_height="@dimen/ba_icon"
+				    android:layout_gravity="center" />	
+			    
+				<TextView android:id="@+id/ba_layout1appcategorytext"
+				    android:textSize="10dp"
+				    android:textColor="@color/ba_gametype"
+				    android:gravity="center"
+				    android:layout_width="match_parent" 
+				    android:layout_height="wrap_content"
+				    android:textStyle="bold"
+				    android:layout_marginTop="5dp" />
+				
+				<TextView android:id="@+id/layout1apptitletext"
+				    android:textSize="@dimen/ba_appTitle"
+				    android:textColor="@color/ba_gametitle"
+				    android:gravity="center"
+				    android:layout_width="match_parent" 
+				    android:layout_height="wrap_content" />
+				
+				<TextView android:id="@+id/layout1textview"
+				    android:layout_width="match_parent" 
+				    android:layout_height="match_parent"
+				    android:layout_marginLeft="30dp"
+				    android:layout_marginRight="30dp"
+				    android:layout_marginTop="10dp"
+				    android:layout_marginBottom="10dp"
+				    android:textColor="@android:color/white"
+				    android:singleLine="false"
+				    android:gravity="center" />
+	            
+	        </LinearLayout>
+
+    </LinearLayout>
+
+	<Button
+	    android:id="@+id/layout1closeButton"
+	    android:layout_width="50dp"
+	    android:layout_height="50dp"
+	    android:layout_alignParentRight="true"
+	    android:layout_alignParentTop="true"
+	    android:layout_marginRight="10dp"
+	    android:layout_marginTop="10dp"
+	    android:background="@drawable/ba_close_white_shadow" />
+	
+	<Button android:id="@+id/layout1calltoactionbutton"
+	    android:layout_width="match_parent"
+	    android:layout_height="@dimen/ba_call_to_action_height_port"
+	    android:gravity="center"
+	    android:background="@drawable/ba_roundedcalltoaction"
+	    android:textColor="@color/ba_calltoactiontextcolor"
+	    android:textSize="@dimen/ba_call_to_action_text_size"
+	    android:layout_marginLeft="40dp"
+	    android:layout_marginRight="40dp"
+	    android:layout_marginBottom="50dp"
+	    android:layout_alignParentBottom="true" />
+	
+	<TextView
+	    android:layout_width="80dp"
+	    android:layout_height="20dp"
+	    android:gravity="center"
+	    android:background="@drawable/ba_sponsored_border"
+	    android:textColor="@color/ba_sponsoredcolor"
+	    android:textSize="10dp"
+		android:text="@string/ba_sponsored"
+	    android:layout_marginBottom="15dp"
+	    android:layout_alignParentBottom="true"
+	    android:layout_centerHorizontal="true" />
+	
+</RelativeLayout>

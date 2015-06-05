@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="ba_icon">60dp</dimen>
+    <dimen name="ba_layout3_icon">80dp</dimen>
+    <dimen name="ba_icon_margin_port">-20dp</dimen>
+    <dimen name="ba_view_pager_width">180dp</dimen>
+    <dimen name="ba_view_pager_margin">10dp</dimen>
+    <dimen name="ba_appTitle">20dp</dimen>
+
+    <dimen name="ba_call_to_action_height_port">30dp</dimen>
+    <dimen name="ba_call_to_action_height_land">30dp</dimen>
+    <dimen name="ba_ad_unit_margin_bottom_port">90dp</dimen> <!-- call_to_action_height_port + size of download button + sponsored + 10dp margin -->
+	<dimen name="ba_ad_unit_margin_bottom_land">80dp</dimen> <!-- call_to_action_height_land + size of download button + sponsored + 10dp margin -->
+	<dimen name="ba_call_to_action_text_size">14dp</dimen>
+	<dimen name="ba_layout1iconpaddingtop_land">0dp</dimen>
+	
+	<dimen name="ba_appTitleLayout2">20dp</dimen>
+	<dimen name="ba_layout2webviewtextsize_port">14px</dimen>
+	<dimen name="ba_layout2_margin_bottom_port">70dp</dimen> <!-- call_to_action_height_port + 40dp margin -->
+	<dimen name="ba_layout2_padding_top_landscape">20dp</dimen>
+	<dimen name="ba_layout2_padding_rating_landscape">23dp</dimen>
+	<dimen name="ba_layout2_title_padding_top_landscape">5dp</dimen>
+	<dimen name="ba_layout2_padding_bottom_landscape">10dp</dimen>
+	
+	<dimen name="ba_layout3_padding_top_icon_land">0dp</dimen>
+	<dimen name="ba_layout3_padding_landscape_cta_bottom">5dp</dimen>
+	<dimen name="ba_layout3_call_to_action_height">60dp</dimen>
+</resources>

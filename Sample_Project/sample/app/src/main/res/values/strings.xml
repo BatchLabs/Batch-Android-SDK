@@ -1,0 +1,49 @@
+<!--
+  ~ Copyright (c) 2015 Batch.com. All rights reserved.
+  -->
+
+<resources>
+    <string name="app_name">Batch Sample</string>
+
+    <string name="ok">OK</string>
+    <string name="thanks">Thanks!</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="main_button_unlock">Unlock</string>
+    <string name="main_button_ads">Ads</string>
+    <string name="main_button_notification_settings">Notification Settings</string>
+    <string name="title_activity_ads">Ads</string>
+    <string name="title_activity_native_ads">Native Ads</string>
+    <string name="title_activity_unlock">Unlock</string>
+    <string name="title_activity_notification_settings">Notification Settings</string>
+
+    <string name="unlock_auto_popup_title">Congratulations!</string>
+    <string name="unlock_button_redeem">Redeem a code</string>
+    <string name="unlock_button_restore">Restore</string>
+    <string name="unlock_restore_success">Restore successful</string>
+    <string name="unlock_restore_error">An error occurred during restoration</string>
+    <string name="unlock_loading">Loading…</string>
+    <string name="unlock_item_no_ads">No Ads</string>
+    <string name="unlock_item_pro_trial">Pro Trial</string>
+    <string name="unlock_item_lives">Lives</string>
+    <string name="unlock_redeem">Redeem</string>
+    <string name="unlock_code">Code</string>
+    <string name="unlock_code_success">Code redeemed</string>
+    <string name="unlock_code_error">An error occurred while redeeming a code</string>
+
+    <string name="ads_interstitial_status">Interstitial status</string>
+    <string name="ads_status_loaded">Ad available</string>
+    <string name="ads_status_not_loaded">No ad available</string>
+    <string name="ads_load">Manually load an interstitial</string>
+    <string name="ads_display">Display interstitial</string>
+    <string name="ads_native_ads">Native Ads</string>
+    <string name="ads_native_cover_description">Ad Cover</string>
+    <string name="ads_native_icon_description">Ad Icon</string>
+    <string name="ads_native_ad_disclaimer">Ad</string>
+
+    <string name="notif_settings_category_title">Notifications</string>
+    <string name="notif_settings_alert">Notifications</string>
+    <string name="notif_settings_vibrate">Vibrate</string>
+    <string name="notif_settings_sound">Sound</string>
+    <string name="notif_settings_lights">Lights</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<color name="ba_darkBackground">#EE000000</color>
+	<color name="ba_gametype">#FF74727f</color>
+	<color name="ba_gametitle">#FFFFFFFF</color>
+	<color name="ba_gamedescription">#FFFFFFFF</color>
+	<color name="ba_calltoactiontextcolor">#FFFFFFFF</color>
+	<color name="ba_sponsoredcolor">#55CDBC7B</color>
+	<color name="ba_layout2textbackground">#FFF8F7F7</color>
+</resources>

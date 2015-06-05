@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@null"
+    android:id="@+id/layout3container" >
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ba_adunit3_background" />
+
+    <ImageView
+        android:id="@+id/layout3creativelandscapebackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:paddingBottom="10dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="38dp"
+        android:paddingTop="10dp" >
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_weight="60" >
+
+            <FrameLayout
+                android:id="@+id/layout3webviewcontainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical" />
+        </FrameLayout>
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="@dimen/ba_layout3_padding_landscape_cta_bottom"
+            android:layout_weight="40"
+            android:background="@android:color/transparent" >
+
+            <LinearLayout
+                android:id="@+id/layout3landrightlayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/layout3calltoactionbuttonframe"
+                android:background="@android:color/transparent"
+                android:gravity="center"
+                android:orientation="vertical" >
+
+                <ImageView
+                    android:id="@+id/layout3icon"
+                    android:layout_width="@dimen/ba_layout3_icon"
+                    android:layout_height="@dimen/ba_layout3_icon"
+                    android:layout_gravity="center" />
+
+                <TextView
+                    android:id="@+id/layout3apptitletext"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:paddingTop="10dp"
+                    android:textColor="@color/ba_gametitle"
+                    android:textSize="@dimen/ba_appTitle" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:orientation="horizontal"
+                    android:paddingTop="10dp" >
+
+                    <ImageView
+                        android:id="@+id/layout3star1"
+                        android:layout_width="15dp"
+                        android:layout_height="15dp" />
+
+                    <ImageView
+                        android:id="@+id/layout3star2"
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:layout_marginLeft="3dp" />
+
+                    <ImageView
+                        android:id="@+id/layout3star3"
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:layout_marginLeft="3dp" />
+
+                    <ImageView
+                        android:id="@+id/layout3star4"
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:layout_marginLeft="3dp" />
+
+                    <ImageView
+                        android:id="@+id/layout3star5"
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:layout_marginLeft="3dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/layout3calltoactionbuttonframe"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/ba_layout3_call_to_action_height"
+                android:layout_alignParentBottom="true"
+                android:layout_gravity="center"
+                android:layout_marginBottom="40dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp" >
+
+                <Button
+                    android:id="@+id/layout3calltoactionbutton"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/ba_roundedcalltoaction"
+                    android:gravity="center"
+                    android:textColor="@color/ba_calltoactiontextcolor"
+                    android:textSize="@dimen/ba_call_to_action_text_size" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="80dp"
+                android:layout_height="20dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/ba_sponsored_border"
+                android:gravity="center"
+			    android:text="@string/ba_sponsored"
+                android:textColor="@color/ba_sponsoredcolor"
+                android:textSize="10dp" />
+        </RelativeLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/layout3closeButton"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/ba_close_white_shadow" />
+
+</RelativeLayout>

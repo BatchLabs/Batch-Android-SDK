@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.batch.android">
+
+    <uses-sdk
+        android:targetSdkVersion="22" />
+
+    <application />
+
+</manifest>

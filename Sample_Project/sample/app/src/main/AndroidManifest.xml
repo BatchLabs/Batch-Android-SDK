@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ~ Copyright (c) 2015 Batch.com. All rights reserved. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.batch.android.sample" >
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <permission
+        android:name="com.batch.android.sample.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="com.batch.android.sample.permission.C2D_MESSAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:name=".BatchSampleApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name=".activity.MainActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".activity.AdsActivity"
+            android:label="@string/title_activity_ads"
+            android:parentActivityName=".activity.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.MainActivity" />
+        </activity>
+
+        <activity
+            android:name=".activity.NotificationSettingsActivity"
+            android:label="@string/title_activity_notification_settings"
+            android:parentActivityName=".activity.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.batch.android.sample.activity.MainActivity" />
+        </activity>
+        <activity
+            android:name=".activity.UnlockActivity"
+            android:label="@string/title_activity_unlock"
+            android:parentActivityName=".activity.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.batch.android.sample.activity.MainActivity" />
+        </activity>
+        <activity
+            android:name=".activity.NativeAdsActivity"
+            android:label="@string/title_activity_native_ads"
+            android:parentActivityName=".activity.AdsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.batch.android.sample.activity.AdsActivity" />
+        </activity>
+
+        <!-- Batch's Required manifest items -->
+
+        <service android:name="com.batch.android.BatchPushService" />
+
+        <receiver
+            android:name="com.batch.android.BatchPushReceiver"
+            android:permission="com.google.android.c2dm.permission.SEND" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+
+                <category android:name="com.batch.android.sample" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name="com.batch.android.AdActivity"
+            android:theme="@style/com.batch.android.AdActivityTheme" />
+
+    </application>
+
+</manifest>

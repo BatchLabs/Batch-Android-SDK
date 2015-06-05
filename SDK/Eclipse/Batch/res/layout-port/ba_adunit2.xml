@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ba_darkBackground" xmlns:app="http://schemas.android.com/apk/res-auto">
+    
+    <com.batch.android.view.FixedRatioRelativeLayout 
+        android:id="@+id/layout2container"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+    	android:layout_height="500dp"
+    	android:layout_width="340dp"
+    	android:layout_centerInParent="true"
+    	android:background="@drawable/ba_adunit2layoutcorner" >
+    	
+        <LinearLayout 
+            android:layout_width="match_parent"
+   			android:layout_height="match_parent"
+   			android:orientation="vertical">
+   			
+        <com.batch.android.view.RoundedImageView android:id="@+id/layout2creativeimageview"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.5"
+                android:scaleType="fitXY"
+                app:riv_corner_radius="3dp" />
+            
+            <View android:layout_width="match_parent"
+		        android:layout_height="4dp"
+		        android:background="@drawable/ba_adunit2shadow"
+		        android:layout_marginTop="-4dp" />
+            
+            <LinearLayout android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.5"
+                android:orientation="vertical"
+                android:layout_marginBottom="@dimen/ba_layout2_margin_bottom_port"
+                android:layout_marginTop="-3dp">
+                
+                
+                <LinearLayout android:layout_width="match_parent"
+	                android:layout_height="80dp"
+	                android:orientation="horizontal"
+	                android:background="@color/ba_layout2textbackground" 
+	                android:paddingLeft="15dp"
+	                android:paddingRight="15dp"
+	                android:gravity="center_vertical" >
+	                
+	                <ImageView android:id="@+id/layout2icon"
+					    android:layout_width="60dp"
+					    android:layout_height="60dp"
+					    android:layout_gravity="center" />
+					    
+					<RelativeLayout android:layout_width="match_parent"
+					    android:layout_height="match_parent"
+					    android:layout_marginLeft="15dp" >
+					    
+					    <com.batch.android.view.AutoResizeTextView 
+					        android:id="@+id/layout2apptitletext"
+						    android:textSize="@dimen/ba_appTitleLayout2"
+						    android:textColor="@android:color/black"
+						    android:layout_width="match_parent" 
+						    android:layout_height="40dp"
+						    android:layout_alignParentTop="true"
+						    android:layout_marginTop="10dp"
+						    android:ellipsize="marquee"
+						    android:focusable="false"
+						    android:singleLine="false"
+						    android:maxLines="2" />
+					    
+					    <LinearLayout android:layout_width="wrap_content"
+					        android:layout_height="wrap_content"
+					        android:orientation="horizontal"
+					        android:layout_alignParentBottom="true"
+					        android:layout_marginBottom="17dp" >
+					        
+					        <ImageView android:id="@+id/layout2star1"
+					            android:layout_width="12dp"
+					            android:layout_height="12dp" />
+					        
+					        <ImageView android:id="@+id/layout2star2"
+					            android:layout_width="12dp"
+					            android:layout_height="12dp"
+					            android:layout_marginLeft="4dp" />
+					        
+					        <ImageView android:id="@+id/layout2star3"
+					            android:layout_width="12dp"
+					            android:layout_height="12dp"
+					            android:layout_marginLeft="4dp" />
+					        
+					        <ImageView android:id="@+id/layout2star4"
+					            android:layout_width="12dp"
+					            android:layout_height="12dp"
+					            android:layout_marginLeft="4dp" />
+					        
+					        <ImageView android:id="@+id/layout2star5"
+					            android:layout_width="12dp"
+					            android:layout_height="12dp"
+					            android:layout_marginLeft="4dp" />
+					        
+					    </LinearLayout>
+					    
+					    <TextView
+						    android:layout_width="80dp"
+						    android:layout_height="20dp"
+						    android:gravity="center"
+						    android:background="@drawable/ba_sponsored_border"
+						    android:textColor="@color/ba_sponsoredcolor"
+						    android:textSize="10dp"
+			    			android:text="@string/ba_sponsored"
+						    android:layout_marginBottom="12dp"
+						    android:layout_alignParentBottom="true"
+						    android:layout_alignParentRight="true" />
+					    
+					</RelativeLayout>
+	            	
+	            </LinearLayout>
+	            
+	            <View android:layout_width="match_parent"
+			        android:layout_height="4dp"
+			        android:background="@drawable/ba_adunit2shadow"
+			        android:layout_marginTop="-4dp" />
+	            
+	            <TextView android:id="@+id/layout2textview"
+	                android:layout_width="match_parent" 
+				    android:layout_height="match_parent"
+				    android:layout_marginLeft="20dp"
+				    android:layout_marginRight="20dp"
+				    android:layout_marginTop="15dp"
+				    android:singleLine="false"
+				    android:textColor="@android:color/black"
+				    android:gravity="center"
+				    />
+	            
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <Button android:id="@+id/layout2calltoactionbutton"
+		    android:layout_width="match_parent"
+		    android:layout_height="@dimen/ba_call_to_action_height_port"
+		    android:gravity="center"
+		    android:background="@drawable/ba_roundedcalltoaction"
+		    android:textColor="@color/ba_calltoactiontextcolor"
+		    android:textSize="@dimen/ba_call_to_action_text_size"
+		    android:layout_marginLeft="30dp"
+		    android:layout_marginRight="30dp"
+		    android:layout_marginBottom="20dp"
+		    android:layout_alignParentBottom="true" />
+		
+    </com.batch.android.view.FixedRatioRelativeLayout>
+    
+    <Button android:id="@+id/layout2closeButton"
+	    android:layout_width="50dp"
+	    android:layout_height="50dp"
+	    android:layout_alignTop="@id/layout2container"
+	    android:layout_alignRight="@id/layout2container"
+	    android:layout_marginRight="-25dp"
+	    android:layout_marginTop="-25dp"
+	    android:background="@drawable/ba_close_white_shadow" />
+    
+</RelativeLayout>
