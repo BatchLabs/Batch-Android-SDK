@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.3.1
+-----
+* Push enhancements
+* Minor bug fixes
+
+
 1.3
 -----
 * Native Ads

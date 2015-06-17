@@ -26,6 +26,12 @@ android {
             res.srcDirs = ['res']
         }
     }
+
+    buildTypes {
+        release {
+            consumerProguardFiles 'proguard-project.txt'
+        }
+    }
 }
 
 dependencies {
