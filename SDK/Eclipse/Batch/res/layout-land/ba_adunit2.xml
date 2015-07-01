@@ -130,7 +130,7 @@
 	                android:layout_width="match_parent" 
 				    android:layout_height="wrap_content"
 				    android:layout_marginRight="20dp"
-				    android:layout_toLeftOf="@id/layout2calltoactionbutton"
+				    android:layout_toLeftOf="@+id/layout2calltoactionbutton"
 				    android:layout_alignParentLeft="true"
 				    android:layout_centerVertical="true"
 				    android:singleLine="false"

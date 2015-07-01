@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.3.2
+-----
+* New manual push helper
+
+
 1.3.1
 -----
 * Push enhancements
