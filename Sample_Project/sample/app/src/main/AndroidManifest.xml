@@ -30,14 +30,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".activity.AdsActivity"
-            android:label="@string/title_activity_ads"
-            android:parentActivityName=".activity.MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.MainActivity" />
-        </activity>
 
         <activity
             android:name=".activity.NotificationSettingsActivity"
@@ -55,14 +47,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.batch.android.sample.activity.MainActivity" />
         </activity>
-        <activity
-            android:name=".activity.NativeAdsActivity"
-            android:label="@string/title_activity_native_ads"
-            android:parentActivityName=".activity.AdsActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.batch.android.sample.activity.AdsActivity" />
-        </activity>
 
         <!-- Batch's Required manifest items -->
 
@@ -77,10 +61,6 @@
                 <category android:name="com.batch.android.sample" />
             </intent-filter>
         </receiver>
-
-        <activity
-            android:name="com.batch.android.AdActivity"
-            android:theme="@style/com.batch.android.AdActivityTheme" />
 
     </application>
 

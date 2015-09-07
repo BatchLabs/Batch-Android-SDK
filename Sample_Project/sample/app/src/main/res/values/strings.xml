@@ -10,9 +10,7 @@
     <string name="cancel">Cancel</string>
 
     <string name="main_button_unlock">Unlock</string>
-    <string name="main_button_ads">Ads</string>
     <string name="main_button_notification_settings">Notification Settings</string>
-    <string name="title_activity_ads">Ads</string>
     <string name="title_activity_native_ads">Native Ads</string>
     <string name="title_activity_unlock">Unlock</string>
     <string name="title_activity_notification_settings">Notification Settings</string>
@@ -30,16 +28,6 @@
     <string name="unlock_code">Code</string>
     <string name="unlock_code_success">Code redeemed</string>
     <string name="unlock_code_error">An error occurred while redeeming a code</string>
-
-    <string name="ads_interstitial_status">Interstitial status</string>
-    <string name="ads_status_loaded">Ad available</string>
-    <string name="ads_status_not_loaded">No ad available</string>
-    <string name="ads_load">Manually load an interstitial</string>
-    <string name="ads_display">Display interstitial</string>
-    <string name="ads_native_ads">Native Ads</string>
-    <string name="ads_native_cover_description">Ad Cover</string>
-    <string name="ads_native_icon_description">Ad Icon</string>
-    <string name="ads_native_ad_disclaimer">Ad</string>
 
     <string name="notif_settings_category_title">Notifications</string>
     <string name="notif_settings_alert">Notifications</string>

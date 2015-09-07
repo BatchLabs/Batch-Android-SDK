@@ -1,7 +1,7 @@
 ![Dashboard Items](https://raw.github.com/BatchLabs/android-sdk/master/readme_logo.png)
 
 # Batch Sample Apps
-The samples are minimal examples demonstrating proper integrations of the Batch SDK, including implementation of Batch Unlock, Batch Ads, and Batch Push functionality.
+The samples are minimal examples demonstrating proper integrations of the Batch SDK, including implementation of Batch Unlock and Batch Push functionality.
 
 You will need an up-to-date SDK and Android Studio installation in order to properly utilize this sample.
 
@@ -31,10 +31,7 @@ At this point, feel free to launch your app. If you select `Unlock`, you should 
 
 If you are using the wizard, you can now click `Test` and should receive a confirmation of your integration if you launched the app with your API key.
 
-### 4. Enable ads
-In the settings menu, activate *interstitial ads* under *Ads*.
-
-### 5. Add items for Batch Unlock
+### 4. Add items for Batch Unlock
 The samples are configured with three static items: `No Ads`, `Pro Trial`, and `Lives`.
 
 ![Dashboard Items](https://raw.github.com/BatchLabs/android-sdk/master/readme_items.png)
@@ -47,7 +44,7 @@ While the names can vary in the *NAME* field, the *REFERENCE* is the case-sensit
 
 *Lives* is an example of a resource, or consumable item. You can define the given quantity in the campaign.  
 
-### 6. Create campaign
+### 5. Create campaign
 In the campaign screen of your dashboard, create a new *Unlock* campaign. You can use any of the wizard options, or choose a *Custom Offer* for manual setup. 
 
 As long as the conditions (time, user targeting, URL scheme, capping) match when you launch the app, you will recieve whatever configuration of features and resources you specify. You will also recieve the `reward_message` custom parameter, sent as alert, to give feedback to the user about the offer redeemed.
@@ -58,17 +55,11 @@ In this example, `No Ads` is given in the offer with *restore* enabled, `Pro Tri
 
 > Note: If you set a campaign targeting only new users, ensure that you're running the app for the first time on the device, otherwise it will be considered an existing user. Delete and reinstall to be considered new.
 
-### 7. Testing Restore
+### 6. Testing Restore
 
 To test the restore functionality, delete the app from your testing device and then reinstall from Android Studio. Upon relaunch you will see that your inventories have been reset to defaults. Within *Unlock*, select *Restore* and you will see a confirmation of the restore. Your inventory will now reflect any content you have enabled for restoration.
 
-### 8. Testing Ads
-
-To test the ads functionality, select *Manually load an interstitial* under *Ads*. If an ad is available, it will be reflected in the status message and *Display interstitial* will become available. Select it to display a preview of a Batch interstitial ad.  
-
-You can also test in-feed Native Ads from here.
-
-### 9. Testing Push
+### 7. Testing Push
 
 To test the push functionality, add your GCM Sender ID in `BatchSampleApplication.java`. Your token will be logged in your device's logcat, which you can use in the dashboard's test push function. This can be found on the Message screen of the push campaign creation wizard.
 You will also be able to change the notification settings from the main menu.

@@ -20,12 +20,6 @@
         android:text="@string/main_button_unlock"/>
 
     <Button
-        android:id="@+id/main_ads_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/main_button_ads"/>
-
-    <Button
         android:id="@+id/main_notification_settings_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

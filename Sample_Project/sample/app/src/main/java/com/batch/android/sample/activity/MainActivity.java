@@ -29,15 +29,6 @@ public class MainActivity extends BatchActivity
             }
         });
 
-        findViewById(R.id.main_ads_button).setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                startActivity(new Intent(MainActivity.this, AdsActivity.class));
-            }
-        });
-
         findViewById(R.id.main_notification_settings_button).setOnClickListener(new View.OnClickListener()
         {
             @Override

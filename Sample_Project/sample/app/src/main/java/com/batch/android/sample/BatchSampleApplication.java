@@ -45,9 +45,6 @@ public class BatchSampleApplication extends Application implements SharedPrefere
 
         Batch.setConfig(new Config("YOUR_API_KEY"));
 
-        // This app takes advantage of Ads' manual load system
-        Batch.Ads.setAutoLoad(false);
-
         updateNotificationSettings();
     }
 
