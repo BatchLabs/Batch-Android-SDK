@@ -35,5 +35,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.2.0'
     compile 'com.android.support:support-v4:22.2.0'
     compile 'com.google.android.gms:play-services:7.5.0'
-    compile 'com.batch.android:batch-sdk:1.3+'
+    compile 'com.batch.android:batch-sdk:1.4+'
 }

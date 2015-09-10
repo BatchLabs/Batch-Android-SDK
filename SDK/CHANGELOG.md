@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.4
+-----
+* Batch Ads has been discontinued
+* Added a method to get the last known push token
+* Minor push bugfixes
+
 1.3.2
 -----
 * New manual push helper
