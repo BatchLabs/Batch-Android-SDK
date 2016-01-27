@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+1.5
+----
+* Custom user data (attributes, tags and events)
+* Added an API to retrieve Batch's unique installation identifier
+* Deprecated BatchUserProfile
+* Added ability to start Batch in a service
+
 1.4
 -----
 * Batch Ads has been discontinued

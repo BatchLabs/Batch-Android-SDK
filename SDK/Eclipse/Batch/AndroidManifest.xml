@@ -2,7 +2,7 @@
     package="com.batch.android">
 
     <uses-sdk
-        android:targetSdkVersion="22" />
+        android:targetSdkVersion="23" />
 
     <application />
 
