@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+1.5.2
+-----
+* Fix JSON issues on Android 4.3 and below
+
+1.5.1
+-----
+* Fix a bug where clearTagCollection incorrectly cleared all attributes
+
 1.5
 ----
 * Custom user data (attributes, tags and events)
