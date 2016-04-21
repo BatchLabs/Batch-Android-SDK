@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+1.5.3
+-----
+* Added Batch.Push.getNotificationsType()
+* Threads used by Batch are now named
+* Batch.User.getEditor() has been renamed: Please use Batch.User.editor(). The old method will still work, but has been deprecated
+* Additional intent flags can now be set for the activity started when opening a Push using Batch.Push.setAdditionalIntentFlags(int)
+* Added "BatchActivityLifecycleHelper", an implementation of the "Application.ActivityLifecycleCallbacks" interface to use with "registerActivityLifecycleCallbacks()"  
+
 1.5.2
 -----
 * Fix JSON issues on Android 4.3 and below
