@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.5.4
+-----
+* Fix a rare memory leak for the last activity
+* Internal bugfixes
+
 1.5.3
 -----
 * Added Batch.Push.getNotificationsType()
