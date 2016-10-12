@@ -5,4 +5,14 @@
     <style name="com.batch.android.AdActivityTheme" parent="@android:style/Theme.Translucent.NoTitleBar.Fullscreen">
     </style>
 
+    <style name="com.batch.android.MessagingActivityTheme" parent="@android:style/Theme.DeviceDefault.Dialog.NoActionBar.MinWidth">
+        <item name="android:windowBackground">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+    <style name="com.batch.android.ActionActivityTheme" parent="@android:style/Theme.DeviceDefault.Dialog.NoActionBar.MinWidth">
+        <item name="android:windowBackground">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
 </resources>

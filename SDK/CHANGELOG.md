@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+1.6.0
+-----
+* Batch now requires Android 4.0.3 (API Level 15)
+* Batch now targets Android 7 (API Level 24), and should only be used in apps that compile with that SDK version. You should also use a v24 support-v4 library with it.
+* Updated notification behaviour to be more adapted to changes introduced in Nougat
+* `setCanUseAdvancedDeviceInformation()` has been introduced on the `Config` object to reduce the quantity of device information Batch will use. Note that disabling this will limit several dashboard features.
+* `BatchPushData` has been deprecated in favour of `BatchPushPayload`, which is easier to use and will allow you to read anything used by Batch's standard push receiver. It's also easier to instanciate from an intent/bundle, and easier to serialize.
+* InstanceID support has been merged into the main SDK. If migrating from an older SDK, you'll need to add a new service in your manifest, as described in the [push setup](/doc/android/sdk-integration/push-setup.html).
+* The overall method count has been reduced.
+
 1.5.4
 -----
 * Fix a rare memory leak for the last activity

@@ -2,8 +2,15 @@
     package="com.batch.android">
 
     <uses-sdk
-        android:targetSdkVersion="23" />
+        android:targetSdkVersion="24" />
 
-    <application />
+    <application>
+      <activity android:name=".BatchActionActivity"
+                android:theme="@style/com.batch.android.ActionActivityTheme"
+                android:exported="false" />
+
+      <service android:name=".BatchActionService"
+          android:exported="false" />
+    </application>
 
 </manifest>
