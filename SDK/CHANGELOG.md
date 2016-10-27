@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.7.0
+-----
+* Introduced [Mobile Landings](https://batch.com/doc/android/mobile-landings.html)
+
 1.6.0
 -----
 * Batch now requires Android 4.0.3 (API Level 15)

@@ -5,6 +5,10 @@
         android:targetSdkVersion="24" />
 
     <application>
+      <activity android:name=".MessagingActivity"
+                        android:theme="@style/com.batch.android.MessagingActivityTheme"
+                        android:exported="false" />
+
       <activity android:name=".BatchActionActivity"
                 android:theme="@style/com.batch.android.ActionActivityTheme"
                 android:exported="false" />
