@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+1.7.2
+----
+* Fixed a bug where events would stop working after rotation in some cases
+* Fixed a bug where Batch wouldn't work properly with translucent/floating activities
+
+1.7.1
+-----
+* Fixed a bug where mobile landings buttons could be misplaced
+
 1.7.0
 -----
 * Introduced [Mobile Landings](https://batch.com/doc/android/mobile-landings.html)
