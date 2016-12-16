@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.7.3
+----
+* Fixed a bug that could cause notifications to open the wrong deeplink if multiple notifications were present in the notification shade
+
 1.7.2
 ----
 * Fixed a bug where events would stop working after rotation in some cases
