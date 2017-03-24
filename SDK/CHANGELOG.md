@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.7.4
+----
+* Fix Batch.Messaging.LifecycleListener being wrongly obfuscated by Proguard, making it harder to use than intended
+
 1.7.3
 ----
 * Fixed a bug that could cause notifications to open the wrong deeplink if multiple notifications were present in the notification shade
