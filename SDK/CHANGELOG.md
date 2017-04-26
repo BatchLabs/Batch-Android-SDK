@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+1.8.0
+----
+* BREAKING CHANGE: Removed Batch.Ads and Batch.Unlock methods and related classes.
+* Added Batch.User.trackLocation, allowing you to natively track user position updates
+* Added global notification sound override using Batch.Push.setSound(Uri)
+* Un-obfuscated the exception returned by some of BatchPushPayload's methods
+* Deprecated Batch.isRunningInDevMode. It is useless, as DEV API Keys always start with "DEV"
+
 1.7.4
 ----
 * Fix Batch.Messaging.LifecycleListener being wrongly obfuscated by Proguard, making it harder to use than intended
