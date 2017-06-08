@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.9.0
+----
+* Added the Inbox module, allowing you to fetch previously received notifications from your code. More info: https://batch.com/doc/android/inbox.html 
+
 1.8.0
 ----
 * BREAKING CHANGE: Removed Batch.Ads and Batch.Unlock methods and related classes.
