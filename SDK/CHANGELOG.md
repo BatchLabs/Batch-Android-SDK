@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+1.9.1
+----
+* Batch SDK is now built with and targets API 26
+* Added support for Android 8.0 Notification Channels
+  See Batch.Push.getChannelsManager() and our channels documentation (coming soon) to tweak how Batch handles them.
+* Batch requires support-v4 26.0.0, for notifications to work with Android 8.0. (As of writing, only 26.0.0-beta2 is available)
+* Eclipse support had been dropped
+
 1.9.0
 ----
 * Added the Inbox module, allowing you to fetch previously received notifications from your code. More info: https://batch.com/doc/android/inbox.html 
