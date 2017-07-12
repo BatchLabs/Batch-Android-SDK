@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+1.9.2
+----
+* Batch is now available on Maven Central!
+* Unofbuscated classes that have been wrongly obfuscated before. BatchNotificationAction is now available.
+* Introducing BatchNotificationInterceptor, which allows you to change the generated notificationId or change the NotificationCompat.Builder instance that Batch uses
+  to display notifications. This allows you to add features such as a Wear extender, etc.
+
 1.9.1
 ----
 * Batch SDK is now built with and targets API 26
