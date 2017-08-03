@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.10.0
+----
+* Introduced In-App Campaigns
+* Added a Do Not Disturb mode on Batch.Messaging, allowing easier control of when landings will be shown
+
 1.9.2
 ----
 * Batch is now available on Maven Central!
