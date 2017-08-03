@@ -5,6 +5,10 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory android:title="@string/notif_settings_category_title">
+        <Preference
+            android:summary="These settings might behave unexpectedly on Android O"
+            />
+
         <!-- A 'parent' preference, which enables/disables child preferences (below)
              when checked/unchecked. -->
         <CheckBoxPreference

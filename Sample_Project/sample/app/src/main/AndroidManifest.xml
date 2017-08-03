@@ -46,21 +46,6 @@
                       android:host="notification-settings" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".activity.UnlockActivity"
-            android:label="@string/title_activity_unlock"
-            android:parentActivityName=".activity.MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.batch.android.sample.activity.MainActivity" />
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="batch-sample"
-                      android:host="unlock" />
-            </intent-filter>
-        </activity>
 
         <!-- Batch's Required manifest items -->
 

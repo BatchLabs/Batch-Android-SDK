@@ -20,15 +20,6 @@ public class MainActivity extends BatchActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        findViewById(R.id.main_unlock_button).setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                startActivity(new Intent(MainActivity.this, UnlockActivity.class));
-            }
-        });
-
         findViewById(R.id.main_notification_settings_button).setOnClickListener(new View.OnClickListener()
         {
             @Override
