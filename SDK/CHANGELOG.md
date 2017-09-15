@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+1.10.1
+----
+* Improved handling of new Android O backgrounding limitations
+* Fixed Do Not Disturb mode not working properly
+* Fixed a bug where activities opened by a push using a deeplink did not contain the Batch.Push.PAYLOAD_KEY extra
+* Fixed an issue with Android Oreo channels
+* Added APIs to copy Batch's data from an intent to another. See Batch.copyBatchExtras
+* Added a method on BatchInAppMessage, allowing you to fetch the visual content of the message. See BatchInAppMessage.getContent for more info
+* Added proguard rules to exclude support-v4 NotificationCompat related classes 
+
 1.10.0
 ----
 * Introduced In-App Campaigns
