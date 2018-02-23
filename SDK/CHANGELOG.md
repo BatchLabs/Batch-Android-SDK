@@ -1,6 +1,28 @@
 CHANGELOG
 =========
 
+1.11.0
+----
+* Added support for Banners in In-App Messaging
+
+  If your app uses the Mobile Landing/In-App Messaging manual mode, you need to update your implementation to support banners. Please check the [updated manual mode documentation](https://batch.com/doc/android/mobile-landings.html) for more information.
+
+* Fix an issue where an exception could be thrown if an invalid deeplink was supplied when setting up an In-App Message's buttons.
+* The SDK will now log the current Installation ID on start
+
+1.10.2
+----
+* Unobfuscated InAppMessageUserActionSource, which is implemented by BatchInAppMessage
+* Fixed an exception that could be thrown when using the Inbox APIs in the background. 
+  While it will not throw an exception anymore, the fetcher will still not work in these conditions if used in 'user identifier' mode: In order to fix this, please use Batch.Inbox.getFetcher(Context, String, String) rather than Batch.Inbox.getFetcher(String, String).
+* Fix a bug where the image of an In-App message could be distorted after a double rotation.
+* Added a method `getNotificationIdentifier()` on BatchInboxNotificationContent, which allows you to retrieve a unique identifier for this specific notification.
+* Added a variant of `Batch.Push.appendBatchData()` compatible with `BatchNotificationInterceptor` implementations
+* Added `Batch.Push.makePendingIntent(Intent)`, to generate a valid PendingIntent from an Intent, suitable for a Notification's builder. Please note that it will override the intent's action. If you rely on a custom action, you will have to make your own PendingIntent.
+* Added `Batch.Push.makePendingIntentForDeeplink(String)`, to generate a valid PendingIntent for a deeplink string, suitable for a Notification's builder, using Batch's action activity.
+* Improve builtin proguard rules. The number of library classes kept because of Batch is now much lower.
+* Added detection for invalid sender IDs, and overall better error reporting when FCM/GCM registration fails.
+
 1.10.1
 ----
 * Improved handling of new Android O backgrounding limitations
