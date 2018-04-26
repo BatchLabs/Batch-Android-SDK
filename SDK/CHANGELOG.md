@@ -1,6 +1,28 @@
 CHANGELOG
 =========
 
+1.12.0
+----
+* Batch now fully supports Firebase Cloud Messaging. Note that existing Batch integrations will NOT automatically be migrated to FCM. You should follow the [migration steps](https://batch.com/doc/android/advanced/fcm-migration.html) before April 2019.
+
+* Added methods to handle opting-out from Batch, and wiping user data.
+  Please see `Batch.optOut()`, `Batch.optOutAndWipeData()` and `Batch.optIn()`.
+  You can control whether Batch is opted out from by default using a manifest meta-data entry:  
+  `<meta-data android:name="batch_opted_out_by_default" android:value="false" />`
+  For compatibility reasons, Batch will be enabled by default.
+  More info in our documentation.
+
+* When a push registration identifier has successfully been fetched, Batch will now broadcast it as the action definied by `Batch.ACTION_REGISTRATION_IDENTIFIER_OBTAINED`. More info in the documentation.
+* Banners now correctly track their display, and trigger a `onBatchMessageShown()` call on your `LifecycleListener` if one is set.
+* Displaying a banner will dismiss any currently displayed banner
+* Deprecated Config.setCanUseAndroidID: Android id is never collected anymore. 
+* Deprecated Config.setCanUseInstanceID: users should migrate to FCM.
+* Added `android.permission.INTERNET`, `android.permission.WAKE_LOCK` and `android.permission.VIBRATE` in Batch's manifest, meaning that your app will automatically require them with no additional manifest changes. This should not impact you as they're required by many libraries, including Google's, and have always been required for Batch to work. If you didn't have them already, this might trigger a permission request on pre Marshmallow devices: please look at the manifest merger output to see if this impacts you.
+* Fixed some rare crashes that could happen on some Android emulators that broadcast malformed Google Play Services intents.
+* Various javadoc fixes
+    
+Note: This version is the **last one** supporting Android Studio 2.x. Batch 1.13 will ONLY support Android Studio 3.x and later.
+
 1.11.0
 ----
 * Added support for Banners in In-App Messaging
