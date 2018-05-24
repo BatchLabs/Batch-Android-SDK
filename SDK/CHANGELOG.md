@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.12.1
+----
+* FCM registration errors are now more explicitly logged
+* Fix an error when a "null" registration ID could be logged
+* Add support for server-side Sender ID detection. The Sender ID has also been included in the registration broadcast introduced in 1.12.0
+
 1.12.0
 ----
 * Batch now fully supports Firebase Cloud Messaging. Note that existing Batch integrations will NOT automatically be migrated to FCM. You should follow the [migration steps](https://batch.com/doc/android/advanced/fcm-migration.html) before April 2019.
