@@ -1,35 +1,37 @@
-![Dashboard Items](https://raw.github.com/BatchLabs/android-sdk/master/readme_logo.png)
+Batch.com iOS SDK
+==================
 
-# Batch Sample Apps
-The samples are minimal examples demonstrating proper integrations of the Batch SDK, including implementation of Batch Push functionality.
+![Logo](http://batch-doc.s3.amazonaws.com/logo_batch_192.gif)
 
-You will need an up-to-date SDK and Android Studio installation in order to properly use this sample.
+![Header](http://batch-doc.s3.amazonaws.com/General/BatchHeader.png)
 
-## App
+# About
 
-1. Clone or download the repository.
+Batch is the leading mobile engagement & push notification suite engineered for the mobile era.
 
-2. Open the sample project in Android Studio.
+# Requirements
+ - Android Studio 3.0+
+ - Android 15+
 
-## Dashboard
+# Installation
+Gradle (recommended)
 
-### 1. Login to your [Batch.com](https://batch.com/) account or create a new one.
+```
+compile 'com.batch.android:batch-sdk:+'
+```
 
-### 2. Add your new sample app
-Add a new app on the [dashboard](https://dashboard.batch.com/app/new) using the manual option, as your sample app doesn't have an App Store or Play Store URL to autopopulate.
+Manual  
+You can find the AAR [here](https://batch.com/download/android)
 
-### 3. Retrieve the dev API key
-Within your newly-created app, find the dev API key either here on step 1 of the wizard screen under `API KEY`, or in the settings menu under *API Keys*. 
+## Using it
+Describing what Batch can do is a little too big for this README.
+Read our [setup documentation](https://batch.com/doc/android/sdk-integration.html) to follow a step by step tutorial for integrating Batch features into your app.
 
-Place the dev API key in your sample app's `BatchSampleApplication.java`, in the startWithAPIKey method call.
+# Documentation
 
-At this point, feel free to launch your app. 
+ - [Technical](https://batch.com/doc)
+ - [Javadoc](https://batch.com/android-api-reference/index.html)
+ - [FAQ](https://batch.com/doc/faq/general.html)
+ - [Developer FAQ](https://batch.com/developers)
 
-### 4. Testing Push
-
-To test the push functionality, add your GCM Sender ID in `BatchSampleApplication.java`. Your token will be logged in your device's logcat, which you can use in the dashboard's test push function. This can be found on the Message screen of the push campaign creation wizard.
-You will also be able to change the notification settings from the main menu.
-
-## Resources
-* [Full Batch documentation](https://dashboard.batch.com/doc)
-* [support@batch.com](support@batch.com)
+Copyright 2018 - Batch.com
