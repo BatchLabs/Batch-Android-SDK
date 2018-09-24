@@ -1,6 +1,34 @@
 CHANGELOG
 =========
 
+1.13.0
+----
+
+**Core**
+
+* SDK is now built with the Pie SDK, and targets API Level 28.
+
+* Opting-out from the SDK now sends an event notifying the server of this. If a data wipe has been asked, the request will also be forwarded to the server.
+  New methods have been introduced to be informed of the status of the request to update your UI accordingly, and possibly revert the opt-out if the network is unreachable.
+
+**Push**
+
+* Exposed the tag Batch uses to display notifications in the constant `Batch.NOTIFICATION_TAG`. You can use this to cancel notifications, or use other APIs that require finding notifications by ID and tag.
+
+* Added `Batch.Messaging.setShowForegroundLandings()`. It allows you to disable Batch's default behaviour to forward push messages containing landings to the app if it is in the foreground. Call this method with `false` will result in notifications always being posted no matter what the application state is.
+
+**Events**
+
+Event data support has been overhauled. As a result:  
+
+* Introduced `BatchEventData`. Use this class to attach attributes and tags to an event. See this class' documentation for more information about limits.
+* `Batch.User.trackEvent(String name, Stringlabel, JSONObject data)` has been deprecated
+ - Calls to this method will log deprecation warnings in the console
+ - Legacy data (JSONObject) will be converted to `BatchEventData`. Same data format restrictions apply: Any key/value entry that can't be converted will be ignored, and logged. Tags are not supported
+* Introduced `Batch.User.trackEvent(String name, Stringlabel, BatchEventData data)`, replacing the deprecated method.
+
+More info in the [event documentation](/doc/android/custom-data/custom-events.html#_event-data).
+
 1.12.1
 ----
 * FCM registration errors are now more explicitly logged
