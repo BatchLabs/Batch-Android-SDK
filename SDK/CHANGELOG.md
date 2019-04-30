@@ -1,6 +1,52 @@
 CHANGELOG
 =========
 
+1.14.0
+----
+
+**BREAKING: Batch now requires Java 1.8 source support.**  
+You may need to enable desugaring to make Batch work with your project by adding the following in your `build.gradle`:
+```
+android {
+  //...
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+}
+```
+
+**NOTE:** This release is one of the last supporting the legacy Android support libraries. Please start migrating to AndroidX to ensure a smooth upgrade experience in the future.
+
+**Core**
+
+* Requires Android Studio 3.0 or higher with d8 enabled.
+* Fix some potential bugs with BatchActions in some locales.
+* Batch will not catch RuntimeExceptions occurring in implementations of BatchNotificationInterceptor: they will now crash your app as they should have.
+* Batch.push.setGCMSenderId() has been deprecated: Please migrate to FCM as soon as possible. GCM and GCM-legacy support will be removed from the SDK in a later release.
+* Synchronization of user attributes and tags is now more optimized, resulting in less network requests.
+* Other various bugfixes.
+* Included new license information in the release zips and the artifact metadata. If you integrate using maven central, licenses will be picked up by `com.google.android.gms.oss-licenses-plugin`.
+
+**User**
+
+* High level data (language/region/custom user id) can now be read back.
+* User data (attributes and tags) can now be read back. [Documentation](https://batch.com/doc/android/custom-data/custom-attributes.html#_reading-attributes-and-tag-collections)
+
+
+**Push**
+* Notification content is now visible on the lockscreen by default, even when locked. Use a notification interceptor if you want to override the visibility when showing sensitive content.
+
+**Messaging**
+* Added support for two new UI formats: Modal, and Image. See the documentation for more information.
+* Added support for GIFs in Mobile Landings and In-App messages.
+* Added support for rich text.
+* Added support for text scrolling in all formats. Banners will now have a maximum body height of ~160pt, and their text will scroll.
+
+* Support for opening deeplinks from In-App Messaging and Mobile Landings into a Custom Tab
+* Added new methods on Batch.Messaging.LifecycleListener allowing you to track more information such as close/autoclose and button presses. More info in the Mobile Landings documentation.
+* Batch.Messaging.LifecycleListener methods are no longer called on each rotation  
+
 1.13.0
 ----
 
