@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+1.14.1
+----
+
+- Switched back to Proguard from R8. This should fix an issue with Firebase Performance.
+- Notifications using BigPictureStyle will now show the big picture as the large icon when collapsed, if no other large icon was set.
+  Note: this feature requires androidx.core
+- All SDK XML resources have been marked as private and will not show up in code completion anymore.
+
 1.14.0
 ----
 
