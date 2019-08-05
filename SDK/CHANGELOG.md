@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+1.14.2
+----
+
+**In-App**
+
+* Fix grace periods greater than 119 hours not working
+
+**User**
+
+* Fixed wrong visiblity and obfuscation of methods in `BatchUserAttribute`
+* Added @NonNull annotations to `BatchAttributesFetchListener` and `BatchTagCollectionsFetchListener`
+
 1.14.1
 ----
 
