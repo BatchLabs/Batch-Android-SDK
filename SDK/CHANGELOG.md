@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+1.14.3
+----
+
+**Messaging**
+
+* Fix a crash that occurs when a user the activity backing the "Image" format is stopped.
+
 1.14.2
 ----
 
