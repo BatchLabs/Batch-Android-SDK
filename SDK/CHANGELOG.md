@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.14.4
+----
+
+* Fix a crash that could occur on resume if the application process was killed after backgrounding the app on a messaging activity.
+
 1.14.3
 ----
 
