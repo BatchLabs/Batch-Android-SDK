@@ -1,8 +1,53 @@
 CHANGELOG
 =========
 
+1.15.0
+----  
+
+**BREAKING**
+* Migrated to AndroidX. Batch now **explicitely** depends on androidx core. The SDK now explicitly depends on `androidx.core:core:1.0.0`. Please upgrade your version of the support library accordingly.
+* BatchNotificationAction.getSupportActions no longer throws exception com.batch.android.MissingDependencyException, as androidx.core is now an explicit dependency.
+
+**Core**
+
+* Fix an exception that occurred when the `<application>` entry in the manifest had no `<meta-data>` children.
+* Improved In-App view tracker error handling.
+* Added support for external analytics using `EventDispatcher`. See the documentation for more details.
+* Added a new feature for developers: a debug view is now available using `Batch.Debug.startDebugActivity`.
+* Remove obfuscation on `BatchOptOutResultListener.ErrorPolicy` enum.
+* Added the ability to change the logger level using `Config`.
+
+**Actions**
+
+* Added an interface `BatchDeeplinkInterceptor` to override some aspects of a deeplink that Batch wants to open.
+
+**Messaging**
+
+* Improved accessibility of all message formats
+* Fixed an issue where an Image/Modal format set to auto close would crash if the user moved to another app before the countdown was elapsed.
+
+**Push**
+
+* System notification authorization is now reported to Batch's servers.  
+  This includes channels support: the default channel override is used to measure the status if set, otherwise Batch's default channel is used.
+* `Batch.Push.setNotificationsColor()` now explicitly takes a ColorInt
+* `Batch.Push.setSmallIconResourceId()` now explicitly takes a DrawableRes
+* The notification default color will now be the value of your theme's `colorPrimary` attribute rather than black.
+* If no small icon has been set when configuring Batch, the SDK will now fallback on Firebase's `com.google.firebase.messaging.default_notification_icon`.  
+
+**Inbox**
+
+* Added the `markAsDeleted` method on `BatchInboxFetcher`, allowing the deletion of notifications
+
+**User**
+
+* Saving a UserDataEditor before Batch is started now enqueues the changes instead of failing. If Batch is not started before the process dies, changes will be lost. This change does not affect BatchUserProfile, which has been deprecated for a while.
+
+
 1.14.4
 ----
+
+**Messaging**
 
 * Fix a crash that could occur on resume if the application process was killed after backgrounding the app on a messaging activity.
 
@@ -11,7 +56,7 @@ CHANGELOG
 
 **Messaging**
 
-* Fix a crash that occurs when a user the activity backing the "Image" format is stopped.
+* Fix a crash that could occur when the activity backing the "Image" format is stopped.
 
 1.14.2
 ----
