@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+1.15.1
+----
+
+**Core**
+* Tweaked how the log levels work to be more like how logcat works. The default logger level is now VERBOSE and INTERNAL implies all other log levels.
+  Breaking: LoggerLevel.isGreaterOrEqual has been renamed to LoggerLevel.canLog
+**Push**
+* The "Registration ID/Push Token" log has been accidentally set as internal in 1.15.0. It is now public again.
+
 1.15.0
 ----  
 
