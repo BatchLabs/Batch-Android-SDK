@@ -1,4 +1,4 @@
-Batch.com iOS SDK
+Batch.com Android SDK
 ==================
 
 ![Logo](http://batch-doc.s3.amazonaws.com/logo_batch_192.gif)
