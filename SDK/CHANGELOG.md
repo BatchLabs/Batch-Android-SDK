@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+1.15.2
+----
+
+**Messaging**
+
+* Fixed a crash where the app would crash if the user rotated an automatically dismissing fullscreen/modal/image template.
+
+**User**
+
+* Added support for Date in BatchEventData.
+* BatchEventData now supports up to 15 attributes (used to be 10).
+* BatchUserAttribute now has a public constructor for easier mocking.
+
 1.15.1
 ----
 
