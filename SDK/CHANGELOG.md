@@ -1,6 +1,27 @@
 CHANGELOG
 =========
 
+1.16.0
+----
+**Core**
+
+* Batch is now built using the Android 11 (sdk version 30) SDK, and targets it. Android 11 is fully supported.
+* Batch is now built using R8 rather than proguard.
+* Add support for Push/Advertising ID plugins.
+* Support for TLS versions older than 1.2 has been disabled for devices on Lollipop and higher. Devices on 4.1 to 4.4 might still use TLS 1.1 for compatiblity.
+* Should to fix an issue where Google would report a security issue in `com.batch.android.c.h.c` due to our usage of an ECB cipher. We've always used standard HTTPS for our network communication: the weak encryption is only used for an additional layer of security on disk and during transport.
+
+**Inbox**
+
+* Enhanced the way the SDK fetchs notifications from the servers to greatly reduce bandwidth usage. No public API change.
+
+**Messaging**
+
+* Fixed an issue where In-App messages might not survive rotation with newer AndroidX core versions.
+* Fixed an issue where rotating an autoclosable In-App message would not show the right countdown.
+* Fixed an issue where LeakCanary would temporarily report a leak with autoclosable messages. This was due to a delayed callback that eventually went away: Batch now cancels it sooner.
+* Auto closable In-App messages won't attempt to dismiss themselves in the background anymore: they'll check if they should have been in onStart.
+
 1.15.2
 ----
 
@@ -18,7 +39,7 @@ CHANGELOG
 ----
 
 **Core**
-* Tweaked how the log levels work to be more like how logcat works. The default logger level is now VERBOSE and INTERNAL implies all other log levels.
+* Tweaked how the log levels work to be more like how logcat works. The default logger level is now INFO and INTERNAL implies all other log levels.
   Breaking: LoggerLevel.isGreaterOrEqual has been renamed to LoggerLevel.canLog
 **Push**
 * The "Registration ID/Push Token" log has been accidentally set as internal in 1.15.0. It is now public again.
