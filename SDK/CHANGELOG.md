@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.16.1
+----
+**Core**
+
+* Fixed a crash that happened when using Messaging (In-App messages/Mobile landings) or the Debug view. It was due to the removal of a default proguard rule, resulting in broken R references.
+
 1.16.0
 ----
 **Core**
