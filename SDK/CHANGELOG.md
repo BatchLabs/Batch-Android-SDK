@@ -1,10 +1,22 @@
 CHANGELOG
 =========
 
+1.16.3
+----
+
+**Core**
+
+* Fix an issue where Batch might lose some module configuration (such as the push small icon) when an activity is destroyed and no other is on screen.
+
+**Push**
+
+* Fix a bug where query parameters of rich push media URLs were escaped twice, making use of non URL safe characters impossible.
+
 1.16.2
 ----
 
 **Messaging**
+
 * Fix in-app campaigns cache being unreadable. This caused an issue where in-app campaigns with a `NEW_SESSION` trigger would not work if Android or the user killed the application process.
 
 1.16.1
