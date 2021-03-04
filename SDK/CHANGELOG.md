@@ -1,6 +1,38 @@
 CHANGELOG
 =========
 
+1.17.0
+----
+
+**Core**
+
+* Added a package query entry in AndroidManifest.xml for `com.huawei.appmarket` to enable detection of the Huawei AppGallery.
+* Added missing `android:exported` manifest attributes in preparation for Android 12.
+
+
+**Actions**
+
+* Added `batch.rating`, which asks the user to review your app using the Google Play In-App Review API.
+  To enable in-app review, add the `com.google.android.play:core` dependency to your project.
+  If the library is missing or fails, the SDK will open the Play Store/Huawei AppGallery.
+* Added `batch.clipboard`, which can copy text to the clipboard.
+
+**Messaging**
+
+* Added support for a new UI format: WebView. See documentation for more info.
+* Added `onBatchMessageCancelledByError` on `Batch.Messaging.LifecycleListener`, called when a message could not be loaded due to an error when loading the message's content.
+* Added `onBatchMessageWebViewActionTriggered` on `Batch.Messaging.LifecycleListener`, called when a in-app webview format action has been triggered.
+* In-App campaign cache is now cleared on server errors
+
+**Push**
+
+* *Important change*: Push open pending intents are now created with `FLAG_IMMUTABLE` on Android M and higher in preparation for Android 12.  
+  This also applies to `PendingIntent` instances returned by `Batch.Push.makePendingIntent*()` methods.
+
+**Event Dispatchers**
+
+* Added the new event types `MESSAGING_CLOSE_ERROR` and `MESSAGING_WEBVIEW_CLICK`. See javadoc for more info.
+
 1.16.3
 ----
 
@@ -16,7 +48,6 @@ CHANGELOG
 ----
 
 **Messaging**
-
 * Fix in-app campaigns cache being unreadable. This caused an issue where in-app campaigns with a `NEW_SESSION` trigger would not work if Android or the user killed the application process.
 
 1.16.1
@@ -29,7 +60,7 @@ CHANGELOG
 ----
 **Core**
 
-* Batch is now built using the Android 11 (sdk version 30) SDK, and targets it. Android 11 is fully supported.
+* Batch is now built using the Android 11 (API Level 30) SDK, and targets it. Android 11 is fully supported.
 * Batch is now built using R8 rather than proguard.
 * Add support for Push/Advertising ID plugins.
 * Support for TLS versions older than 1.2 has been disabled for devices on Lollipop and higher. Devices on 4.1 to 4.4 might still use TLS 1.1 for compatiblity.
