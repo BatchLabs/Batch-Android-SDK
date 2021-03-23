@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:clickable="false"
+    android:focusable="false"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/com_batchsdk_user_data_debug_collection_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAllCaps="false"
+        style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+    <com.batch.android.debug.view.NestedListView
+        android:listSelector="@android:color/transparent"
+        android:id="@+id/com_batchsdk_user_data_debug_tag_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="com_batchsdk_ImageDialogFullscreenTheme" parent="@style/com_batchsdk_ImageDialogThemeBase">
+        <item name="android:statusBarColor">#000000</item>
+    </style>
+
+    <style name="com_batchsdk_ImageDialogModalTheme" parent="@style/com_batchsdk_ImageDialogThemeBase">
+        <item name="android:windowTranslucentStatus">true</item>
+    </style>
+
+    <style name="com_batchsdk_WebViewDialogTheme" parent="@style/com_batchsdk_ModalDialogTheme">
+        <item name="android:statusBarColor">#000000</item>
+    </style>
+
+</resources>

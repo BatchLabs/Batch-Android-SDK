@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    tools:ignore="rtlCompat">
+
+
+    <TextView
+        android:id="@+id/com_batchsdk_notification_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignWithParentIfMissing="true"
+        android:layout_toStartOf="@+id/com_batchsdk_notification_icon1"
+        android:singleLine="true"
+        android:textAppearance="@style/com_batchsdk_TextAppearance.Notification.Title" />
+
+    <TextView
+        android:id="@+id/com_batchsdk_notification_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignWithParentIfMissing="true"
+        android:layout_below="@+id/com_batchsdk_notification_title"
+        android:layout_toStartOf="@+id/com_batchsdk_notification_icon1"
+        android:singleLine="true"
+        android:textAppearance="@style/com_batchsdk_TextAppearance.Notification.Content" />
+
+
+    <ImageView
+        android:id="@+id/com_batchsdk_notification_icon1"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginLeft="6dp"
+        android:layout_marginStart="6dp"
+        android:scaleType="centerCrop"
+        tools:ignore="ContentDescription" />
+</RelativeLayout>

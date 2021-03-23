@@ -1,0 +1,166 @@
+/*
+ * How it works:
+ *
+ * Metalava doesn't really have a documentation at the moment, so here what this script do.
+ *
+ * We generate a signature file of the current API using metalavaGenerateSignarature task.
+ * To include only the public SDK classes/methods/fields, we first hide all package in the source set and then unhide the @PublicSDK annotation.
+ * The output will be located in metalava-api/ folder.
+ *
+ * We can compare a previously generated signature file with the current API using the metalavaCompareSignature task.
+ */
+
+def metalavaJarFile = project.rootProject.file('../prebuilt/metalava.jar')
+if (!metalavaJarFile.exists()) {
+    logger.warn('WARNING: Metalava jar not found')
+}
+
+/**
+ * Recursively list all packages from a directory
+ * The package must contains at least one .java file to be included
+ * @param rootDirectory
+ * @param directory
+ * @param packages
+ */
+void getPackagesInDirectory(File rootDirectory, File directory, Set<String> packages) {
+    directory.listFiles().each {
+        if (it.isFile() && it.path.endsWith('.java')) {
+            def packageName = it.getParentFile().path
+            if (packageName.startsWith(rootDirectory.path)) {
+                packageName = packageName.substring(rootDirectory.path.length() + 1)
+            }
+            packageName = packageName.replace('/', '.')
+            packages.add(packageName)
+        } else if (it.isDirectory()) {
+            getPackagesInDirectory(rootDirectory, it, packages)
+        }
+    }
+}
+
+/**
+ * Generate the list of arguments to use with metalava
+ * @param jarFile
+ * @param sourceSet
+ * @return
+ */
+List<String> getCommonMetalavaArgs(jarFile, sourceSet) {
+    def args = [
+            '-jar', jarFile.path,
+            '--format=v2',
+            '--manifest', sourceSet.manifest.srcFile, // Manifest keep track of permissions set
+            '--show-single-annotation', 'com.batch.android.annotation.PublicSDK',
+    ]
+
+    def packagesToHide = new HashSet<String>()
+    sourceSet.java.srcDirs.each {
+        getPackagesInDirectory(it, it, packagesToHide)
+    }
+
+    packagesToHide.each {
+        // We keep com.batch.android.json
+        if (!it.equals('com.batch.android.json')) {
+            args.addAll(['--hide-package', it])
+        }
+    }
+    return args
+}
+
+/**
+ * Add or update baseline
+ * @param args
+ * @param baselineFile
+ */
+static void addBaseline(args, baselineFile) {
+    if (baselineFile.exists()) {
+        args.addAll([
+                '--baseline', baselineFile.path
+        ])
+    } else {
+        args.addAll([
+                '--update-baseline', baselineFile.path
+        ])
+    }
+}
+
+// To generate the public API file we hide all packages
+// Then we unhide all class annotated with @PublicSDK
+// Metalava doesn't take into account glob like com.batch.android.* so we need to get all packages/sub-packages manually
+task metalavaGenerateSignature {
+    doFirst {
+        def signatureArgs = getCommonMetalavaArgs(metalavaJarFile, android.sourceSets.main)
+        addBaseline(signatureArgs, project.file('metalava-baseline.txt'))
+        signatureArgs.addAll([
+                '--source-path', android.sourceSets.main.java.srcDirs.toArray().join(':'),
+                '--api', project.rootProject.file('../metalava-api/' + android.defaultConfig.versionName + '/api.txt')
+        ])
+        exec {
+            executable = 'java'
+            args = signatureArgs
+        }
+
+        copy {
+            from project.rootProject.file('../metalava-api/' + android.defaultConfig.versionName + '/api.txt')
+            into project.rootProject.file('../metalava-api')
+            rename 'api.txt', 'api-latest.txt'
+        }
+    }
+}
+
+// Generate doc stubs using metalava API
+task metalavaGenerateStubs {
+    doFirst {
+        def signatureArgs = getCommonMetalavaArgs(metalavaJarFile, android.sourceSets.main)
+        addBaseline(signatureArgs, project.file('metalava-baseline.txt'))
+        signatureArgs.addAll([
+                '--source-path', android.sourceSets.main.java.srcDirs.toArray().join(':'),
+                '--doc-stubs', "$buildDir.path/metalava/doc-stubs/"
+        ])
+        exec {
+            executable = 'java'
+            args = signatureArgs
+        }
+    }
+}
+
+/// Generate javadoc using metalava doc stubs
+task metalavaGenerateJavadoc(type: Javadoc, dependsOn: ['metalavaGenerateStubs']) {
+    source = "$buildDir.path/metalava/doc-stubs/"
+    destinationDir = project.rootProject.file('../javadoc')
+    title = "Batch Android SDK " + android.defaultConfig.versionName
+    failOnError = false
+}
+
+// Generate a tmp signature file of the current code in project
+// Compare the newly generated tmp signature file with the previous signature file
+// Metalava will prompt an error if an incompatibility is found
+task metalavaCompareSignature {
+    doFirst {
+        // Generate tmp signature file of current API
+        def tmpSignatureFile = buildDir.path + '/outputs/metalava/api.txt'
+        def tmpSignatureArgs = getCommonMetalavaArgs(metalavaJarFile, android.sourceSets.main)
+        addBaseline(tmpSignatureArgs, project.file('metalava-baseline.txt'))
+        tmpSignatureArgs.addAll([
+                '--source-path', android.sourceSets.main.java.srcDirs.toArray().join(':'),
+                '--api', tmpSignatureFile,
+                '--no-banner'
+        ])
+        exec {
+            executable = 'java'
+            args = tmpSignatureArgs
+        }
+
+        // Compare tmp signature with previous signature
+        def compareSignatureArgs = [
+                '-jar', metalavaJarFile.path,
+                '--source-files', tmpSignatureFile,
+                '--check-compatibility:api:current', project.rootProject.file('../metalava-api/api-latest.txt'),
+                '--format=v2',
+        ]
+        addBaseline(compareSignatureArgs, project.file('metalava-baseline.txt'))
+        exec {
+            ignoreExitValue = false
+            executable = 'java'
+            args = compareSignatureArgs
+        }
+    }
+}

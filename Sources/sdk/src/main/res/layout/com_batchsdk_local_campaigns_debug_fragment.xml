@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:padding="16dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:textAppearance="@style/com_batchsdk_TextAppearance.Debug.Headline"
+            android:text="@string/com_batchsdk_debug_view_refresh"
+            android:id="@+id/com_batchsdk_local_campaign_debug_fragment_refresh_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:paddingTop="16dp"
+            android:id="@+id/com_batchsdk_local_campaign_debug_fragment_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+        <com.batch.android.debug.view.NestedListView
+            android:id="@+id/com_batchsdk_local_campaign_debug_fragment_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

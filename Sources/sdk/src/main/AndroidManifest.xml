@@ -1,0 +1,82 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.batch.android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <permission
+        android:name="${applicationId}.batch.permission.INTERNAL_BROADCAST"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="${applicationId}.batch.permission.INTERNAL_BROADCAST" />
+
+    <queries>
+        <package android:name="com.huawei.appmarket" />
+    </queries>
+
+    <application>
+        <activity
+            android:name=".MessagingActivity"
+            android:theme="@style/com_batchsdk_MessagingActivityTheme"
+            android:exported="false" />
+
+        <activity
+            android:name=".BatchActionActivity"
+            android:theme="@style/com_batchsdk_ActionActivityTheme"
+            android:exported="false" />
+
+        <activity
+            android:name=".debug.BatchDebugActivity"
+            android:theme="@style/com_batchsdk_DebugActivityTheme"
+            android:exported="false" />
+
+        <service
+            android:name=".BatchActionService"
+            android:exported="false" />
+
+        <service
+            android:name=".BatchPushService"
+            android:exported="false" />
+
+        <service
+            android:name=".BatchPushJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+
+        <service
+            android:name=".BatchDisplayReceiptJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+
+        <service
+            android:name="com.batch.android.eventdispatcher.DispatcherDiscoveryService"
+            android:directBootAware="true"
+            android:exported="false"
+            tools:targetApi="n" />
+
+        <service
+            android:name="com.batch.android.push.PushRegistrationDiscoveryService"
+            android:directBootAware="true"
+            android:exported="false"
+            tools:targetApi="n" />
+
+        <receiver
+            android:name=".BatchPushMessageReceiver"
+            android:permission="com.google.android.c2dm.permission.SEND"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <category android:name="${applicationId}" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".BatchPushMessageDismissReceiver"
+            android:exported="false" />
+
+    </application>
+
+</manifest>

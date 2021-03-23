@@ -1,0 +1,47 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.batch.android.test">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-sdk tools:overrideLibrary="com.google.firebase.iid, com.google.firebase.firebase_analytics, com.google.firebase.measurement, com.google.firebase.measurement_impl, com.google.android.gms.measurement.api, com.google.android.gms.measurement_base, com.google.android.gms.measurement.sdk, com.google.android.gms.measurement.sdk.api" />
+
+    <permission
+        android:name="com.batch.android.sample.gradle.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="com.batch.android.sample.gradle.permission.C2D_MESSAGE" />
+    <uses-permission android:name="com.batch.android.sample.permission.C2D_MESSAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Beacons permissions -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+
+    <!-- Geofences/Beacons permission -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+
+    <application
+        android:name="com.batch.android.TestApplication"
+        android:debuggable="true">
+
+        <activity
+            android:name="com.batch.android.TestActivity"
+            android:exported="false"
+            android:theme="@style/com_batchsdk_ActionActivityTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>

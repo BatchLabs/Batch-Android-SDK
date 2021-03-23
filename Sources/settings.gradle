@@ -1,0 +1,2 @@
+rootProject.name = 'Batch'
+include ':sdk', ':sdk-stubs', ':sdk-processor', ':sdk-lint'

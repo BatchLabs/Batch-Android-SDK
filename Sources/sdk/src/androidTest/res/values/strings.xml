@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="google_api_key">AIzaSyCvsLxSkl7Nyh0KviGyygHw0-anaxOeRRA</string>
+    <string name="google_app_id">1:535891708426:android:1e06aeeb4216abbe</string>
+    <string name="gcm_defaultSenderId">535891708426</string>
+    <string name="project_id">batch-sdk-connected-tests</string>
+</resources>

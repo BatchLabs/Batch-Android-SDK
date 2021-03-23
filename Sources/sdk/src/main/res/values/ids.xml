@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="com_batchsdk_messaging_root_view" type="id" />
+    <item name="com_batchsdk_messaging_background_view" type="id" />
+    <item name="com_batchsdk_messaging_container_view" type="id" />
+    <item name="com_batchsdk_messaging_content_view" type="id" />
+    <item name="com_batchsdk_messaging_image_view" type="id" />
+    <item name="com_batchsdk_messaging_image_container_view" type="id" />
+    <item name="com_batchsdk_messaging_web_view" type="id" />
+    <item name="com_batchsdk_messaging_close_button" type="id" />
+    <item name="com_batchsdk_messaging_countdown_progress" type="id" />
+</resources>

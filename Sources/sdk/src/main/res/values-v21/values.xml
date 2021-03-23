@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="com_batchsdk_TextAppearance.Notification.Title" parent="@android:style/TextAppearance.Material.Notification.Title" />
+
+    <style name="com_batchsdk_TextAppearance.Notification.Content" parent="@android:style/TextAppearance.Material.Notification" />
+
+    <style name="com_batchsdk_TextAppearance.Debug.Headline" parent="@android:style/TextAppearance.Material.Widget.Button" />
+
+    <style name="com_batchsdk_TextAppearance.Debug.Body" parent="@android:style/TextAppearance.Material.Small" />
+</resources>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:paddingBottom="16dp"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:text="@string/com_batchsdk_user_data_debug_fragment_user_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+            <TextView
+                android:id="@+id/com_batchsdk_user_data_debug_fragment_user_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/com_batchsdk_TextAppearance.Debug.Body" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:paddingBottom="16dp"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:text="@string/com_batchsdk_user_data_debug_fragment_attribute_list"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+            <com.batch.android.debug.view.NestedListView
+                android:listSelector="@android:color/transparent"
+                android:id="@+id/com_batchsdk_user_data_debug_fragment_attribute_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:paddingBottom="16dp"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:text="@string/com_batchsdk_user_data_debug_fragment_collection_list"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+            <com.batch.android.debug.view.NestedListView
+                android:listSelector="@android:color/transparent"
+                android:divider="@null"
+                android:dividerHeight="0dp"
+                android:id="@+id/com_batchsdk_user_data_debug_fragment_collection_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

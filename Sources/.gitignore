@@ -1,17 +1,11 @@
-# Never uncomment this
-batch-maven-*gpg*
-maven.properties
-
-# Standard ignores
-
-.DS_Store
-local.properties
-build
 .gradle
-javadoc
-public-sdk/Batch.aar
-public-sdk/Batch.aar.asc
-public-sdk/Batch.mapping.txt
+/local.properties
+/maven.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
 
 # Recommended ignore from Gradle
 **/.idea/dataSources.*

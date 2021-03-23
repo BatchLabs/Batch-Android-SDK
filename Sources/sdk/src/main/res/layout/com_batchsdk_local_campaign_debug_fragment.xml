@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:paddingBottom="16dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="@string/com_batchsdk_local_campaign_debug_fragment_token"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+        <TextView
+            android:id="@+id/com_batchsdk_local_campaign_debug_fragment_token"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Body" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:paddingBottom="16dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="@string/com_batchsdk_local_campaign_debug_fragment_start_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+        <TextView
+            android:id="@+id/com_batchsdk_local_campaign_debug_fragment_start_date"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Body" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:paddingBottom="16dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="@string/com_batchsdk_local_campaign_debug_fragment_end_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+        <TextView
+            android:id="@+id/com_batchsdk_local_campaign_debug_fragment_end_date"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Body" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:paddingBottom="16dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="@string/com_batchsdk_local_campaign_debug_fragment_capping"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+        <TextView
+            android:id="@+id/com_batchsdk_local_campaign_debug_fragment_capping"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Body" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:paddingBottom="16dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="@string/com_batchsdk_local_campaign_debug_fragment_period"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+        <TextView
+            android:id="@+id/com_batchsdk_local_campaign_debug_fragment_period"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Body" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:paddingBottom="16dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="@string/com_batchsdk_local_campaign_debug_fragment_trigger"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+        <TextView
+            android:id="@+id/com_batchsdk_local_campaign_debug_fragment_trigger"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/com_batchsdk_TextAppearance.Debug.Body" />
+
+    </LinearLayout>
+
+    <Button
+        android:textAppearance="@style/com_batchsdk_TextAppearance.Debug.Headline"
+        android:text="@string/com_batchsdk_debug_view_share"
+        android:id="@+id/com_batchsdk_identifier_debug_fragment_share_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

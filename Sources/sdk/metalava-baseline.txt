@@ -1,0 +1,7 @@
+// Baseline format: 1.0
+HiddenSuperclass: com.batch.android.BatchPushMessageDismissReceiver:
+    Public class com.batch.android.BatchPushMessageDismissReceiver stripped of unavailable superclass com.batch.android.compat.WakefulBroadcastReceiver
+HiddenSuperclass: com.batch.android.BatchPushMessageReceiver:
+    Public class com.batch.android.BatchPushMessageReceiver stripped of unavailable superclass com.batch.android.compat.WakefulBroadcastReceiver
+HiddenSuperclass: com.batch.android.BatchPushReceiver:
+    Public class com.batch.android.BatchPushReceiver stripped of unavailable superclass com.batch.android.compat.WakefulBroadcastReceiver

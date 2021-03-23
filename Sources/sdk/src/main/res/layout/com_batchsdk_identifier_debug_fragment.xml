@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TextView
+        android:text="@string/com_batchsdk_identifier_debug_fragment_sdk_version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+    <TextView
+        android:id="@+id/com_batchsdk_identifier_debug_fragment_sdk_version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="16dp"
+        style="@style/com_batchsdk_TextAppearance.Debug.Body" />
+
+    <TextView
+        android:text="@string/com_batchsdk_identifier_debug_fragment_install_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+    <TextView
+        android:id="@+id/com_batchsdk_identifier_debug_fragment_install_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="16dp"
+        style="@style/com_batchsdk_TextAppearance.Debug.Body" />
+
+
+    <TextView
+        android:text="@string/com_batchsdk_identifier_debug_fragment_advertising_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+    <TextView
+        android:id="@+id/com_batchsdk_identifier_debug_fragment_advertising_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="16dp"
+        style="@style/com_batchsdk_TextAppearance.Debug.Body" />
+
+
+    <TextView
+        android:text="@string/com_batchsdk_identifier_debug_fragment_push_token"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
+
+    <TextView
+        android:id="@+id/com_batchsdk_identifier_debug_fragment_push_token"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="16dp"
+        style="@style/com_batchsdk_TextAppearance.Debug.Body" />
+
+    <Button
+        android:textAppearance="@style/com_batchsdk_TextAppearance.Debug.Headline"
+        android:text="@string/com_batchsdk_debug_view_share"
+        android:id="@+id/com_batchsdk_identifier_debug_fragment_share_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

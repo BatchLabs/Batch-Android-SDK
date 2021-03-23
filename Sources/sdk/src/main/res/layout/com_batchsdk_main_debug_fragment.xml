@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <Button
+        android:textAppearance="@style/com_batchsdk_TextAppearance.Debug.Headline"
+        android:id="@+id/com_batchsdk_main_debug_fragment_identifier"
+        android:text="@string/com_batchsdk_main_debug_fragment_identifier"
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:textAppearance="@style/com_batchsdk_TextAppearance.Debug.Headline"
+        android:id="@+id/com_batchsdk_main_debug_fragment_user_data"
+        android:text="@string/com_batchsdk_main_debug_fragment_user_data"
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:textAppearance="@style/com_batchsdk_TextAppearance.Debug.Headline"
+        android:id="@+id/com_batchsdk_main_debug_fragment_local_campaign"
+        android:text="@string/com_batchsdk_main_debug_fragment_local_campaign"
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

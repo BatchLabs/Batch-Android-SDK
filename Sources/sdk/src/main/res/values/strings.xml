@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="com_batchsdk_debug_view_title">Batch Debug</string>
+    <string name="com_batchsdk_debug_view_share">Share</string>
+    <string name="com_batchsdk_debug_view_refresh">Refresh</string>
+    <string name="com_batchsdk_debug_view_empty">&lt;None Set&gt;</string>
+    <string name="com_batchsdk_debug_date_format">yyyy-MM-dd HH:mm:ss</string>
+
+    <string name="com_batchsdk_main_debug_fragment_identifier">Identifiers</string>
+    <string name="com_batchsdk_main_debug_fragment_user_data">Custom user data</string>
+    <string name="com_batchsdk_main_debug_fragment_local_campaign">In-App Campaigns</string>
+
+    <string name="com_batchsdk_identifier_debug_fragment_sdk_version">Batch SDK Version</string>
+    <string name="com_batchsdk_identifier_debug_fragment_install_id">Installation ID</string>
+    <string name="com_batchsdk_identifier_debug_fragment_advertising_id">Advertising ID</string>
+    <string name="com_batchsdk_identifier_debug_fragment_push_token">Push Token</string>
+
+    <string name="com_batchsdk_user_data_debug_fragment_user_id">Custom User ID</string>
+    <string name="com_batchsdk_user_data_debug_fragment_attribute_list">Custom Attributes</string>
+    <string name="com_batchsdk_user_data_debug_fragment_collection_list">Tag Collections</string>
+
+    <string name="com_batchsdk_local_campaign_debug_fragment_title">Local Campaigns (%1$d)</string>
+    <string name="com_batchsdk_local_campaign_debug_fragment_token">Token</string>
+    <string name="com_batchsdk_local_campaign_debug_fragment_start_date">Start Date</string>
+    <string name="com_batchsdk_local_campaign_debug_fragment_end_date">End Date</string>
+    <string name="com_batchsdk_local_campaign_debug_fragment_capping">Capping</string>
+    <string name="com_batchsdk_local_campaign_debug_fragment_period">Grace period</string>
+    <string name="com_batchsdk_local_campaign_debug_fragment_trigger">Trigger</string>
+    <string name="com_batchsdk_local_campaign_debug_fragment_refreshing">Refreshing in-app campaigns</string>
+
+    <public /> <!-- Mark all string as private -->
+</resources>
