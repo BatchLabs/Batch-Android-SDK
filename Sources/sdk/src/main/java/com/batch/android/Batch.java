@@ -2305,7 +2305,7 @@ public final class Batch
                 /*
                  * Warm up the local broadcast manager
                  */
-                LocalBroadcastManagerProvider.get(context);
+                LocalBroadcastManagerProvider.get(context.getApplicationContext());
 
                 /*
                  * Check for update migration stuff
