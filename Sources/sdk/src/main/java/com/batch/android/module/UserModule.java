@@ -354,7 +354,7 @@ public final class UserModule extends BatchModule
                 if (label.length() > 200) {
                     Logger.internal(TAG,
                             "Event label is longer than 200 characters and has been removed from the event");
-                } else {
+                } else if (label.length() > 0) {
                     params.put(PARAMETER_KEY_LABEL, label);
                 }
             }

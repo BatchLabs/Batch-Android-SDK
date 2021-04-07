@@ -105,8 +105,8 @@ public class LocalBroadcastManager
 
     public LocalBroadcastManager(Context context)
     {
-        mAppContext = context;
-        mHandler = new Handler(context.getMainLooper())
+        mAppContext = context.getApplicationContext();
+        mHandler = new Handler(mAppContext.getMainLooper())
         {
 
             @Override

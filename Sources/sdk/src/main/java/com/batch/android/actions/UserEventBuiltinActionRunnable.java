@@ -57,7 +57,7 @@ public class UserEventBuiltinActionRunnable implements UserActionRunnable
                 return;
             }
 
-            String label = json.getString("l");
+            String label = json.reallyOptString("l", null);
 
             BatchEventData data = new BatchEventData();
 

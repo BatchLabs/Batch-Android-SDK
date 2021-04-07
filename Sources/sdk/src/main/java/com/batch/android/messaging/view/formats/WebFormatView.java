@@ -124,7 +124,10 @@ public class WebFormatView extends FrameLayout
         webSettings.setDefaultTextEncodingName("utf-8");
         webSettings.setSupportMultipleWindows(true);
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
-            webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+            // Work around an issue where android could show "ERR_CACHE_MISS"
+            // In a perfect world we would like to make use of the browser cache
+            // but as those messages are usually one shot, it doesn't really matter.
+            webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         }
 
         webView.addJavascriptInterface(jsInterface, "_batchAndroidBridge");
