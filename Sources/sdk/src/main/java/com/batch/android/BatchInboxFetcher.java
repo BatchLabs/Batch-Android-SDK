@@ -105,7 +105,7 @@ public class BatchInboxFetcher
     /**
      * Returns a copy of all notifications that have been fetched until now, ordered by reverse chronological order (meaning that the first message is the newest one, and the last one the oldest).
      * Note that this array will be empty until you call {@link #fetchNewNotifications(OnNewNotificationsFetchedListener)}, and will only grow on subsequent fetches.
-     * On this beta, this operation is quite extensive: you should cache this result until you call fetch*.
+     * This operation is quite extensive: you should cache this result until you call fetch*.
      */
     @NonNull
     public List<BatchInboxNotificationContent> getFetchedNotifications()

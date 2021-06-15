@@ -90,7 +90,7 @@ public class BatchUserDataEditor
 
     /**
      * Set the user identifier.<br>
-     * Be careful: you should make sure the identifier uniquely identifies a user. When pushing an identifier, all installations with that identifier will get the Push, which can cause some privacy issues if done wrong. Also affects Unlock offer delivery and restore.
+     * Be careful: you should make sure the identifier uniquely identifies a user. When pushing an identifier, all installations with that identifier will get the Push, which can cause some privacy issues if done wrong.
      *
      * @param identifier Identifier string
      * @return This object instance, for method chaining

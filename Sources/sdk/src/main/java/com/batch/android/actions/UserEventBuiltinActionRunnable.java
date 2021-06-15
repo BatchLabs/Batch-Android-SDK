@@ -28,7 +28,14 @@ public class UserEventBuiltinActionRunnable implements UserActionRunnable
 
     private Date parseDate(String date)
     {
-        DateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US);
+        DateFormat isoFormat = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US);
+        } else {
+            isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
+            // Java 6 doesn't parse dates with timezones well
+            date = date.replaceAll("Z$", "+0000");
+        }
         try {
             return isoFormat.parse(date);
         } catch (ParseException e) {

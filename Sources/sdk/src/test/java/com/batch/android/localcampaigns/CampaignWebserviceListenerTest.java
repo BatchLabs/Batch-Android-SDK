@@ -49,10 +49,9 @@ public class CampaignWebserviceListenerTest
 
         Mockito.verify(campaignManager, Mockito.times(1)).deleteSavedCampaignsAsync(context);
         Mockito.verify(campaignManager, Mockito.times(3)).saveCampaignsResponseAsync(Mockito.any(),
-                JSONObjectMockitoMatcher.eq(new JSONObject("{\"campaigns\": []}")));
+                JSONObjectMockitoMatcher.eq(new JSONObject("{\"id\":\"dummy_id\",\"campaigns\": []}")));
 
         JSONObject expectedPersistedPayload = getSingleCampaignPayload();
-        expectedPersistedPayload.remove("id");
         Mockito.verify(campaignManager, Mockito.times(2)).saveCampaignsResponseAsync(Mockito.any(),
                 JSONObjectMockitoMatcher.eq(expectedPersistedPayload));
     }
@@ -60,27 +59,27 @@ public class CampaignWebserviceListenerTest
     private JSONObject getErrorPayload() throws JSONException
     {
         return new JSONObject(
-                "{\"id\":\"ffbb\",\"error\": {\"code\": 2, \"reason\": \"internal error\"}}");
+                "{\"id\":\"dummy_id\",\"error\": {\"code\": 2, \"reason\": \"internal error\"}}");
     }
 
     private JSONObject getInvalidCampaignTypePayload() throws JSONException
     {
-        return new JSONObject("{\"id\":\"ffbb\",\"campaigns\": {}}");
+        return new JSONObject("{\"id\":\"dummy_id\",\"campaigns\": {}}");
     }
 
     private JSONObject getEmptyPayload() throws JSONException
     {
-        return new JSONObject("{\"id\":\"ffbb\",\"campaigns\": []}");
+        return new JSONObject("{\"id\":\"dummy_id\",\"campaigns\": []}");
     }
 
     private JSONObject getEmptyWithUnknownKeyPayload() throws JSONException
     {
-        return new JSONObject("{\"id\":\"ffbb\",\"invalid\":1,\"campaigns\": []}");
+        return new JSONObject("{\"id\":\"dummy_id\",\"invalid\":1,\"campaigns\": []}");
     }
 
     private JSONObject getSingleCampaignPayload() throws JSONException
     {
-        return new JSONObject("{\"id\":\"ffbb\",\"campaigns\": [" +
+        return new JSONObject("{\"id\":\"dummy_id\",\"campaigns\": [" +
                 "    {" +
                 "       \"campaignId\": \"25876676\"," +
                 "       \"campaignToken\": \"ffed98550583631424ab69225b4f74aa\"," +
@@ -101,7 +100,7 @@ public class CampaignWebserviceListenerTest
 
     private JSONObject getSinglePersistableCampaignWithTransientPayload() throws JSONException
     {
-        return new JSONObject("{\"id\":\"ffbb\",\"campaigns\": [" +
+        return new JSONObject("{\"id\":\"dummy_id\",\"campaigns\": [" +
                 "    {" +
                 "       \"campaignId\": \"25876676\"," +
                 "       \"campaignToken\": \"ffed98550583631424ab69225b4f74aa\"," +

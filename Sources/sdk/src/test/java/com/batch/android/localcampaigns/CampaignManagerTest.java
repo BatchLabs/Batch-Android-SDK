@@ -2,6 +2,7 @@ package com.batch.android.localcampaigns;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.MediumTest;
@@ -9,11 +10,13 @@ import androidx.test.filters.MediumTest;
 import com.batch.android.core.DateProvider;
 import com.batch.android.date.BatchDate;
 import com.batch.android.date.UTCDate;
+import com.batch.android.di.providers.CampaignManagerProvider;
 import com.batch.android.di.providers.LandingOutputProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.localcampaigns.model.LocalCampaign;
+import com.batch.android.query.response.LocalCampaignsResponse;
 
 import org.junit.After;
 import org.junit.Before;
@@ -30,11 +33,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static android.os.Looper.getMainLooper;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(AndroidJUnit4.class)
 @MediumTest
@@ -81,6 +86,37 @@ public class CampaignManagerTest
 
         campaignManager.saveCampaignsResponse(context, jsonCampaigns);
         assertTrue(campaignManager.hasSavedCampaigns(context));
+
+        removeExistingSave();
+        assertFalse(campaignManager.hasSavedCampaigns(context));
+    }
+
+    /**
+     * Test that the campaigns are correctly written to the cache, and can be reloaded.
+     *
+     * This isn't really a "unit" test, but is a test that allows us to fully test the persistence
+     * code until we rewrite it. The other test (testLoadCampaigns) is too narrow to catch some errors:
+     * the persisting code is tested elsewhere, but persisting + reloading isn't tested as a unit
+     * and can (actually did, twice) break even though both tests are correct.
+     *
+     * Non regression test for ch24046.
+     */
+    @Test
+    public void testSaveAndLoadCampaigns() throws NoSuchFieldException, IllegalAccessException, JSONException
+    {
+        // Remove all campaigns, saved or loaded
+        removeExistingSave();
+        assertFalse(campaignManager.hasSavedCampaigns(context));
+        campaignManager.updateCampaignList(new ArrayList<>());
+
+        // Save using the code that will actually save the response in production, rather
+        // than reimplementing it in the tests.
+        new SyncLocalCampaignsResponse(context, jsonCampaigns, true);
+        assertTrue(campaignManager.hasSavedCampaigns(context));
+        assertEquals(0, campaignManager.getCampaignList().size());
+
+        campaignManager.loadSavedCampaignResponse(context);
+        assertEquals(1, campaignManager.getCampaignList().size());
 
         removeExistingSave();
         assertFalse(campaignManager.hasSavedCampaigns(context));
@@ -309,5 +345,27 @@ public class CampaignManagerTest
         {
         });
         return campaign;
+    }
+
+    /**
+     * LocalCampaignsResponse implementation that calls saveCampaignsResponse synchronously
+     * instead of asynchronously.
+     */
+    static class SyncLocalCampaignsResponse extends LocalCampaignsResponse {
+
+        public SyncLocalCampaignsResponse(Context context,
+                                          JSONObject response,
+                                          boolean autosave) throws JSONException
+        {
+            super(context, response, autosave);
+        }
+
+        @Override
+        protected void saveResponse(@NonNull JSONObject response)
+        {
+            CampaignManagerProvider.get().saveCampaignsResponse(
+                    getContext(),
+                    response);
+        }
     }
 }

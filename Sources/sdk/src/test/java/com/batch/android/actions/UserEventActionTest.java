@@ -7,7 +7,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.MediumTest;
 
 import com.batch.android.Batch;
-import com.batch.android.Config;
 import com.batch.android.di.DITestUtils;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.json.JSONException;
@@ -29,9 +28,12 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
+import org.robolectric.annotation.Config;
 import org.robolectric.res.android.Asset;
 import org.robolectric.shadows.ShadowLog;
 
+import static android.os.Build.VERSION_CODES.JELLY_BEAN_MR2;
+import static android.os.Build.VERSION_CODES.P;
 import static org.mockito.ArgumentMatchers.eq;
 
 @RunWith(AndroidJUnit4.class)
@@ -138,6 +140,7 @@ public class UserEventActionTest
     }
 
     @Test
+    @Config(sdk = {JELLY_BEAN_MR2, P})
     public void testTrackEventWithAttrAction() throws JSONException
     {
         ActionModule actionModule = new ActionModule();

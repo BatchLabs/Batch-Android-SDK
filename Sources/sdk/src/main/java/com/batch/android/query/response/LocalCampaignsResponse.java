@@ -5,6 +5,7 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.batch.android.core.Logger;
 import com.batch.android.date.TimezoneAwareDate;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Response for {@link LocalCampaignsQuery}
@@ -125,12 +127,11 @@ public class LocalCampaignsResponse extends AbstractLocalCampaignsResponse
         //TODO: This should manually be done, not on class instaniation!
         if (autosave) {
             JSONObject responseCopy = new JSONObject();
+            //TODO: Temporary fix for ch24046
+            responseCopy.put("id", response.reallyOptString("id", "dummy_id"));
             responseCopy.put("campaigns", new JSONArray(persistCampaigns));
 
-            // Save response
-            CampaignManagerProvider.get().saveCampaignsResponseAsync(
-                    getContext(),
-                    responseCopy);
+            saveResponse(responseCopy);
         }
     }
 
@@ -290,5 +291,12 @@ public class LocalCampaignsResponse extends AbstractLocalCampaignsResponse
             default:
                 throw new JSONException("Unknown campaign triggers \"" + type + "\"");
         }
+    }
+
+    @VisibleForTesting
+    protected void saveResponse(@NonNull JSONObject response) {
+        CampaignManagerProvider.get().saveCampaignsResponseAsync(
+                getContext(),
+                response);
     }
 }

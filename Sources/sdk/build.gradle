@@ -26,9 +26,9 @@ android {
         minSdkVersion 15
         targetSdkVersion 30
         versionCode 1
-        versionName "1.17.1"
+        versionName "1.17.2"
         buildConfigField "String", SDK_VERSION, "\"$versionName\""
-        buildConfigField "Integer", API_LEVEL, '35'
+        buildConfigField "Integer", API_LEVEL, '36'
         buildConfigField "Integer", MESSAGING_API_LEVEL, '10'
         buildConfigField "String", WS_DOMAIN, '"ws.batch.com"'
 

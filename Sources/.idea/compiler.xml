@@ -11,6 +11,11 @@
       <entry name="!?*.kt" />
       <entry name="!?*.clj" />
     </wildcardResourcePatterns>
-    <bytecodeTargetLevel target="1.8" />
+    <bytecodeTargetLevel target="1.8">
+      <module name="Batch.sdk" target="11" />
+      <module name="Batch.sdk-lint" target="11" />
+      <module name="Batch.sdk-sample" target="11" />
+      <module name="Batch.sdk-stubs" target="11" />
+    </bytecodeTargetLevel>
   </component>
 </project>
