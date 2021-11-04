@@ -1,5 +1,6 @@
 package com.batch.android.push.formats;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.view.View;
@@ -113,6 +114,7 @@ public class APENFormat extends BaseFormat implements NotificationFormat
         return imageScaleType;
     }
 
+    @SuppressLint("AnnotateVersionCheck")
     public static boolean isSupported()
     {
         return android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;

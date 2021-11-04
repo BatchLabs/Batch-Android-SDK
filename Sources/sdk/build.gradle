@@ -26,7 +26,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 30
         versionCode 1
-        versionName "1.17.2"
+        versionName "1.17.3"
         buildConfigField "String", SDK_VERSION, "\"$versionName\""
         buildConfigField "Integer", API_LEVEL, '36'
         buildConfigField "Integer", MESSAGING_API_LEVEL, '10'
@@ -64,8 +64,8 @@ android {
 
     lintOptions {
         abortOnError true
-        warningsAsErrors true
         baseline file("lint-baseline.xml")
+        lintConfig file("lint.xml")
     }
 
     testOptions {

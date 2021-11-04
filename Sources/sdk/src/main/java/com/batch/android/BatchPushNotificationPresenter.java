@@ -1,5 +1,6 @@
 package com.batch.android;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -392,6 +393,10 @@ public class BatchPushNotificationPresenter
             contentIntentFlags = contentIntentFlags | PendingIntent.FLAG_IMMUTABLE;
         }
 
+        // UnspecifiedImmutableFlag is suppressed as the linter can't recognize our conditional
+        // Android M immutability flag.
+
+        @SuppressLint("UnspecifiedImmutableFlag")
         PendingIntent contentIntent = PendingIntent.getActivity(context,
                 0,
                 launchIntent,
@@ -414,6 +419,10 @@ public class BatchPushNotificationPresenter
             deleteIntentFlags = deleteIntentFlags | PendingIntent.FLAG_IMMUTABLE;
         }
 
+        // UnspecifiedImmutableFlag is suppressed as the linter can't recognize our conditional
+        // Android M immutability flag.
+
+        @SuppressLint("UnspecifiedImmutableFlag")
         PendingIntent deleteIntent =
                 PendingIntent.getBroadcast(context.getApplicationContext(),
                         notificationId, dismissIntent, deleteIntentFlags);

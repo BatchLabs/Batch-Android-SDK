@@ -1,15 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 4.1.1" client="gradle" variant="debug" version="4.1.1">
-
-    <issue
-        id="KtxExtensionAvailable"
-        message="Add suffix `-ktx` to enable the Kotlin extensions for this library"
-        errorLine1="    api &quot;androidx.core:core:$androidXLibraryVersion&quot;"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="build.gradle"
-            line="107"
-            column="5"/>
-    </issue>
+<issues format="5" by="lint 4.2.0" client="gradle" variant="debug" version="4.2.0">
 
 </issues>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
-	<issue id="GradleDependency">
-		<ignore path="build.gradle" />
-	</issue>
+	<issue id="OldTargetApi" severity="warning" />
+
+	<!-- android.lintOptions.warningsAsErrors should do this but ... IDK -->
+	<!--<issue id="all" severity="error" /> -->
 </lint>

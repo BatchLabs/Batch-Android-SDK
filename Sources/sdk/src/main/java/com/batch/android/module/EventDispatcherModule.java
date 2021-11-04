@@ -28,7 +28,7 @@ public class EventDispatcherModule extends BatchModule
             "com.batch.android.eventdispatcher.DispatcherRegistrar";
     private static final String COMPONENT_KEY_PREFIX = "com.batch.android.eventdispatcher:";
 
-    private Set<BatchEventDispatcher> eventDispatchers = new LinkedHashSet<>();
+    private final Set<BatchEventDispatcher> eventDispatchers = new LinkedHashSet<>();
     private OptOutModule optOutModule;
 
     private boolean isContextLoaded = false;
@@ -54,20 +54,6 @@ public class EventDispatcherModule extends BatchModule
     public int getState()
     {
         return 1;
-    }
-
-    @Override
-    public void batchDidStop()
-    {
-        clear();
-    }
-
-    public void clear()
-    {
-        synchronized (eventDispatchers) {
-            eventDispatchers.clear();
-            isContextLoaded = false;
-        }
     }
 
     private void printLoadedDispatcher(@NonNull String name)
@@ -111,11 +97,13 @@ public class EventDispatcherModule extends BatchModule
             return;
         }
 
-        // Ensure once because of NotificationPresenter
-        if (isContextLoaded) {
-            return;
+        synchronized (eventDispatchers) {
+            // Ensure once because of NotificationPresenter
+            if (isContextLoaded) {
+                return;
+            }
+            isContextLoaded = true;
         }
-        isContextLoaded = true;
 
         List<String> registrarNames = DiscoveryServiceHelper.getComponentNames(context,
                 DispatcherDiscoveryService.class,

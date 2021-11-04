@@ -1,5 +1,6 @@
 package com.batch.android;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -71,12 +72,16 @@ public class BatchNotificationAction
      * @return A list of {@link NotificationCompat.Action} instances matching the provided {@link BatchNotificationAction},
      * if they've been successfully converted
      */
+    @SuppressLint("UnspecifiedImmutableFlag")
     @NonNull
     public static List<NotificationCompat.Action> getSupportActions(@NonNull Context context,
                                                                     @NonNull List<BatchNotificationAction> batchActions,
                                                                     @Nullable BatchPushPayload pushPayload,
                                                                     @Nullable Integer notificationId)
     {
+        // UnspecifiedImmutableFlag is suppressed as the linter can't recognize our conditional
+        // Android M immutability flag.
+
         if (context == null) {
             throw new IllegalArgumentException("Context cannot be null");
         }
@@ -109,6 +114,8 @@ public class BatchNotificationAction
 
             int actionIntentFlags = PendingIntent.FLAG_ONE_SHOT;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                // Remove @SuppressLint("UnspecifiedImmutableFlag") if you ever delete this line,
+                // so that the linter can warn appropriately
                 actionIntentFlags = actionIntentFlags | PendingIntent.FLAG_IMMUTABLE;
             }
 
