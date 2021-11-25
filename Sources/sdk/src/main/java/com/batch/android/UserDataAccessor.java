@@ -110,7 +110,9 @@ public class UserDataAccessor
                             case STRING:
                                 publicType = BatchUserAttribute.Type.STRING;
                                 break;
-
+                            case URL:
+                                publicType = BatchUserAttribute.Type.URL;
+                                break;
                             default:
                                 continue; // We skip attributes whose type is not dealt with above.
                         }

@@ -21,7 +21,6 @@ import java.util.TimeZone;
 
 /**
  * Helper to retrieve Android system configuration.
- *
  */
 public final class SystemParameterHelper
 {
@@ -53,13 +52,43 @@ public final class SystemParameterHelper
     }
 
     /**
-     * Return the current device locale
+     * Get the current device language
      *
-     * @return
+     * @return language
      */
-    public static Locale getDeviceLocale()
+    public static String getDeviceLanguage()
     {
-        return Locale.getDefault();
+        final Locale locale = Locale.getDefault();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return locale.toLanguageTag();
+        }
+
+        // Pre lollipop fallback
+
+        String language = locale.getLanguage();
+
+        // fix wrong android device locale
+        if (language.equals("in")) {
+            return "id";
+        }
+        if (language.equals("iw")) {
+            return "he";
+        }
+        if (language.equals("ji")) {
+            return "yi";
+        }
+        return language;
+    }
+
+    /**
+     * Get the current device country
+     *
+     * @return country
+     */
+    public static String getDeviceCountry()
+    {
+        return Locale.getDefault().getCountry();
     }
 
     /**
@@ -569,10 +598,10 @@ public final class SystemParameterHelper
                 value = String.valueOf(isNetRoaming(context));
                 break;
             case DEVICE_LANGUAGE:
-                value = getDeviceLocale().getLanguage();
+                value = getDeviceLanguage();
                 break;
             case DEVICE_REGION:
-                value = getDeviceLocale().getCountry();
+                value = getDeviceCountry();
                 break;
             case DEVICE_TYPE:
                 value = getDeviceModel();

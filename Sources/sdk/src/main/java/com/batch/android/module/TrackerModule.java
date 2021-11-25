@@ -36,7 +36,6 @@ import com.batch.android.processor.Singleton;
 import com.batch.android.push.Registration;
 import com.batch.android.runtime.State;
 import com.batch.android.tracker.TrackerDatasource;
-import com.batch.android.tracker.TrackerEventSender;
 import com.batch.android.tracker.TrackerMode;
 import com.batch.android.webservice.listener.TrackerWebserviceListener;
 
@@ -156,7 +155,7 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
 
                 // Not reconstructed everytime to keep track of the state and only if we are in ON mode
                 if (mode == TrackerMode.ON && sender == null) {
-                    sender = new TrackerEventSender(RuntimeManagerProvider.get(), this);
+                    sender = new EventSender(RuntimeManagerProvider.get(), this);
                 }
             } catch (Exception e) {
                 Logger.error(TAG, "Error while starting tracker module", e);
@@ -380,7 +379,7 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
             data.put("cus", customID);
         }
 
-        if (Batch.shouldUseAdvertisingID() && advertisingID != null) {
+        if (Batch.shouldUseAdvertisingID() && advertisingID.isNotNull()) {
             try {
                 String idv = advertisingID.get();
                 if (idv != null) {

@@ -16,6 +16,7 @@ import com.batch.android.module.UserModule;
 import com.batch.android.processor.Module;
 import com.batch.android.processor.Singleton;
 
+import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,7 +28,6 @@ import java.util.Set;
  * <p>
  * This class is NOT thread or context safe at all. You must make sure it is <b>ALWAYS</b> acessed
  * using its singleton, and that all of the calls happen on a single thread.
- *
  */
 @Module
 @Singleton
@@ -194,6 +194,15 @@ public final class SQLUserDatasource implements UserDatasource
         final ContentValues cv = new ContentValues();
         cv.put(UserDatabaseHelper.COLUMN_ATTR_VALUE, attribute.getTime());
         setAttribute(key, cv, AttributeType.DATE, false);
+    }
+
+    @Override
+    public void setAttribute(@NonNull String key,
+                             @NonNull URI attribute) throws UserDatabaseException
+    {
+        final ContentValues cv = new ContentValues();
+        cv.put(UserDatabaseHelper.COLUMN_ATTR_VALUE, attribute.toString());
+        setAttribute(key, cv, AttributeType.URL, false);
     }
 
     @Override
@@ -491,6 +500,9 @@ public final class SQLUserDatasource implements UserDatasource
                                 break;
                             case DOUBLE:
                                 typedValue = cursor.getDouble(valueColIndex);
+                                break;
+                            case URL:
+                                typedValue = new URI(cursor.getString(valueColIndex));
                                 break;
                             default:
                                 continue;

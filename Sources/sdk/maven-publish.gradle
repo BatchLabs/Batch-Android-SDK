@@ -19,6 +19,35 @@ if (signingFile.exists()) {
     }
 }
 
+sourceSets {
+    main {
+        java.srcDirs += 'build/generated'
+    }
+}
+
+task androidJavadocs(type: Javadoc) {
+    source = sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    options.addStringOption('Xdoclint:none', '-quiet')
+    android.libraryVariants.all { variant ->
+        if (variant.name == 'release') {
+            owner.classpath += variant.getCompileClasspath()
+        }
+    }
+    exclude '**/gif/README'
+    exclude '**/R.html', '**/R.*.html', '**/index.html'
+}
+
+task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+    archiveClassifier.set("javadoc")
+    from androidJavadocs.destinationDir
+}
+
+task androidSourcesJar(type: Jar) {
+    archiveClassifier.set("sources")
+    from sourceSets.main.java.srcDirs
+}
+
 nexusStaging {
     packageGroup = mavenGroupId
 }
@@ -32,6 +61,8 @@ publishing {
             version android.defaultConfig.versionName
 
             artifact(project.rootProject.file("../public-sdk/Batch.aar"))
+            artifact androidJavadocsJar
+            artifact androidSourcesJar
 
             pom {
                 name = "Batch.com Android SDK"

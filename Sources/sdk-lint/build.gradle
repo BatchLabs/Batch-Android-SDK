@@ -1,13 +1,13 @@
 apply plugin: 'java-library'
 
 dependencies {
-    compileOnly 'com.android.tools.lint:lint-api:26.6.3'
-    compileOnly 'com.android.tools.lint:lint-checks:26.6.3'
+    compileOnly 'com.android.tools.lint:lint-api:30.0.3'
+    compileOnly 'com.android.tools.lint:lint-checks:30.0.3'
 
     testImplementation "junit:junit:4.12"
-    testImplementation "com.android.tools.lint:lint:26.6.3"
-    testImplementation "com.android.tools.lint:lint-tests:26.6.3"
-    testImplementation "com.android.tools:testutils:26.6.3"
+    testImplementation "com.android.tools.lint:lint:30.0.3"
+    testImplementation "com.android.tools.lint:lint-tests:30.0.3"
+    testImplementation "com.android.tools:testutils:30.0.3"
 }
 
 
@@ -15,4 +15,9 @@ jar {
     manifest {
         attributes("Lint-Registry-v2": "com.batch.android.lint.BatchIssueRegistry")
     }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }

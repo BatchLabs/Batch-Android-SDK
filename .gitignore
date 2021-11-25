@@ -12,6 +12,7 @@ javadoc
 public-sdk/Batch.aar
 public-sdk/Batch.aar.asc
 public-sdk/Batch.mapping.txt
+node_modules/
 
 # Recommended ignore from Gradle
 **/.idea/dataSources.*

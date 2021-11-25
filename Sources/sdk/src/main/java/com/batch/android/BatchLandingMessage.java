@@ -18,13 +18,33 @@ public class BatchLandingMessage extends BatchMessage implements PushUserActionS
 {
     public static final String KIND = "landing";
 
+    private static final String GOOGLE_PREFIX = "google.";
+
     private Bundle payload;
     private JSONObject landing;
 
     protected BatchLandingMessage(@NonNull Bundle rawPayload, @NonNull JSONObject parsedLanding)
     {
-        payload = rawPayload;
+        payload = cleanBundle(rawPayload);
         landing = parsedLanding;
+    }
+
+    /**
+     * Remove reserved firebase's keys from a bundle
+     *
+     * @param bundle bundle to clean
+     * @return A cleaned bundle without google's keys
+     */
+    private Bundle cleanBundle(Bundle bundle)
+    {
+        Bundle copy = new Bundle(bundle);
+        Set<String> keys = bundle.keySet();
+        for (String key : keys) {
+            if (key != null && key.startsWith(GOOGLE_PREFIX)) {
+                copy.remove(key);
+            }
+        }
+        return copy;
     }
 
     @Override
@@ -42,10 +62,13 @@ public class BatchLandingMessage extends BatchMessage implements PushUserActionS
         JSONObject json = new JSONObject();
         Set<String> keys = payload.keySet();
         for (String key : keys) {
-            try {
-                json.put(key, payload.getString(key));
-            } catch (JSONException e) {
-                // Ignore
+            Object value = payload.get(key);
+            if (value instanceof String) {
+                try {
+                    json.put(key, value.toString());
+                } catch (JSONException e) {
+                    //ignore
+                }
             }
         }
         return json;

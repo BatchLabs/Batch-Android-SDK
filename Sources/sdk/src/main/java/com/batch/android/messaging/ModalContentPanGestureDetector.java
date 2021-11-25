@@ -346,6 +346,9 @@ public class ModalContentPanGestureDetector implements GestureDetector.OnGesture
                 float scaleRatio = Math.min(1,
                         Math.max(SMALLEST_SCALE_RATIO,
                                 1 + ( -1 * Math.abs(translationY) * SCALE_PAN_MULTIPLIER )));
+                if (Float.isNaN(scaleRatio)) {
+                    break;
+                }
 
                 if (scaleRatio <= SCALE_RATIO_DISMISS_THRESHOLD) {
                     if (!shouldDismissOnTouchUp) {

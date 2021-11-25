@@ -51,7 +51,7 @@ public class WipeDataTest
 
         final CampaignManager campaignManager = DITestUtils.mockSingletonDependency(CampaignManager.class,
                 null);
-        campaignManager.saveCampaignsResponse(c, j);
+        //campaignManager.saveCampaignsResponse(c, j);
 
         final LocalCampaign fakeCampaign = new LocalCampaign();
         final List<LocalCampaign> fakeCampaignList = new ArrayList<>();

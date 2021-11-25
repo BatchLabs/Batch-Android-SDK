@@ -50,4 +50,10 @@ public class EventLocalCampaignTrigger implements LocalCampaign.Trigger
 
         return true;
     }
+
+    @Override
+    public String getType()
+    {
+        return "EVENT";
+    }
 }

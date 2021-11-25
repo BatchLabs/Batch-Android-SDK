@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.internal.matchers.Null;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -296,6 +297,13 @@ class MockDataSource implements UserDatasource
     public void setAttribute(@NonNull String key,
                              @NonNull Date attribute) throws UserDatabaseException
     {}
+
+    @Override
+    public void setAttribute(@NonNull String key,
+                             @NonNull URI attribute) throws UserDatabaseException
+    {
+
+    }
 
     @Override
     public void removeAttribute(@NonNull String key) throws UserDatabaseException {}

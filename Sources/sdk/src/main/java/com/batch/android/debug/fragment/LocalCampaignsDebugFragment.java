@@ -26,7 +26,7 @@ import com.batch.android.di.providers.LocalCampaignsWebserviceListenerImplProvid
 import com.batch.android.di.providers.TaskExecutorProvider;
 import com.batch.android.localcampaigns.CampaignManager;
 import com.batch.android.localcampaigns.model.LocalCampaign;
-import com.batch.android.query.response.AbstractLocalCampaignsResponse;
+import com.batch.android.query.response.LocalCampaignsResponse;
 import com.batch.android.webservice.listener.LocalCampaignsWebserviceListener;
 
 import java.util.ArrayList;
@@ -51,7 +51,7 @@ public class LocalCampaignsDebugFragment extends Fragment
                         LocalCampaignsWebserviceListenerImplProvider.get();
 
                 @Override
-                public void onSuccess(List<AbstractLocalCampaignsResponse> response)
+                public void onSuccess(List<LocalCampaignsResponse> response)
                 {
                     sdkImpl.onSuccess(response);
                     Activity activity = getActivity();

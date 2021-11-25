@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -213,6 +214,8 @@ public class BatchUserTest extends DITest
         editor.setAttribute("today", new Date());
         editor.setAttribute("float_value", 3.2);
         editor.setAttribute("int_value", 4);
+        editor.setAttribute("url_value", new URI("batch://batch.com"));
+        editor.setAttribute("wrong_url_value", new URI("batch.com"));
         editor.save(false);
 
         MockBatchAttributesFetchListener listener = new MockBatchAttributesFetchListener();
@@ -225,13 +228,21 @@ public class BatchUserTest extends DITest
         assertTrue(listener.didFinish());
         assertFalse(listener.didFail());
         assertNotNull(result);
-        assertEquals(3, listener.getAttributes().size()); // 3 attributes were set
+        assertEquals(4, listener.getAttributes().size()); // 3 attributes were set
+
         BatchUserAttribute dateValue = result.get("today");
+        BatchUserAttribute urlValue = result.get("url_value");
+        BatchUserAttribute wrongUrlValue = result.get("wrong_url_value");
         assertNotNull(dateValue);
         assertNull(dateValue.getStringValue());
         assertNull(dateValue.getNumberValue());
         assertNull(dateValue.getBooleanValue());
+        assertNull(dateValue.getUriValue());
         assertNotNull(dateValue.getDateValue());
+
+        assertNull(wrongUrlValue);
+        assertNotNull(urlValue);
+        assertNotNull(urlValue.getUriValue());
 
         // remove changes from test
         editor.clearAttributes();

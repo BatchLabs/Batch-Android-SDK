@@ -11,13 +11,14 @@ import com.batch.android.post.JSONPostDataProvider;
 import com.batch.android.post.PostDataProvider;
 import com.batch.android.query.Query;
 import com.batch.android.query.QueryType;
-import com.batch.android.query.response.AttributesCheckResponse;
-import com.batch.android.query.response.AttributesSendResponse;
-import com.batch.android.query.response.LocalCampaignsResponse;
-import com.batch.android.query.response.PushResponse;
 import com.batch.android.query.response.Response;
-import com.batch.android.query.response.StartResponse;
-import com.batch.android.query.response.TrackingResponse;
+import com.batch.android.query.serialization.deserializers.AttributesCheckResponseDeserializer;
+import com.batch.android.query.serialization.deserializers.AttributesSendResponseDeserializer;
+import com.batch.android.query.serialization.deserializers.LocalCampaignsResponseDeserializer;
+import com.batch.android.query.serialization.deserializers.PushResponseDeserializer;
+import com.batch.android.query.serialization.deserializers.ResponseDeserializer;
+import com.batch.android.query.serialization.deserializers.StartResponseDeserializer;
+import com.batch.android.query.serialization.deserializers.TrackingResponseDeserializer;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -178,30 +179,31 @@ abstract class BatchQueryWebservice extends BatchWebservice
             }
 
             /*
-             * Build response depending on query type
+             * Instantiate the right deserializer according to the query type
              */
-            Response resp = null;
+            ResponseDeserializer responseDeserializer = null;
             switch (query.getType()) {
                 case START:
-                    resp = new StartResponse(applicationContext, response);
+                    responseDeserializer = new StartResponseDeserializer(response);
                     break;
                 case TRACKING:
-                    resp = new TrackingResponse(applicationContext, response);
+                    responseDeserializer = new TrackingResponseDeserializer(response);
                     break;
                 case PUSH:
-                    resp = new PushResponse(applicationContext, response);
+                    responseDeserializer = new PushResponseDeserializer(response);
                     break;
                 case ATTRIBUTES:
-                    resp = new AttributesSendResponse(applicationContext, response);
+                    responseDeserializer = new AttributesSendResponseDeserializer(response);
                     break;
                 case ATTRIBUTES_CHECK:
-                    resp = new AttributesCheckResponse(applicationContext, response);
+                    responseDeserializer = new AttributesCheckResponseDeserializer(response);
                     break;
                 case LOCAL_CAMPAIGNS:
-                    resp = new LocalCampaignsResponse(applicationContext, response);
+                    responseDeserializer = new LocalCampaignsResponseDeserializer(response);
                     break;
             }
-
+            // Build the response
+            Response resp = responseDeserializer.deserialize();
             this.responses.add(resp);
         }
     }

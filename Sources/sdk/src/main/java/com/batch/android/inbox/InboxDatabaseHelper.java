@@ -6,7 +6,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 /**
  * SQLite Database helper for Batch's Inbox
- *
  */
 public final class InboxDatabaseHelper extends SQLiteOpenHelper
 {
@@ -27,13 +26,14 @@ public final class InboxDatabaseHelper extends SQLiteOpenHelper
     protected static final String COLUMN_TITLE = "title";
     protected static final String COLUMN_BODY = "body";
     protected static final String COLUMN_UNREAD = "unread";
+    protected static final String COLUMN_DELETED = "deleted";
     protected static final String COLUMN_DATE = "date";
     protected static final String COLUMN_PAYLOAD = "payload";
 
 // -------------------------------------------->
 
     private static final String DATABASE_NAME = "ba_in.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
 // -------------------------------------------->
 
@@ -60,6 +60,7 @@ public final class InboxDatabaseHelper extends SQLiteOpenHelper
                 + COLUMN_TITLE + " text not null, "
                 + COLUMN_BODY + " text not null, "
                 + COLUMN_UNREAD + " integer not null default 0 check(" + COLUMN_UNREAD + " IN (0,1)), "
+                + COLUMN_DELETED + " integer not null default 0 check(" + COLUMN_DELETED + " IN (0,1)), "
                 + COLUMN_DATE + " integer not null, "
                 + COLUMN_PAYLOAD + " text, "
                 + "unique(" + COLUMN_NOTIFICATION_ID + "," + COLUMN_SEND_ID + "));");
@@ -79,7 +80,9 @@ public final class InboxDatabaseHelper extends SQLiteOpenHelper
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion)
     {
-
+        if (oldVersion < 2) {
+            database.execSQL("ALTER TABLE " + TABLE_NOTIFICATIONS + " ADD COLUMN " + COLUMN_DELETED + " integer not null default 0 check(" + COLUMN_DELETED + " IN (0,1)) ");
+        }
     }
 
 }

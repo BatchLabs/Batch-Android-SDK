@@ -1,25 +1,18 @@
 package com.batch.android.query.response;
 
-import android.content.Context;
-
-import com.batch.android.json.JSONException;
-import com.batch.android.json.JSONObject;
 import com.batch.android.query.QueryType;
 import com.batch.android.query.TrackingQuery;
 
 /**
  * Response for a {@link TrackingQuery}
- *
  */
 public class TrackingResponse extends Response
 {
     /**
-     * @param context
-     * @param response
-     * @throws JSONException
+     * @param queryID id of the query
      */
-    public TrackingResponse(Context context, JSONObject response) throws JSONException
+    public TrackingResponse(String queryID)
     {
-        super(context, QueryType.TRACKING, response);
+        super(QueryType.TRACKING, queryID);
     }
 }

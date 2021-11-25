@@ -22,7 +22,7 @@ public class BatchActivityLifecycleHelper implements Application.ActivityLifecyc
     @Override
     public void onActivityCreated(Activity activity, Bundle savedInstanceState)
     {
-
+        Batch.onCreate(activity);
     }
 
     @Override

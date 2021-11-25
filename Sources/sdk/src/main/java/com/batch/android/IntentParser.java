@@ -1,7 +1,6 @@
 package com.batch.android;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -106,104 +105,113 @@ public final class IntentParser
     }
 
     /**
-     * Does this intent contains a Batch notification token that tells the user did open from push
-     * <p>
-     * Calling this consumes the open: subsequent calls for the same intent will return false
+     * Does this intent comes from a push notification
+     *
+     * @return true if it does
      */
-    public boolean shouldHandleOpen()
+    public boolean comesFromPush()
     {
-        try {
-            if (intent == null) {
-                Logger.internal(TAG, "shouldHandleOpen : No intent found");
-                return false;
-            }
-
-            /*
-             * Check if already used
-             */
-            if (intent.getBooleanExtra(ALREADY_TRACKED_OPEN_KEY, false)) {
-                Logger.internal(TAG, "shouldHandleOpen : Already tracked open");
-                return false;
-            }
-
-
-            boolean fromPush = intent.getBooleanExtra(FROM_PUSH_KEY, false);
-            if (fromPush) {
-                // Set already used
-                intent.putExtra(ALREADY_TRACKED_OPEN_KEY, true);
-            }
-
-            return fromPush;
-        } catch (Exception e) {
-            Logger.internal(TAG, "Error while checking if open is from push", e);
+        if (intent == null) {
+            Logger.internal(TAG, "intentComesFromPush : No intent found");
             return false;
+        }
+        return intent.getBooleanExtra(FROM_PUSH_KEY, false);
+
+    }
+
+    /**
+     * Does the open has been already tracked
+     *
+     * @return true if it was
+     */
+    public boolean isOpenAlreadyTracked()
+    {
+        if (intent == null) {
+            Logger.internal(TAG, "isOpenAlreadyTracked : No intent found");
+            return false;
+        }
+        return intent.getBooleanExtra(ALREADY_TRACKED_OPEN_KEY, false);
+    }
+
+    /**
+     * Mark the open as already tracked
+     */
+    public void markOpenAsAlreadyTracked()
+    {
+        if (comesFromPush()) {
+            intent.putExtra(ALREADY_TRACKED_OPEN_KEY, true);
+        } else {
+            Logger.internal(TAG, "Trying to consume an open that does not come from a push");
         }
     }
 
     /**
      * Does this intent contains a Batch Messaging landing message
      *
-     * @param context
-     * @return
+     * @return true if it does
      */
-    public BatchMessage getLanding(Context context)
+    public boolean hasLanding()
     {
-        if (context == null) {
-            throw new NullPointerException("context==null");
+        if (payload == null) {
+            Logger.internal(TAG, "hasLandingMessage : No valid payload in intent");
+            return false;
         }
-
-        try {
-            if (intent == null) {
-                Logger.internal(TAG, "getLanding : No intent found");
-                return null;
-            }
-
-            if (payload == null) {
-                Logger.internal(TAG, "getLanding : No valid payload in intent");
-                return null;
-            }
-
-            /*
-             * Check if already used
-             */
-            if (intent.getBooleanExtra(ALREADY_SHOWN_LANDING_KEY, false)) {
-                Logger.internal(TAG, "getLanding : Already used intent");
-                return null;
-            }
-
-
-            BatchMessage message = payload.getLandingMessage();
-            if (message != null) {
-                // Set already used
-                intent.putExtra(ALREADY_SHOWN_LANDING_KEY, true);
-            }
-
-            return message;
-        } catch (Exception e) {
-            Logger.internal(TAG, "Error while getting the embedded landing", e);
-            return null;
-        }
+        return payload.getLandingMessage() != null;
     }
 
     /**
-     * Retrieve the push id from the intent.<br>
-     * You should use {@link #shouldHandleOpen()} before calling this method.
+     * Does the landing message has been already shown
      *
-     * @param context
-     * @return
+     * @return true if it was
      */
-    public String getPushId(Context context)
+    public boolean isLandingAlreadyShown()
     {
-        if (context == null) {
-            throw new NullPointerException("context==null");
+        if (intent == null) {
+            Logger.internal(TAG, "isLandingAlreadyShown : No intent found");
+            return false;
         }
+        return intent.getBooleanExtra(ALREADY_SHOWN_LANDING_KEY, false);
+    }
 
+    /**
+     * Mark the open as already tracked
+     */
+    public void markLandingAsAlreadyShown()
+    {
+        if (intent == null) {
+            Logger.internal(TAG, "markLandingAsAlreadyShown : No intent found");
+            return ;
+        }
+        intent.putExtra(ALREADY_SHOWN_LANDING_KEY, true);
+    }
+
+    /**
+     * Get the landing message and mark it as used
+     *
+     * @return Batch Message to display
+     */
+    @Nullable
+    public BatchMessage getLanding()
+    {
+        if (payload == null) {
+            Logger.internal(TAG, "getLanding : No valid payload in intent");
+            return null;
+        }
+        return payload.getLandingMessage();
+    }
+
+    /**
+     * Retrieve the push identifier from the intent.
+     *
+     * @return the push identifier
+     */
+    public String getPushId()
+    {
         try {
             if (intent == null) {
                 Logger.internal(TAG, "getPushId : No intent found");
                 return null;
             }
-
             return intent.getStringExtra(PUSH_ID_KEY);
         } catch (Exception e) {
             Logger.internal(TAG, "Error while retrieving push id", e);
@@ -214,7 +222,7 @@ public final class IntentParser
     /**
      * Retrieve the push data from the intent.<br>
      *
-     * @return
+     * @return the push data
      */
     public InternalPushData getPushData()
     {

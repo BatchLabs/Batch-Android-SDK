@@ -211,16 +211,16 @@ abstract public class BatchWebservice extends Webservice
                     if (Batch.shouldUseAdvertisingID()) {
                         AdvertisingID advertisingID = Batch.getAdvertisingID();
 
-                        boolean isIdfaAvailble = advertisingID.isReady();
-                        if (isIdfaAvailble) {
+                        boolean isIdfaAvailable = advertisingID.isReady() && advertisingID.isNotNull();
+                        if (isIdfaAvailable) {
                             ids.put(parameter, advertisingID.get());
                         }
                     }
                 } else if (SystemParameterShortName.ADVERTISING_ID_OPTIN.shortName.equals(parameter)) {
                     AdvertisingID advertisingID = Batch.getAdvertisingID();
 
-                    boolean isIdfaAvailble = advertisingID.isReady();
-                    if (isIdfaAvailble) {
+                    boolean isIdfaAvailable = advertisingID.isReady();
+                    if (isIdfaAvailable) {
                         ids.put(parameter, !advertisingID.isLimited());
                     }
                 } else if (SystemParameterShortName.BRIDGE_VERSION.shortName.equals(parameter)) {
@@ -501,9 +501,8 @@ abstract public class BatchWebservice extends Webservice
     private static String generateAcceptLanguage(Context applicationContext)
     {
         try {
-            String language = SystemParameterHelper.getDeviceLocale().getLanguage();
-            String region = SystemParameterHelper.getDeviceLocale().getCountry();
-
+            String language = SystemParameterHelper.getDeviceLanguage();
+            String region = SystemParameterHelper.getDeviceCountry();
             return String.format("%s-%s", language, region);
         } catch (Exception e) {
             Logger.internal(TAG, "Error while building Accept Language header", e);

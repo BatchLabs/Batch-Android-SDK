@@ -30,4 +30,6 @@ public final class InternalEvents
     public static final String OPT_OUT = "_OPT_OUT";
     public static final String OPT_OUT_AND_WIPE_DATA = "_OPTOUT_WIPE_DATA";
 
+    public static final String FIND_MY_INSTALLATION = "_FIND_MY_INSTALLATION";
+
 }

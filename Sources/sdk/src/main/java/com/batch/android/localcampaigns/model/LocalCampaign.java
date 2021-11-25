@@ -142,7 +142,17 @@ public class LocalCampaign
      */
     public interface Trigger
     {
-
+        /**
+         * Type of trigger, possible values :
+         * <li>NOW</li>
+         * <li>EVENT</li>
+         * <li>NEXT_SESSION</li>
+         * <li>CAMPAIGNS_LOADED</li>
+         * <li>CAMPAIGNS_REFRESHED</li>
+         *
+         * @return type
+         */
+        String getType();
     }
 
     public void displayMessage()

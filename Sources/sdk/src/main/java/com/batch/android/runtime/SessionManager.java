@@ -13,6 +13,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.batch.android.core.Logger;
 import com.batch.android.core.Parameters;
+import com.batch.android.core.ExcludedActivityHelper;
 import com.batch.android.di.providers.LocalBroadcastManagerProvider;
 
 import java.util.UUID;
@@ -146,6 +147,9 @@ public class SessionManager implements ComponentCallbacks2, Application.Activity
     @Override
     public void onActivityCreated(Activity activity, Bundle bundle)
     {
+        if (ExcludedActivityHelper.activityIsExcludedFromManifest(activity)) {
+            return;
+        }
         createCount.incrementAndGet();
     }
 
@@ -158,6 +162,9 @@ public class SessionManager implements ComponentCallbacks2, Application.Activity
     @Override
     public void onActivityResumed(Activity activity)
     {
+        if (ExcludedActivityHelper.activityIsExcludedFromManifest(activity)) {
+            return;
+        }
         startNewSessionIfNeeded(activity.getApplicationContext());
         backgroundSessionExpirationUptime = null;
     }
@@ -183,6 +190,9 @@ public class SessionManager implements ComponentCallbacks2, Application.Activity
     @Override
     public void onActivityDestroyed(Activity activity)
     {
+        if (ExcludedActivityHelper.activityIsExcludedFromManifest(activity)) {
+            return;
+        }
         createCount.decrementAndGet();
 
         if (areAllActivitiesDestroyed()) {

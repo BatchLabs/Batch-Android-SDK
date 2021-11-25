@@ -155,9 +155,7 @@ public class InboxSyncWebserviceClient extends BatchWebservice implements TaskRu
                             deleteIds.add(deleteId);
                         }
                     }
-
-                    InboxDatasourceProvider.get(applicationContext)
-                            .deleteNotifications(deleteIds);
+                    InboxDatasourceProvider.get(applicationContext).deleteNotifications(deleteIds);
                 }
             }
 

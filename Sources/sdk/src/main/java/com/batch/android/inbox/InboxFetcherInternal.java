@@ -25,6 +25,7 @@ import com.batch.android.webservice.listener.InboxWebserviceListener;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -200,6 +201,7 @@ public class InboxFetcherInternal
             if (internalNotif != null) {
                 for (JSONObject eventData : getEventDatas(internalNotif)) {
                     trackerModule.track(InternalEvents.INBOX_MARK_AS_READ, eventData);
+                    InboxDatasourceProvider.get(context).markNotificationAsRead(notifID);
                     // Potentially the same object, but they might be different
                     PrivateNotificationContentHelper.getInternalContent(notification).isUnread = false;
                     internalNotif.isUnread = false;
@@ -216,10 +218,9 @@ public class InboxFetcherInternal
         synchronized (fetchedNotifications) {
             if (fetchedNotifications.size() > 0) {
                 for (JSONObject eventData : getEventDatas(fetchedNotifications.get(0))) {
-                    trackerModule.track(InternalEvents.INBOX_MARK_ALL_AS_READ,
-                            eventData);
+                    trackerModule.track(InternalEvents.INBOX_MARK_ALL_AS_READ, eventData);
                 }
-
+                InboxDatasourceProvider.get(context).markAllAsRead(new Date().getTime(), fetcherId);
                 for (InboxNotificationContentInternal content : fetchedNotifications) {
                     content.isUnread = false;
                 }
@@ -244,11 +245,12 @@ public class InboxFetcherInternal
 
             if (internalNotif != null) {
                 for (JSONObject eventData : getEventDatas(internalNotif)) {
-                    trackerModule.track(InternalEvents.INBOX_MARK_AS_DELETED,
-                            eventData);
+                    trackerModule.track(InternalEvents.INBOX_MARK_AS_DELETED, eventData);
+                    InboxDatasourceProvider.get(context).markNotificationAsDeleted(notifID);
                     // Potentially the same object, but they might be different
                     PrivateNotificationContentHelper.getInternalContent(notification).isDeleted = true;
                     internalNotif.isDeleted = true;
+                    fetchedNotifications.remove(internalNotif);
                 }
             } else {
                 Logger.internal(TAG,
@@ -260,18 +262,9 @@ public class InboxFetcherInternal
     @NonNull
     private static List<BatchInboxNotificationContent> convertInternalModelsToPublic(@NonNull List<InboxNotificationContentInternal> privateNotifications)
     {
-        return convertInternalModelsToPublic(privateNotifications, false);
-    }
-
-    @NonNull
-    private static List<BatchInboxNotificationContent> convertInternalModelsToPublic(@NonNull List<InboxNotificationContentInternal> privateNotifications,
-                                                                                     boolean filterDeleted)
-    {
         final List<BatchInboxNotificationContent> res = new ArrayList<>();
         for (InboxNotificationContentInternal privateNotification : privateNotifications) {
-            if (!filterDeleted || !privateNotification.isDeleted) {
-                res.add(PrivateNotificationContentHelper.getPublicContent(privateNotification));
-            }
+            res.add(PrivateNotificationContentHelper.getPublicContent(privateNotification));
         }
         return res;
     }
@@ -537,7 +530,7 @@ public class InboxFetcherInternal
     public List<BatchInboxNotificationContent> getPublicFetchedNotifications()
     {
         synchronized (fetchedNotifications) {
-            return convertInternalModelsToPublic(this.fetchedNotifications, true);
+            return convertInternalModelsToPublic(this.fetchedNotifications);
         }
     }
 

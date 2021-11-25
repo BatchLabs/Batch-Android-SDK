@@ -2,11 +2,10 @@ package com.batch.android.user;
 
 /**
  * Define the type of an attribute
- *
  */
 public enum AttributeType
 {
-    DELETED(0, 'u'),
+    DELETED(0, 'x'),
 
     STRING(1, 's'),
 
@@ -16,7 +15,9 @@ public enum AttributeType
 
     BOOL(4, 'b'),
 
-    DATE(5, 't');
+    DATE(5, 't'),
+
+    URL(6, 'u');
 
 // ---------------------------------------->
 

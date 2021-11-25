@@ -66,6 +66,13 @@ public class BatchInboxNotificationContent
         return internalContent.isUnread;
     }
 
+    /**
+     * Flag indicating whether this notification is deleted or not.
+     *
+     * @return true if notification is deleted
+     * @deprecated You should refresh your copy of the data with getFetchedNotifications() after using markAsDeleted.
+     */
+    @Deprecated
     public boolean isDeleted()
     {
         return internalContent.isDeleted;

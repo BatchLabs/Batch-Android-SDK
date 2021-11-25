@@ -10,11 +10,6 @@
  * We can compare a previously generated signature file with the current API using the metalavaCompareSignature task.
  */
 
-def metalavaJarFile = project.rootProject.file('../prebuilt/metalava.jar')
-if (!metalavaJarFile.exists()) {
-    logger.warn('WARNING: Metalava jar not found')
-}
-
 /**
  * Recursively list all packages from a directory
  * The package must contains at least one .java file to be included
@@ -37,19 +32,33 @@ void getPackagesInDirectory(File rootDirectory, File directory, Set<String> pack
     }
 }
 
+
+/**
+ * Essential metalava args
+ * @return
+ */
+List<String> getBaseMetalavaArgs() {
+    def args = [
+            '-cp', project.rootProject.file('../prebuilt/*'),
+            'com.android.tools.metalava.Driver',
+            '--format=v2',
+    ]
+    return args
+}
+
 /**
  * Generate the list of arguments to use with metalava
- * @param jarFile
  * @param sourceSet
  * @return
  */
-List<String> getCommonMetalavaArgs(jarFile, sourceSet) {
-    def args = [
-            '-jar', jarFile.path,
-            '--format=v2',
+List<String> getCommonProjectMetalavaArgs(sourceSet) {
+
+    def args = getBaseMetalavaArgs()
+    args.addAll([
+            '--classpath', project.android.getBootClasspath().join(':'),
             '--manifest', sourceSet.manifest.srcFile, // Manifest keep track of permissions set
             '--show-single-annotation', 'com.batch.android.annotation.PublicSDK',
-    ]
+    ])
 
     def packagesToHide = new HashSet<String>()
     sourceSet.java.srcDirs.each {
@@ -87,7 +96,7 @@ static void addBaseline(args, baselineFile) {
 // Metalava doesn't take into account glob like com.batch.android.* so we need to get all packages/sub-packages manually
 task metalavaGenerateSignature {
     doFirst {
-        def signatureArgs = getCommonMetalavaArgs(metalavaJarFile, android.sourceSets.main)
+        def signatureArgs = getCommonProjectMetalavaArgs(android.sourceSets.main)
         addBaseline(signatureArgs, project.file('metalava-baseline.txt'))
         signatureArgs.addAll([
                 '--source-path', android.sourceSets.main.java.srcDirs.toArray().join(':'),
@@ -106,10 +115,72 @@ task metalavaGenerateSignature {
     }
 }
 
+android.libraryVariants.all { variant ->
+
+    task ("metalavaGenerateStubs${variant.name.capitalize()}", dependsOn: ['assembleRelease']) {
+        doFirst {
+            def signatureArgs = getCommonProjectMetalavaArgs(android.sourceSets.main)
+            addBaseline(signatureArgs, project.file('metalava-baseline.txt'))
+            signatureArgs.addAll([
+                    '--classpath', files(variant.javaCompile.classpath.files, project.android.getBootClasspath()).join(":"),
+                    '--source-path', android.sourceSets.main.java.srcDirs.toArray().join(':'),
+                    '--doc-stubs', "$buildDir.path/metalava/doc-stubs/"
+            ])
+            exec {
+                executable = 'java'
+                args = signatureArgs
+            }
+        }
+    }
+
+    task("metalavaGenerateJavadoc${variant.name.capitalize()}", type: Javadoc, dependsOn: ['assembleRelease', "metalavaGenerateStubs${variant.name.capitalize()}"]) {
+        title = "Batch Android SDK " + android.defaultConfig.versionName
+        source = "$buildDir.path/metalava/doc-stubs/"
+        destinationDir = project.rootProject.file('../javadoc')
+        failOnError = false
+        
+        doFirst {
+	        classpath = files(variant.javaCompile.classpath.files, project.android.getBootClasspath())
+	    }
+	
+        options.links("http://docs.oracle.com/javase/7/docs/api/");
+        options.links("http://d.android.com/reference/");
+        exclude '**/BuildConfig.java'
+        exclude '**/R.java'
+        
+        
+        // We never want to cache this step
+        outputs.cacheIf { false }
+        outputs.upToDateWhen { false }
+    }
+
+}
+
+/**
+ * Old metalava tasks, which can't be used as we need to resolve the classpath
+ * to properly build on Java 11+
+ **/
+
+/// Generate javadoc using metalava doc stubs
+/*
+task metalavaGenerateJavadoc(type: Javadoc, dependsOn: ['metalavaGenerateStubs']) {
+    source = "$buildDir.path/metalava/doc-stubs/"
+    destinationDir = project.rootProject.file('../javadoc')
+    classpath = project.files(project.android.getBootClasspath())
+    title = "Batch Android SDK " + android.defaultConfig.versionName
+    failOnError = false
+    options.addStringOption('Xdoclint:none', '-quiet')
+    // We never want to cache this step
+    outputs.cacheIf { false }
+    outputs.upToDateWhen { false }
+}
+*/
+
 // Generate doc stubs using metalava API
+/*
 task metalavaGenerateStubs {
     doFirst {
-        def signatureArgs = getCommonMetalavaArgs(metalavaJarFile, android.sourceSets.main)
+        def signatureArgs = getCommonProjectMetalavaArgs(android.sourceSets.main)
         addBaseline(signatureArgs, project.file('metalava-baseline.txt'))
         signatureArgs.addAll([
                 '--source-path', android.sourceSets.main.java.srcDirs.toArray().join(':'),
@@ -121,14 +192,9 @@ task metalavaGenerateStubs {
         }
     }
 }
+*/
 
-/// Generate javadoc using metalava doc stubs
-task metalavaGenerateJavadoc(type: Javadoc, dependsOn: ['metalavaGenerateStubs']) {
-    source = "$buildDir.path/metalava/doc-stubs/"
-    destinationDir = project.rootProject.file('../javadoc')
-    title = "Batch Android SDK " + android.defaultConfig.versionName
-    failOnError = false
-}
+/** **/
 
 // Generate a tmp signature file of the current code in project
 // Compare the newly generated tmp signature file with the previous signature file
@@ -137,7 +203,7 @@ task metalavaCompareSignature {
     doFirst {
         // Generate tmp signature file of current API
         def tmpSignatureFile = buildDir.path + '/outputs/metalava/api.txt'
-        def tmpSignatureArgs = getCommonMetalavaArgs(metalavaJarFile, android.sourceSets.main)
+        def tmpSignatureArgs = getCommonProjectMetalavaArgs(android.sourceSets.main)
         addBaseline(tmpSignatureArgs, project.file('metalava-baseline.txt'))
         tmpSignatureArgs.addAll([
                 '--source-path', android.sourceSets.main.java.srcDirs.toArray().join(':'),
@@ -150,12 +216,11 @@ task metalavaCompareSignature {
         }
 
         // Compare tmp signature with previous signature
-        def compareSignatureArgs = [
-                '-jar', metalavaJarFile.path,
+        def compareSignatureArgs = getBaseMetalavaArgs()
+        compareSignatureArgs.addAll([
                 '--source-files', tmpSignatureFile,
                 '--check-compatibility:api:current', project.rootProject.file('../metalava-api/api-latest.txt'),
-                '--format=v2',
-        ]
+        ])
         addBaseline(compareSignatureArgs, project.file('metalava-baseline.txt'))
         exec {
             ignoreExitValue = false

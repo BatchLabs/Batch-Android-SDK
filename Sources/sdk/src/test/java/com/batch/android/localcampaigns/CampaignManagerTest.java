@@ -2,7 +2,6 @@ package com.batch.android.localcampaigns;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.MediumTest;
@@ -10,13 +9,13 @@ import androidx.test.filters.MediumTest;
 import com.batch.android.core.DateProvider;
 import com.batch.android.date.BatchDate;
 import com.batch.android.date.UTCDate;
-import com.batch.android.di.providers.CampaignManagerProvider;
 import com.batch.android.di.providers.LandingOutputProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.localcampaigns.model.LocalCampaign;
 import com.batch.android.query.response.LocalCampaignsResponse;
+import com.batch.android.query.serialization.deserializers.LocalCampaignsResponseDeserializer;
 
 import org.junit.After;
 import org.junit.Before;
@@ -33,13 +32,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static android.os.Looper.getMainLooper;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(AndroidJUnit4.class)
 @MediumTest
@@ -79,12 +76,12 @@ public class CampaignManagerTest
     }
 
     @Test
-    public void testSaveCampaigns() throws NoSuchFieldException, IllegalAccessException
+    public void testSaveCampaigns() throws NoSuchFieldException, IllegalAccessException, JSONException
     {
         removeExistingSave();
         assertFalse(campaignManager.hasSavedCampaigns(context));
-
-        campaignManager.saveCampaignsResponse(context, jsonCampaigns);
+        LocalCampaignsResponse response = new LocalCampaignsResponseDeserializer(jsonCampaigns).deserialize();
+        campaignManager.saveCampaigns(context, response.getCampaigns());
         assertTrue(campaignManager.hasSavedCampaigns(context));
 
         removeExistingSave();
@@ -111,7 +108,8 @@ public class CampaignManagerTest
 
         // Save using the code that will actually save the response in production, rather
         // than reimplementing it in the tests.
-        new SyncLocalCampaignsResponse(context, jsonCampaigns, true);
+        LocalCampaignsResponse response = new LocalCampaignsResponseDeserializer(jsonCampaigns).deserialize();
+        campaignManager.saveCampaigns(context, response.getCampaigns());
         assertTrue(campaignManager.hasSavedCampaigns(context));
         assertEquals(0, campaignManager.getCampaignList().size());
 
@@ -123,10 +121,11 @@ public class CampaignManagerTest
     }
 
     @Test
-    public void testLoadCampaigns() throws NoSuchFieldException, IllegalAccessException
+    public void testLoadCampaigns() throws NoSuchFieldException, IllegalAccessException, JSONException
     {
         removeExistingSave();
-        campaignManager.saveCampaignsResponse(context, jsonCampaigns);
+        LocalCampaignsResponse response = new LocalCampaignsResponseDeserializer(jsonCampaigns).deserialize();
+        campaignManager.saveCampaigns(context, response.getCampaigns());
         assertTrue(campaignManager.getCampaignList().isEmpty());
 
         campaignManager.loadSavedCampaignResponse(context);
@@ -146,7 +145,7 @@ public class CampaignManagerTest
     }
 
     @Test
-    public void testCapping() throws NoSuchFieldException, IllegalAccessException, ViewTrackerUnavailableException
+    public void testCapping() throws NoSuchFieldException, IllegalAccessException, ViewTrackerUnavailableException, JSONException
     {
         reloadCampaigns();
 
@@ -184,7 +183,7 @@ public class CampaignManagerTest
     }
 
     @Test
-    public void testGracePeriod() throws NoSuchFieldException, IllegalAccessException, ViewTrackerUnavailableException
+    public void testGracePeriod() throws NoSuchFieldException, IllegalAccessException, ViewTrackerUnavailableException, JSONException
     {
         reloadCampaigns();
 
@@ -245,7 +244,7 @@ public class CampaignManagerTest
     }
 
     @Test
-    public void testStartEndDate() throws NoSuchFieldException, IllegalAccessException
+    public void testStartEndDate() throws NoSuchFieldException, IllegalAccessException, JSONException
     {
         reloadCampaigns();
 
@@ -327,10 +326,11 @@ public class CampaignManagerTest
         campaignManager.updateCampaignList(new ArrayList<>(0));
     }
 
-    private void reloadCampaigns() throws NoSuchFieldException, IllegalAccessException
+    private void reloadCampaigns() throws NoSuchFieldException, IllegalAccessException, JSONException
     {
         removeExistingSave();
-        campaignManager.saveCampaignsResponse(context, jsonCampaigns);
+        LocalCampaignsResponse response = new LocalCampaignsResponseDeserializer(jsonCampaigns).deserialize();
+        campaignManager.saveCampaigns(context, response.getCampaigns());
         campaignManager.loadSavedCampaignResponse(context);
     }
 
@@ -343,29 +343,12 @@ public class CampaignManagerTest
         campaign.startDate = new UTCDate(0);
         campaign.triggers.add(new LocalCampaign.Trigger()
         {
+            @Override
+            public String getType()
+            {
+                return "";
+            }
         });
         return campaign;
-    }
-
-    /**
-     * LocalCampaignsResponse implementation that calls saveCampaignsResponse synchronously
-     * instead of asynchronously.
-     */
-    static class SyncLocalCampaignsResponse extends LocalCampaignsResponse {
-
-        public SyncLocalCampaignsResponse(Context context,
-                                          JSONObject response,
-                                          boolean autosave) throws JSONException
-        {
-            super(context, response, autosave);
-        }
-
-        @Override
-        protected void saveResponse(@NonNull JSONObject response)
-        {
-            CampaignManagerProvider.get().saveCampaignsResponse(
-                    getContext(),
-                    response);
-        }
     }
 }

@@ -14,7 +14,7 @@ public class TestActivity extends Activity
     {
         super.onCreate(savedInstanceState);
         Batch.setConfig(new Config("TEST_API_KEY"));
-        Batch.onStart(this);
+        Batch.onCreate(this);
     }
 
     @Override
@@ -22,7 +22,7 @@ public class TestActivity extends Activity
                          @Nullable PersistableBundle persistentState)
     {
         super.onCreate(savedInstanceState, persistentState);
-        //Batch.onStart(this);
+        Batch.onStart(this);
     }
 
     @Override

@@ -40,7 +40,7 @@ public class IdentifierDebugFragment extends Fragment implements View.OnClickLis
         );
 
         AdvertisingID advertisingID = AdvertisingIDProvider.get();
-        if (advertisingID.isReady()) {
+        if (Batch.shouldUseAdvertisingID() && advertisingID.isReady() && advertisingID.isNotNull()) {
             shareContent = shareContent.concat(
                     String.format("%s: %s\n",
                             getString(R.string.com_batchsdk_identifier_debug_fragment_advertising_id),
@@ -99,7 +99,7 @@ public class IdentifierDebugFragment extends Fragment implements View.OnClickLis
         installId.setText(Batch.User.getInstallationID());
 
         AdvertisingID advertisingID = AdvertisingIDProvider.get();
-        if (advertisingID.isReady()) {
+        if (advertisingID.isReady() && advertisingID.isNotNull()) {
             advertisingId.setText(advertisingID.get());
         } else {
             advertisingId.setText(R.string.com_batchsdk_debug_view_empty);

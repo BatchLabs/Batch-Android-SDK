@@ -12,6 +12,7 @@ import com.batch.android.json.JSONObject;
 import com.batch.android.module.TrackerModule;
 import com.batch.android.user.AttributeType;
 
+import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +31,7 @@ public class BatchEventData
     private static final int MAXIMUM_VALUES = 15;
     private static final int MAXIMUM_TAGS = 10;
     private static final int MAXIMUM_STRING_LENGTH = 64;
+    private static final int MAXIMUM_URL_LENGTH = 2048;
 
     private Map<String, TypedAttribute> attributes;
     private Set<String> tags;
@@ -64,6 +66,8 @@ public class BatchEventData
                     put(key, (Integer) value);
                 } else if (value instanceof Long) {
                     put(key, (Long) value);
+                } else if (value instanceof URI) {
+                    put(key, (URI) value);
                 }
             }
         }
@@ -123,6 +127,22 @@ public class BatchEventData
     {
         if (enforceAttributesCount(key) && enforceAttributeName(key) && enforceStringValue(value)) {
             attributes.put(normalizeKey(key), new TypedAttribute(value, AttributeType.STRING));
+            return this;
+        }
+        return this;
+    }
+
+    /**
+     * Add an URL attribute for the specified key
+     *
+     * @param key   Attribute key. Should be made of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.
+     * @param value URL value to add. Can't be longer than 2048 characters, and can't be empty or null.
+     * @return Same BatchEventData instance, for chaining
+     */
+    public BatchEventData put(String key, URI value)
+    {
+        if (enforceAttributesCount(key) && enforceAttributeName(key) && enforceURIValue(value)) {
+            attributes.put(normalizeKey(key), new TypedAttribute(value, AttributeType.URL));
             return this;
         }
         return this;
@@ -268,6 +288,29 @@ public class BatchEventData
         if (value.length() > MAXIMUM_STRING_LENGTH) {
             Logger.internal(TrackerModule.TAG,
                     "BatchEventData: String attributes and tags can't be longer than " + MAXIMUM_STRING_LENGTH + " characters. Ignoring.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean enforceURIValue(URI value)
+    {
+        if (TextUtils.isEmpty(value.toString())) {
+            Logger.internal(TrackerModule.TAG,
+                    "BatchEventData: Cannot add a null or empty URL attribute/tag. Ignoring.");
+            return false;
+        }
+
+        if (value.toString().length() > MAXIMUM_URL_LENGTH) {
+            Logger.internal(TrackerModule.TAG,
+                    "BatchEventData: URL attributes can't be longer than " + MAXIMUM_URL_LENGTH + " characters. Ignoring.");
+            return false;
+        }
+
+        if (value.getScheme() == null || value.getAuthority() == null) {
+            Logger.error(TrackerModule.TAG,
+                    "BatchEventData: URL attributes must follow the format 'scheme://[authority][path][?query][#fragment]'. Ignoring.");
             return false;
         }
 

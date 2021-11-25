@@ -4,6 +4,8 @@ import androidx.annotation.Nullable;
 
 import com.batch.android.annotation.PublicSDK;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 
 @PublicSDK
@@ -54,10 +56,19 @@ public class BatchUserAttribute
         return null;
     }
 
+    @Nullable
+    public URI getUriValue()
+    {
+        if (type == Type.URL) {
+            return (URI) value;
+        }
+        return null;
+    }
+
     @PublicSDK
     public enum Type
     {
-        STRING, LONGLONG, DOUBLE, BOOL, DATE
+        STRING, LONGLONG, DOUBLE, BOOL, DATE, URL
     }
 }
 

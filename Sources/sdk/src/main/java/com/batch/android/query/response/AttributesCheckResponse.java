@@ -1,15 +1,10 @@
 package com.batch.android.query.response;
 
-import android.content.Context;
-
-import com.batch.android.json.JSONException;
-import com.batch.android.json.JSONObject;
 import com.batch.android.query.AttributesCheckQuery;
 import com.batch.android.query.QueryType;
 
 /**
  * Response for {@link AttributesCheckQuery}
- *
  */
 public class AttributesCheckResponse extends Response
 {
@@ -20,21 +15,9 @@ public class AttributesCheckResponse extends Response
 
     public Long time = null;
 
-    public AttributesCheckResponse(Context context, JSONObject response) throws JSONException
+    public AttributesCheckResponse(String queryID)
     {
-        super(context, QueryType.ATTRIBUTES_CHECK, response);
-
-        if (response.has("action") && !response.isNull("action")) {
-            actionString = response.getString("action");
-        }
-
-        if (response.has("ver") && !response.isNull("ver")) {
-            version = response.getLong("ver");
-        }
-
-        if (response.has("t") && !response.isNull("t")) {
-            version = response.getLong("t");
-        }
+        super(QueryType.ATTRIBUTES_CHECK, queryID);
     }
 
     public Action getAction()
@@ -63,5 +46,30 @@ public class AttributesCheckResponse extends Response
         RECHECK,
         RESEND,
         UNKNOWN
+    }
+
+    public void setActionString(String actionString)
+    {
+        this.actionString = actionString;
+    }
+
+    public long getVersion()
+    {
+        return version;
+    }
+
+    public void setVersion(long version)
+    {
+        this.version = version;
+    }
+
+    public Long getTime()
+    {
+        return time;
+    }
+
+    public void setTime(Long time)
+    {
+        this.time = time;
     }
 }

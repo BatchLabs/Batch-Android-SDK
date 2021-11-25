@@ -24,12 +24,12 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Test the SQLite DAO
- *
  */
 @RunWith(AndroidJUnit4.class)
 @MediumTest
@@ -251,6 +251,8 @@ public class DatasourceTest
                 cursor.getString(cursor.getColumnIndex(InboxDatabaseHelper.COLUMN_BODY)));
         assertEquals(0,
                 cursor.getInt(cursor.getColumnIndex(InboxDatabaseHelper.COLUMN_UNREAD)));
+        assertEquals(0,
+                cursor.getInt(cursor.getColumnIndex(InboxDatabaseHelper.COLUMN_DELETED)));
         assertEquals(now.getTime(),
                 cursor.getLong(cursor.getColumnIndex(InboxDatabaseHelper.COLUMN_DATE)));
         assertEquals(new JSONObject(payload).toString(),
@@ -366,6 +368,110 @@ public class DatasourceTest
                 cursor2.getString(cursor2.getColumnIndex(InboxDatabaseHelper.COLUMN_INSTALL_ID)));
         assertEquals("updated-custom-id",
                 cursor2.getString(cursor2.getColumnIndex(InboxDatabaseHelper.COLUMN_CUSTOM_ID)));
+    }
+
+    @Test
+    public void testMarkNotificationAsDeleted()
+    {
+        long fetcherId = datasource.getFetcherID(FetcherType.USER_IDENTIFIER, "test-custom-id");
+        assertTrue(fetcherId > 0);
+
+        Map<String, String> payload = new HashMap<>();
+        payload.put("com.batch", payloadJson);
+
+        NotificationIdentifiers identifiers = new NotificationIdentifiers("test-id",
+                "test-send-id");
+        identifiers.installID = "b5baf3e0-a01f-11ea-111a-17c13e111be2";
+        InboxNotificationContentInternal
+                notification = new InboxNotificationContentInternal(
+                BatchNotificationSource.CAMPAIGN,
+                new Date(),
+                payload,
+                identifiers);
+
+        notification.title = "test title";
+        notification.body = "test body";
+        notification.isUnread = false;
+        assertTrue(datasource.insert(notification, fetcherId));
+
+        Cursor cursor = datasource.getDatabase().query(
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                null,
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " =?",
+                new String[]{"test-id"},
+                null,
+                null,
+                null);
+        cursor.moveToFirst();
+        boolean deleted = cursor.getInt(cursor.getColumnIndex(InboxDatabaseHelper.COLUMN_DELETED)) != 0;
+        assertFalse(deleted);
+
+        datasource.markNotificationAsDeleted("test-id");
+
+        cursor = datasource.getDatabase().query(
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                null,
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " =?",
+                new String[]{"test-id"},
+                null,
+                null,
+                null);
+
+        cursor.moveToFirst();
+        deleted = cursor.getInt(cursor.getColumnIndex(InboxDatabaseHelper.COLUMN_DELETED)) != 0;
+        assertTrue(deleted);
+    }
+
+    @Test
+    public void testMarkNotificationAsRead()
+    {
+        long fetcherId = datasource.getFetcherID(FetcherType.USER_IDENTIFIER, "test-custom-id");
+        assertTrue(fetcherId > 0);
+
+        Map<String, String> payload = new HashMap<>();
+        payload.put("com.batch", payloadJson);
+
+        NotificationIdentifiers identifiers = new NotificationIdentifiers("test-id",
+                "test-send-id");
+        identifiers.installID = "b5baf3e0-a01f-11ea-111a-17c13e111be2";
+        InboxNotificationContentInternal
+                notification = new InboxNotificationContentInternal(
+                BatchNotificationSource.CAMPAIGN,
+                new Date(),
+                payload,
+                identifiers);
+
+        notification.title = "test title";
+        notification.body = "test body";
+        notification.isUnread = true;
+        assertTrue(datasource.insert(notification, fetcherId));
+
+        Cursor cursor = datasource.getDatabase().query(
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                null,
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " =?",
+                new String[]{"test-id"},
+                null,
+                null,
+                null);
+        cursor.moveToFirst();
+        boolean unread = cursor.getInt(cursor.getColumnIndex(InboxDatabaseHelper.COLUMN_UNREAD)) != 0;
+        assertTrue(unread);
+
+        datasource.markNotificationAsRead("test-id");
+
+        cursor = datasource.getDatabase().query(
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                null,
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " =?",
+                new String[]{"test-id"},
+                null,
+                null,
+                null);
+
+        cursor.moveToFirst();
+        unread = cursor.getInt(cursor.getColumnIndex(InboxDatabaseHelper.COLUMN_UNREAD)) != 0;
+        assertFalse(unread);
     }
 
     @Test

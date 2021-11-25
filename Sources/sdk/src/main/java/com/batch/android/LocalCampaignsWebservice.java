@@ -11,13 +11,13 @@ import com.batch.android.json.JSONObject;
 import com.batch.android.query.LocalCampaignsQuery;
 import com.batch.android.query.Query;
 import com.batch.android.query.QueryType;
-import com.batch.android.query.response.AbstractLocalCampaignsResponse;
 import com.batch.android.query.response.LocalCampaignsResponse;
 import com.batch.android.webservice.listener.LocalCampaignsWebserviceListener;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Webservice to ask the server for all type of local campaigns (be in-app or notification)
@@ -50,8 +50,7 @@ public class LocalCampaignsWebservice extends BatchQueryWebservice implements Ta
     {
         List<Query> queries = new ArrayList<>(1);
 
-        queries.add(new LocalCampaignsQuery(CampaignManagerProvider.get(),
-                applicationContext));
+        queries.add(new LocalCampaignsQuery(CampaignManagerProvider.get(), applicationContext));
 
         return queries;
     }
@@ -103,18 +102,28 @@ public class LocalCampaignsWebservice extends BatchQueryWebservice implements Ta
              * Read responses
              * As opposed to other webservices, this one does not fail if one query is missing, as we want the others to work
              */
-            List<AbstractLocalCampaignsResponse> responses = new ArrayList<>();
+            List<LocalCampaignsResponse> responses = new ArrayList<>();
 
             LocalCampaignsResponse localCampaignsResponse = getResponseFor(LocalCampaignsResponse.class,
                     QueryType.LOCAL_CAMPAIGNS);
             if (localCampaignsResponse != null) {
-                responses.add(localCampaignsResponse);
+
+                // If there's an error, we delete the local campaigns on the disk
+                if (localCampaignsResponse.hasError()) {
+                    Logger.internal(TAG,
+                            "Local campaigns response contains an error : ".concat(
+                                    localCampaignsResponse.getError().toString()));
+                    CampaignManagerProvider.get().deleteSavedCampaignsAsync(applicationContext);
+                } else {
+                    // else we save them
+                    CampaignManagerProvider.get().saveCampaignsAsync(applicationContext,
+                            localCampaignsResponse.getCampaignsToSave());
+                    responses.add(localCampaignsResponse);
+                }
             } else {
                 Logger.internal(TAG, "Missing In-App Campaigns response");
             }
-
             Logger.internal(TAG, "local campaigns webservice ended");
-
             listener.onSuccess(responses);
         } catch (Exception e) {
             Logger.internal(TAG, "Error while reading LocalCampaigns response", e);

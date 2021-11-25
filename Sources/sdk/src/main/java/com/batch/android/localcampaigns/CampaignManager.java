@@ -13,17 +13,23 @@ import com.batch.android.date.BatchDate;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.SecureDateProviderProvider;
 import com.batch.android.di.providers.TaskExecutorProvider;
+import com.batch.android.json.JSONArray;
+import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.localcampaigns.model.LocalCampaign;
 import com.batch.android.localcampaigns.persistence.LocalCampaignsFilePersistence;
 import com.batch.android.localcampaigns.persistence.LocalCampaignsPersistence;
 import com.batch.android.localcampaigns.persistence.PersistenceException;
+import com.batch.android.localcampaigns.serialization.LocalCampaignDeserializer;
+import com.batch.android.localcampaigns.serialization.LocalCampaignSerializer;
 import com.batch.android.localcampaigns.signal.Signal;
 import com.batch.android.localcampaigns.trigger.EventLocalCampaignTrigger;
 import com.batch.android.processor.Module;
 import com.batch.android.processor.Provide;
 import com.batch.android.processor.Singleton;
 import com.batch.android.query.response.LocalCampaignsResponse;
+import com.batch.android.query.serialization.deserializers.LocalCampaignsResponseDeserializer;
+import com.batch.android.query.serialization.serializers.LocalCampaignsResponseSerializer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -343,20 +349,28 @@ public class CampaignManager
         watchedEventNames = newWatchedEvents;
     }
 
-    public void saveCampaignsResponse(@NonNull Context context, @NonNull JSONObject jsonObject)
+    public void saveCampaigns(@NonNull Context context,
+                              @NonNull List<LocalCampaign> campaigns)
     {
         try {
-            persistor.persistData(context, jsonObject, PERSISTENCE_LOCAL_CAMPAIGNS_FILE_NAME);
+            LocalCampaignSerializer serializer = new LocalCampaignSerializer();
+            JSONObject jsonData = new JSONObject();
+            jsonData.put("campaigns", serializer.serializeList(campaigns));
+            persistor.persistData(context,
+                    jsonData,
+                    PERSISTENCE_LOCAL_CAMPAIGNS_FILE_NAME);
         } catch (PersistenceException e) {
             Logger.internal(TAG, "Can't persist local campaigns", e);
+        } catch (JSONException e) {
+            Logger.internal(TAG, "Can't serialize local campaigns before the save operation", e);
+            e.printStackTrace();
         }
     }
 
-    public void saveCampaignsResponseAsync(@NonNull final Context context,
-                                           @NonNull final JSONObject jsonObject)
+    public void saveCampaignsAsync(@NonNull final Context context,
+                                   @NonNull final List<LocalCampaign> campaigns)
     {
-        TaskExecutorProvider.get(context).execute(() -> saveCampaignsResponse(context,
-                jsonObject));
+        TaskExecutorProvider.get(context).execute(() -> saveCampaigns(context, campaigns));
     }
 
     public void deleteSavedCampaigns(@NonNull final Context context)
@@ -397,18 +411,15 @@ public class CampaignManager
             return false;
         }
 
-        List<LocalCampaign> campaigns;
+        LocalCampaignDeserializer localCampaignDeserializer = new LocalCampaignDeserializer();
         try {
-            LocalCampaignsResponse localCampaignsResponse = new LocalCampaignsResponse(context,
-                    campaignsRawData,
-                    false);
-            campaigns = localCampaignsResponse.getCampaigns();
+            JSONArray jsonCampaigns = campaignsRawData.getJSONArray("campaigns");
+            List<LocalCampaign> campaigns = localCampaignDeserializer.deserializeList(jsonCampaigns);
+            updateCampaignList(campaigns);
         } catch (Exception ex) {
             Logger.internal(TAG, "Can't convert json to LocalCampaignsResponse : " + ex.toString());
             return false;
         }
-
-        updateCampaignList(campaigns);
         return true;
     }
 

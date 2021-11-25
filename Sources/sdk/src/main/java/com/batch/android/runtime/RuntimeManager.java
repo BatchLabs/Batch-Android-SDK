@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.batch.android.core.Logger;
+import com.batch.android.debug.FindMyInstallationHelper;
 import com.batch.android.processor.Module;
 import com.batch.android.processor.Singleton;
 
@@ -21,7 +22,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 /**
  * Manager that contains library state and locks
- *
  */
 @Module
 @Singleton
@@ -91,6 +91,12 @@ public class RuntimeManager
      * Write lock
      */
     private WriteLock w = lock.writeLock();
+
+    /**
+     * Debug helper class to copy the installation id to the clipboard
+     */
+    private final FindMyInstallationHelper installationIdHelper = new FindMyInstallationHelper();
+
 
 // ------------------------------------->
 
@@ -393,6 +399,19 @@ public class RuntimeManager
     {
         if (foregroundActivityLifecycleListener == null) {
             foregroundActivityLifecycleListener = new ForegroundActivityLifecycleListener();
+            foregroundActivityLifecycleListener.registerAppLifecycleListener(new ForegroundActivityLifecycleListener.AppLifecycleListener()
+            {
+                @Override
+                public void onEnterForeground()
+                {
+                    installationIdHelper.notifyForeground();
+                }
+
+                @Override
+                public void onEnterBackground()
+                {
+                }
+            });
             application.registerActivityLifecycleCallbacks(foregroundActivityLifecycleListener);
         }
     }

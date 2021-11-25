@@ -32,10 +32,10 @@ import com.batch.android.core.Logger;
 import com.batch.android.core.NotificationAuthorizationStatus;
 import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.Parameters;
-import com.batch.android.core.Reachability;
+import com.batch.android.core.ExcludedActivityHelper;
 import com.batch.android.core.TaskExecutor;
 import com.batch.android.debug.BatchDebugActivity;
-import com.batch.android.di.DI;
+import com.batch.android.debug.FindMyInstallationHelper;
 import com.batch.android.di.providers.ActionModuleProvider;
 import com.batch.android.di.providers.AdvertisingIDProvider;
 import com.batch.android.di.providers.BatchModuleMasterProvider;
@@ -64,8 +64,10 @@ import com.batch.android.runtime.RuntimeManager;
 import com.batch.android.runtime.State;
 import com.google.firebase.messaging.RemoteMessage;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -73,7 +75,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Entry point of the Batch library
- *
  */
 @PublicSDK
 public final class Batch
@@ -100,14 +101,14 @@ public final class Batch
      */
     private static BroadcastReceiver receiver;
     /**
-     * Reachability instance if permission is available
-     */
-    @SuppressLint("StaticFieldLeak")
-    private static Reachability reachability;
-    /**
      * Temp intent stored to be handled at the next start
      */
     private static Intent newIntent;
+    /**
+     * Helper to handle excluded activities from manifest
+     */
+    private static final ExcludedActivityHelper excludedActivityHelper = new ExcludedActivityHelper();
+
     /**
      * Current session ID (changed at each start)
      */
@@ -559,11 +560,23 @@ public final class Batch
         return OptOutModuleProvider.get().isOptedOutSync(context);
     }
 
+    /**
+     * Control whether Batch should enables the Find My Installation feature (default = true)
+     * <p>
+     * If enabled Batch will copy the current installation id in the clipboard when the application
+     * is foregrounded 5 times within 12 seconds.
+     *
+     * @param enabled Whether to enable the find my installation feature.
+     */
+    public static void setFindMyInstallationEnabled(boolean enabled)
+    {
+        FindMyInstallationHelper.isEnabled = enabled;
+    }
+
     // ---------------------------------------------------->
 
     /**
      * Batch Debug module
-     *
      */
     @PublicSDK
     public final static class Debug
@@ -591,7 +604,6 @@ public final class Batch
 
     /**
      * Batch Inbox module
-     *
      */
     @PublicSDK
     public final static class Inbox
@@ -667,7 +679,6 @@ public final class Batch
 
     /**
      * Batch Push module
-     *
      */
     @PublicSDK
     public final static class Push
@@ -1199,7 +1210,6 @@ public final class Batch
 
     /**
      * Batch EventDispatcher module
-     *
      */
     @PublicSDK
     public final static class EventDispatcher
@@ -1335,7 +1345,6 @@ public final class Batch
 
     /**
      * Batch User module
-     *
      */
     @PublicSDK
     public final static class User
@@ -1584,7 +1593,6 @@ public final class Batch
 
     /**
      * Batch Messaging module
-     *
      */
     @PublicSDK
     public final static class Messaging
@@ -1951,7 +1959,6 @@ public final class Batch
 
     /**
      * Batch Action manager
-     *
      */
     @PublicSDK
     public final static class Actions
@@ -2034,6 +2041,25 @@ public final class Batch
     }
 
     /**
+     * Method to call on your main activity {@link Activity#onCreate(Bundle)}.
+     *
+     * @param activity Created activity
+     */
+    public static void onCreate(final Activity activity)
+    {
+
+        if (activity == null) {
+            return;
+        }
+
+        // Check if the activity should be excluded from batch's lifecycle and save the intent if needed
+        if (ExcludedActivityHelper.activityIsExcludedFromManifest(activity)) {
+            excludedActivityHelper.saveIntentIfNeeded(activity);
+            Logger.internal("Created activity has exclusion meta-data");
+        }
+    }
+
+    /**
      * Method to call on your main activity {@link Activity#onStart()} to start Batch and support URL scheme events.<br>
      * You must call this method before any other on Batch.<br>
      * <br>
@@ -2092,18 +2118,8 @@ public final class Batch
      */
     public static void onNewIntent(final Activity activity, final Intent intent)
     {
-        RuntimeManagerProvider.get().run(state -> {
-            newIntent = intent;
-
-            if (MessagingModuleProvider.get().isInAutomaticMode()) {
-                final BatchMessage message = new IntentParser(newIntent).getLanding(activity);
-                if (message != null) {
-                    MessagingModuleProvider.get().displayMessage(activity,
-                            message,
-                            false);
-                }
-            }
-        });
+        newIntent = intent;
+        doBatchStart(activity, false, true);
     }
 
     /**
@@ -2177,8 +2193,8 @@ public final class Batch
                 TrackerModuleProvider.get().track(InternalEvents.STOP, lastStop);
             }
 
-            Logger.internal(
-                    "onStart called on state " + state + ", should start : " + shouldStart);
+
+            Logger.internal("onStart called on state " + state + ", should start : " + shouldStart);
 
             if (context == null) {
                 Logger.error("Batch start called with null context, aborting start");
@@ -2199,9 +2215,14 @@ public final class Batch
             }
 
             IntentParser intentParser = null;
-
             if (context instanceof Activity) {
                 final Activity activity = (Activity) context;
+
+                if (ExcludedActivityHelper.activityIsExcludedFromManifest(activity)) {
+                    Logger.internal(
+                            "Started activity has exclusion meta-data, aborting start.");
+                    return null;
+                }
 
                 /*
                  * If we've already been started by an Activity, and the new one is translucent or floating
@@ -2250,33 +2271,58 @@ public final class Batch
                     runtimeManager.registerActivityListenerIfNeeded(app);
                 }
 
-                intentParser = newIntent != null ? new IntentParser(
-                        newIntent) : new IntentParser(
-                        activity);
-
+                /*
+                 * List the possible intents with push payload by priority :
+                 * 1 - Intent from onNewIntent()
+                 * 2 - Intent from the starting activity
+                 * 3 - Intent saved from an activity with exclusion meta-data
+                 */
+                List<IntentParser> intentParsers = new ArrayList<>();
+                intentParser = new IntentParser(activity);
+                if (newIntent != null) {
+                    Logger.internal("Adding intent from onNewIntent");
+                    intentParsers.add(new IntentParser(newIntent));
+                }
+                intentParsers.add(intentParser);
+                if (excludedActivityHelper.hasIntent()) {
+                    Logger.internal("Adding intent from an activity with exclusion meta-data");
+                    intentParsers.add(new IntentParser(excludedActivityHelper.popIntent()));
+                }
+                // Use the first intent with push payload found
+                for (IntentParser parser : intentParsers) {
+                    if (parser.hasPushPayload()) {
+                        intentParser = parser;
+                        break;
+                    }
+                }
                 if (intentParser.hasPushPayload()) {
                     Logger.internal("Activity has a push payload");
                 } else {
                     Logger.internal("Activity does not have a push payload");
                 }
-
-                fromPush.set(intentParser.shouldHandleOpen());
+                fromPush.set(intentParser.comesFromPush());
                 if (fromPush.get()) {
                     shouldStart = true; // if we comes from push, always start
 
-                    String intentPushId = intentParser.getPushId(
-                            activity.getApplicationContext());
+                    String intentPushId = intentParser.getPushId();
                     if (intentPushId != null) {
                         pushId.append(intentPushId);
                     }
                 }
 
                 if (MessagingModuleProvider.get().isInAutomaticMode()) {
-                    final BatchMessage message = intentParser.getLanding(context);
-                    if (message != null) {
-                        MessagingModuleProvider.get().displayMessage(context,
-                                message,
-                                false);
+                    if (intentParser.hasLanding()) {
+                        if (intentParser.isLandingAlreadyShown()) {
+                            Logger.internal("Trying to display an already shown landing message");
+                        } else {
+                            final BatchMessage message = intentParser.getLanding();
+                            if (message != null) {
+                                intentParser.markLandingAsAlreadyShown();
+                                MessagingModuleProvider.get().displayMessage(context,
+                                        message,
+                                        false);
+                            }
+                        }
                     }
                 }
 
@@ -2366,11 +2412,6 @@ public final class Batch
                             filter);
                 }
 
-                /*
-                 * Instanciate Reachability if permission is available
-                 */
-                setupReachability(runtimeManager.getContext());
-
                 // Check if we have a pending opt-in event
                 OptOutModuleProvider.get().trackOptinEventIfNeeded(context, advertisingID);
             }
@@ -2401,27 +2442,32 @@ public final class Batch
             }
 
             if (intentParser != null && fromPush.get()) {
-                InternalPushData internalPushData = intentParser.getPushData();
-
-                JSONObject params;
-                if (internalPushData != null) {
-                    params = new JSONObject(internalPushData.getExtraParameters());
+                if (intentParser.isOpenAlreadyTracked()) {
+                    Logger.internal("Already tracked open");
                 } else {
-                    params = new JSONObject();
-                }
+                    InternalPushData internalPushData = intentParser.getPushData();
 
-                TrackerModuleProvider.get().track(InternalEvents.OPEN_FROM_PUSH, params);
+                    JSONObject params;
+                    if (internalPushData != null) {
+                        params = new JSONObject(internalPushData.getExtraParameters());
+                    } else {
+                        params = new JSONObject();
+                    }
 
-                try {
-                    BatchPushPayload pushPayload = BatchPushPayload.payloadFromReceiverExtras(
-                            intentParser.getPushBundle());
-                    EventDispatcher.Payload payload = new PushEventPayload(pushPayload, true);
-                    EventDispatcherModuleProvider.get().dispatchEvent(EventDispatcher.Type.NOTIFICATION_OPEN,
-                            payload);
-                } catch (BatchPushPayload.ParsingException | IllegalArgumentException e) {
-                    Logger.internal("Could not dispatch NOTIFICATION_OPEN", e);
+                    TrackerModuleProvider.get().track(InternalEvents.OPEN_FROM_PUSH, params);
+                    intentParser.markOpenAsAlreadyTracked();
+
+                    try {
+                        BatchPushPayload pushPayload = BatchPushPayload.payloadFromReceiverExtras(
+                                intentParser.getPushBundle());
+                        EventDispatcher.Payload payload = new PushEventPayload(pushPayload, true);
+                        EventDispatcherModuleProvider.get().dispatchEvent(EventDispatcher.Type.NOTIFICATION_OPEN,
+                                payload);
+                    } catch (BatchPushPayload.ParsingException | IllegalArgumentException e) {
+                        Logger.internal("Could not dispatch NOTIFICATION_OPEN", e);
+                    }
+                    Logger.info("Activity was opened from a push");
                 }
-                Logger.info("Activity was opened from a push");
             }
 
             /*
@@ -2480,8 +2526,7 @@ public final class Batch
          */
         boolean hasChanged = RuntimeManagerProvider.get().changeStateIf(State.READY,
                 state -> {
-                    Logger.internal(
-                            "onStop called with state " + state);
+                    Logger.internal("onStop called with state " + state);
 
                     if (fromService) {
                         RuntimeManagerProvider.get().decrementServiceRefCount();
@@ -2498,18 +2543,24 @@ public final class Batch
                     /*
                      * If we are closing another activity that is not the one shown
                      */
-                    if (activity != null && activity != currentActivity) {
-                        Logger.internal(
-                                "Closing a sub activity");
-                        return null;
+                    if (activity != null) {
+
+                        if (ExcludedActivityHelper.activityIsExcludedFromManifest(activity)) {
+                            Logger.internal("Closing an excluded activity");
+                            return null;
+                        }
+
+                        if (activity != currentActivity) {
+                            Logger.internal("Closing a sub activity");
+                            return null;
+                        }
                     }
 
                     /*
                      * If the activity is not finishing && we are not forcing (=onDestroy), we only save the date
                      */
                     if (!fromService && !force && currentActivity != null && !currentActivity.isFinishing()) {
-                        Logger.internal(
-                                "onStop called but activity is not finishing... saving date");
+                        Logger.internal("onStop called but activity is not finishing... saving date");
                         RuntimeManagerProvider.get().onStopWithoutFinishing();
                         return null;
                     }
@@ -2518,8 +2569,7 @@ public final class Batch
                         /*
                          * Release activity & listener to free memory
                          */
-                        RuntimeManagerProvider.get().setActivity(
-                                null);
+                        RuntimeManagerProvider.get().setActivity(null);
                     }
 
                     /*
@@ -2590,33 +2640,19 @@ public final class Batch
                     Logger.internal(
                             "doStop, called with state " + state);
 
-                    /*
-                     * Call modules
-                     */
+                    // Call modules
                     moduleMaster.batchWillStop();
-                    TrackerModuleProvider.get().track(
-                            "_STOP");
+                    TrackerModuleProvider.get().track("_STOP");
 
-                    /*
-                     * Free all object to clean memory
-                     */
-                    RuntimeManagerProvider.get().setContext(
-                            null);
+                    // Free all object to clean memory
+                    RuntimeManagerProvider.get().setContext(null);
                     receiver = null;
-                    if (reachability != null) {
-                        reachability.stop();
-                        reachability = null;
-                    }
 
-                    /*
-                     * Set state to OFF
-                     */
+                    // Set state to OFF
                     return State.OFF;
                 });
 
-        /*
-         * Call modules
-         */
+        // Call modules
         if (hasChanged) {
             moduleMaster.batchDidStop();
 
@@ -2641,17 +2677,6 @@ public final class Batch
         install = null;
         advertisingID = null;
         user = null;
-    }
-
-    /**
-     * Instanciate reachability if possible
-     */
-    private static void setupReachability(Context context)
-    {
-        if (GenericHelper.checkPermission("android.permission.ACCESS_NETWORK_STATE", context)) {
-            //noinspection AndroidLintMissingPermission
-            reachability = new Reachability(context);
-        }
     }
 
 // --------------------------------------------->

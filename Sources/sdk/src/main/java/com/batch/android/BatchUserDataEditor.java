@@ -14,6 +14,7 @@ import com.batch.android.module.UserModule;
 import com.batch.android.user.SQLUserDatasource;
 import com.batch.android.user.UserOperation;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
@@ -23,7 +24,6 @@ import java.util.regex.Pattern;
 
 /**
  * Batch User data editor
- *
  */
 @PublicSDK
 public class BatchUserDataEditor
@@ -38,6 +38,7 @@ public class BatchUserDataEditor
     private static final int REGION_INDEX = 1;
     private static final int IDENTIFIER_INDEX = 2;
     private static final int ATTR_STRING_MAX_LENGTH = 64; // Also applies to tag values
+    private static final int ATTR_URL_MAX_LENGTH = 2048;
 
     private final List<UserOperation> operationQueue = new LinkedList<>();
     private boolean[] updatedFields = {false, false, false};
@@ -230,6 +231,41 @@ public class BatchUserDataEditor
         if (value == null || value.length() > ATTR_STRING_MAX_LENGTH) {
             Logger.error(TAG,
                     "String attributes can't be null or longer than " + ATTR_STRING_MAX_LENGTH + " characters. Ignoring attribute '" + key + "'");
+            return this;
+        }
+
+        synchronized (operationQueue) {
+            operationQueue.add(datasource -> datasource.setAttribute(normalizedKey, value));
+        }
+
+        return this;
+    }
+
+    /**
+     * Set a custom user attribute for a key.
+     *
+     * @param key   Attribute key, can't be null. It should be made of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.
+     * @param value Attribute value, can't be null or empty. Must be a valid URI not longer than 2048 character.
+     * @return This object instance, for method chaining
+     */
+    public BatchUserDataEditor setAttribute(final @NonNull String key, final @NonNull URI value)
+    {
+        final String normalizedKey;
+        try {
+            normalizedKey = normalizeAttributeKey(key);
+        } catch (AttributeValidationException e) {
+            return this;
+        }
+
+        //noinspection ConstantConditions
+        if (value == null || value.toString().length() > ATTR_URL_MAX_LENGTH) {
+            Logger.error(TAG,
+                    "URL attributes can't be null or longer than " + ATTR_URL_MAX_LENGTH + " characters. Ignoring attribute '" + key + "'");
+            return this;
+        }
+        if (value.getScheme() == null || value.getAuthority() == null) {
+            Logger.error(TAG,
+                    "URL attributes must follow the format 'scheme://[authority][path][?query][#fragment]'. Ignoring attribute '" + key + "'");
             return this;
         }
 

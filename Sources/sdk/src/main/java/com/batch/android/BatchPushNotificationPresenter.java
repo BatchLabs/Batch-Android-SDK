@@ -382,6 +382,9 @@ public class BatchPushNotificationPresenter
 
             Integer userFlags = PushModuleProvider.get().getAdditionalIntentFlags();
             if (userFlags != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    userFlags = userFlags | PendingIntent.FLAG_IMMUTABLE;
+                }
                 launchIntent.addFlags(userFlags);
             }
         }

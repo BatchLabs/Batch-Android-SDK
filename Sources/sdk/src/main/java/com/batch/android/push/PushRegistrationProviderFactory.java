@@ -19,6 +19,8 @@ import com.batch.android.core.GooglePlayServicesHelper;
 import com.batch.android.core.Logger;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.module.PushModule;
+import com.batch.android.util.MetaDataUtils;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.List;
 
@@ -63,18 +65,26 @@ public class PushRegistrationProviderFactory
          *   - No: Fail
          *
          *  else
-         *  - Look if Firebase is available at both compile time and runtime. FCMRegistrationProvider will enforce firebase-core & firebase-messaing's presences itself.
-         *  - If not, query for plugins.
+         *  - Look if Firebase is available at both compile time and runtime. FCMAbstractRegistrationProvider will enforce firebase-core & firebase-messaing's presences itself.
+         *      - Yes: Check if FCM Token is available( firebase-messaging >= 20.3 ):
+         *          - Yes: Check if sender id is overridden or FCM Instance ID is forced from the manifest:
+         *              - Yes: Check if FCM Instance ID is available:
+         *                  Yes: Use FCM Instance ID provider
+         *                  No: Fail
+         *              - No:  Use FCM Token
+         *          - No: Check if FCM Instance ID is available:
+         *                  Yes: Use FCM Instance ID provider
+         *                  No: Fail
+         *      - No: query for plugins.
          *
          * A provider's decision is final. If it then fails its availability check, another provider will NOT be picked.
          * Thus, looking at the manifest to take this decision isn't the Provider's responsibility, but this Factory's.
-         * To avoid unnecessary work, providers assume that they have been instanciated through this factory,
+         * To avoid unnecessary work, providers assume that they have been instantiated through this factory,
          * and will not check the manifest for their receiver.
          *
          * Note that the advertising identifier will be provided by the same provider than push,
          * for consistency.
          */
-
 
         Logger.internal(TAG, "Determining which registration provider to use...");
         if (isLegacyPushReceiverInManifest()) {
@@ -142,8 +152,38 @@ public class PushRegistrationProviderFactory
             }
         }
 
-        Logger.internal(TAG, "Using FCM provider");
-        return new FCMRegistrationProvider(context);
+        boolean shouldUseFCMInstanceId = false;
+
+        // Case: firebase-messaging >= 20.3
+        if (isFCMTokenApiAvailable()) {
+            if (isSenderIdOverridden()) {
+                Logger.warning(
+                        "Overriding sender id is deprecated with the FCM's Token APIs, please migrate away from it. See our help center for more info.");
+                shouldUseFCMInstanceId = true;
+            } else if (shouldForceFirebaseIIDProvider()) {
+                shouldUseFCMInstanceId = true;
+                Logger.internal(TAG, "FCM InstanceId provider is forced from the manifest.");
+            }
+        } else {
+            shouldUseFCMInstanceId = true;
+        }
+
+        if (shouldUseFCMInstanceId) {
+            if (isFCMFirebaseInstanceIdAvailable()) {
+                Logger.internal(TAG, "Using FCM InstanceId provider");
+                return new FCMInstanceIdRegistrationProvider(context);
+            } else if (FCMAbstractRegistrationProvider.isFirebaseMessagingPresent()) {
+                // This log is only if we have a recent FCM (firebase-messaging >= 22) without IID support.
+                // Do not log anything if we don't have FCM at all, the provider will take care
+                // of it when attempting to register.
+                Logger.error(PushModule.TAG,
+                        "Trying to use FCM InstanceID but it looks like the library is not present. Please migrate to FCM's Token APIs or add the firebase-iid dependency.");
+                return null;
+            }
+        }
+
+        Logger.internal(TAG, "Using FCM-Token provider");
+        return new FCMTokenRegistrationProvider(context);
     }
 
     private boolean isLegacyPushReceiverInManifest()
@@ -172,6 +212,42 @@ public class PushRegistrationProviderFactory
         }
     }
 
+    /**
+     * Verify if the FCM Token API is available by checking if getToken method exist at runtime
+     * (firebase-messaging >= 20.3)
+     *
+     * @return true if if the FCM Token APIs are available
+     */
+    private boolean isFCMTokenApiAvailable()
+    {
+        try {
+            FirebaseMessaging.class.getMethod("getToken");
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Verify if FCM Firebase InstanceId is available
+     *
+     * @return true if class exist
+     */
+    private boolean isFCMFirebaseInstanceIdAvailable()
+    {
+        try {
+            Class.forName("com.google.firebase.iid.FirebaseInstanceId");
+            return true;
+        } catch (Throwable ex) {
+            return false;
+        }
+    }
+
+    /**
+     * Verify if GCM InstanceId is available
+     *
+     * @return true if class exist
+     */
     private boolean isGCMInstanceIdAvailable()
     {
         try {
@@ -199,6 +275,26 @@ public class PushRegistrationProviderFactory
                     e);
             return false;
         }
+    }
+
+    /**
+     * Check if we should force using the FCM Instance ID provider from the android manifest
+     *
+     * @return true if we should force the provider
+     */
+    private boolean shouldForceFirebaseIIDProvider()
+    {
+        return MetaDataUtils.getBooleanMetaData(context, MetaDataUtils.MANIFEST_FORCE_FCM_IID_KEY);
+    }
+
+    /**
+     * Check if the FCM sender identifier is define from the android manifest
+     *
+     * @return true if the SenderId is overridden
+     */
+    private boolean isSenderIdOverridden()
+    {
+        return MetaDataUtils.getIntMetaData(context, MetaDataUtils.MANIFEST_SENDER_ID_KEY) != -1;
     }
 
     public PushRegistrationProvider getExternalPushRegistrationProvider()

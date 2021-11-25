@@ -3,9 +3,12 @@ package com.batch.android.runtime;
 import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.batch.android.core.Logger;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -14,9 +17,64 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ForegroundActivityLifecycleListener implements Application.ActivityLifecycleCallbacks
 {
+    /**
+     * App Lifecycle Listener to be notified when the app enter in background/foreground
+     */
+    public interface AppLifecycleListener
+    {
+        void onEnterForeground();
+
+        void onEnterBackground();
+    }
+
     private static final String TAG = "ForegroundActivityLifecycleListener";
 
-    private AtomicInteger resumeCount = new AtomicInteger(0);
+    /**
+     * Time before checking if the app is in the background after pausing an activity
+     */
+    private static final int TIMEOUT_MS = 700;
+
+    /**
+     * Count of resume activity
+     */
+    private final AtomicInteger resumeCount = new AtomicInteger(0);
+
+    /**
+     * Flag indicating if the last activity is paused
+     */
+    private final AtomicBoolean isPaused = new AtomicBoolean(false);
+
+    /**
+     * Handler used to trigger the delayedPauseRunnable
+     */
+    private Handler handler;
+
+    /**
+     * App Lifecycle listener
+     */
+    private AppLifecycleListener listener;
+
+    /**
+     * Runnable to check if the app is in the background after pausing an activity
+     */
+    private final Runnable delayedPauseRunnable = () -> {
+        if (!isApplicationInForeground()) {
+            isPaused.set(true);
+            if (listener != null) {
+                listener.onEnterBackground();
+            }
+        }
+    };
+
+    /**
+     * Register an AppLifecycleListener
+     * @param listener callback
+     */
+    public void registerAppLifecycleListener(AppLifecycleListener listener)
+    {
+        this.listener = listener;
+        this.handler = new Handler(Looper.getMainLooper());
+    }
 
     @Override
     public void onActivityCreated(Activity activity, Bundle bundle)
@@ -34,12 +92,19 @@ public class ForegroundActivityLifecycleListener implements Application.Activity
     public void onActivityResumed(Activity activity)
     {
         resumeCount.incrementAndGet();
+        if (isPaused.get()) {
+            isPaused.set(false);
+            if (listener != null) {
+                listener.onEnterForeground();
+            }
+        }
     }
 
     @Override
     public void onActivityPaused(Activity activity)
     {
         resumeCount.decrementAndGet();
+        handler.postDelayed(delayedPauseRunnable, TIMEOUT_MS);
     }
 
     @Override

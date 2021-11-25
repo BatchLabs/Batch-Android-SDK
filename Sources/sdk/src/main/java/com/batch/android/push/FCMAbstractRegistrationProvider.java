@@ -1,12 +1,7 @@
 package com.batch.android.push;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
 import android.text.TextUtils;
-
-import androidx.annotation.Nullable;
 
 import com.batch.android.AdsIdentifierProvider;
 import com.batch.android.PushRegistrationProvider;
@@ -15,17 +10,13 @@ import com.batch.android.adsidentifier.GCMAdsIdentifierProvider;
 import com.batch.android.core.Logger;
 import com.batch.android.module.PushModule;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.messaging.FirebaseMessaging;
 
-public class FCMRegistrationProvider implements PushRegistrationProvider
+public abstract class FCMAbstractRegistrationProvider implements PushRegistrationProvider
 {
-    private static final String MANIFEST_SENDER_ID_KEY = "batch_push_fcm_sender_id_override";
+    protected GCMAdsIdentifierProvider adsIdentifierProvider;
+    protected String senderID;
 
-    private GCMAdsIdentifierProvider adsIdentifierProvider;
-    private String senderID;
-
-    FCMRegistrationProvider(Context context)
+    FCMAbstractRegistrationProvider(Context context)
     {
         this.senderID = fetchSenderID(context);
         this.adsIdentifierProvider = new GCMAdsIdentifierProvider(context.getApplicationContext());
@@ -33,26 +24,6 @@ public class FCMRegistrationProvider implements PushRegistrationProvider
 
     public String fetchSenderID(Context context)
     {
-        try {
-            final Bundle metaData = context
-                    .getPackageManager()
-                    .getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA)
-                    .metaData;
-
-            int valueResource = metaData.getInt(MANIFEST_SENDER_ID_KEY, -1);
-            if (valueResource != -1) {
-                String manifestSenderID = context.getString(valueResource);
-                if (!TextUtils.isEmpty(manifestSenderID)) {
-                    Logger.info(PushModule.TAG, "Using FCM Sender ID from manifest");
-                    Logger.internal(PushModule.TAG,
-                            "Using FCM Sender ID from manifest: " + manifestSenderID);
-                    return manifestSenderID;
-                }
-            }
-
-        } catch (Exception ignored) {
-        }
-
         try {
             FirebaseApp fbApp = FirebaseApp.getInstance();
             if (fbApp == null) {
@@ -70,15 +41,11 @@ public class FCMRegistrationProvider implements PushRegistrationProvider
 
             Logger.internal(PushModule.TAG,
                     "Using FCM Sender ID from builtin configuration: " + senderID);
-
             return senderID;
         } catch (NoClassDefFoundError | Exception e) {
             Logger.error(PushModule.TAG,
-                    "Could not register for FCM Push: Firebase has thrown an exception",
-                    e);
+                    "Could not register for FCM Push: Firebase has thrown an exception", e);
         }
-
-
         return senderID;
     }
 
@@ -86,12 +53,6 @@ public class FCMRegistrationProvider implements PushRegistrationProvider
     public String getSenderID()
     {
         return senderID;
-    }
-
-    @Override
-    public String getShortname()
-    {
-        return "FCM";
     }
 
     @Override
@@ -121,30 +82,6 @@ public class FCMRegistrationProvider implements PushRegistrationProvider
         }
     }
 
-    @Nullable
-    @Override
-    @SuppressLint("MissingFirebaseInstanceTokenRefresh")
-    public String getRegistration()
-    {
-        try {
-            if (senderID == null) {
-                return null;
-            }
-
-            FirebaseInstanceId fbIID = FirebaseInstanceId.getInstance();
-            if (fbIID == null) {
-                Logger.error(PushModule.TAG,
-                        "Could not register for FCM Push: Could not get the FirebaseInstanceId. Is your Firebase project configured and initialized?");
-                return null;
-            }
-
-            return fbIID.getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
-        } catch (Exception e) {
-            Logger.error(PushModule.TAG, "Could not register for FCM Push.", e);
-        }
-        return null;
-    }
-
     @Override
     public AdsIdentifierProvider getAdsIdentifierProvider()
     {
@@ -155,14 +92,13 @@ public class FCMRegistrationProvider implements PushRegistrationProvider
     {
         try {
             Class.forName("com.google.firebase.FirebaseApp");
-            Class.forName("com.google.firebase.iid.FirebaseInstanceId");
             return true;
         } catch (Throwable ex) {
             return false;
         }
     }
 
-    private boolean isFirebaseMessagingPresent()
+    public static boolean isFirebaseMessagingPresent()
     {
         try {
             Class.forName("com.google.firebase.messaging.FirebaseMessaging");

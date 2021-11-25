@@ -7,4 +7,9 @@ import com.batch.android.localcampaigns.model.LocalCampaign;
  */
 public class NextSessionTrigger implements LocalCampaign.Trigger
 {
+    @Override
+    public String getType()
+    {
+        return "NEXT_SESSION";
+    }
 }

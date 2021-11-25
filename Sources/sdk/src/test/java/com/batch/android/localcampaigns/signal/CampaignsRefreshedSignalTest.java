@@ -25,6 +25,12 @@ public class CampaignsRefreshedSignalTest
         Assert.assertFalse(signal.satisfiesTrigger(new NextSessionTrigger()));
         Assert.assertFalse(signal.satisfiesTrigger(new EventLocalCampaignTrigger("eventname",
                 null)));
-        Assert.assertFalse(signal.satisfiesTrigger(new LocalCampaign.Trigger() {}));
+        Assert.assertFalse(signal.satisfiesTrigger(new LocalCampaign.Trigger() {
+            @Override
+            public String getType()
+            {
+                return null;
+            }
+        }));
     }
 }

@@ -17,19 +17,19 @@ ext {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
     defaultPublishConfig "release"
 
     resourcePrefix "com_batchsdk_"
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 1
-        versionName "1.17.3"
+        versionName "1.18.0"
         buildConfigField "String", SDK_VERSION, "\"$versionName\""
-        buildConfigField "Integer", API_LEVEL, '36'
-        buildConfigField "Integer", MESSAGING_API_LEVEL, '10'
+        buildConfigField "Integer", API_LEVEL, '40'
+        buildConfigField "Integer", MESSAGING_API_LEVEL, '11'
         buildConfigField "String", WS_DOMAIN, '"ws.batch.com"'
 
         consumerProguardFiles 'proguard-consumer-rules.txt'
@@ -98,7 +98,7 @@ dependencies {
     compileOnly "com.google.android.gms:play-services-nearby:$playServicesVersion"
     compileOnly 'com.google.android.play:core:1.9.0'
     compileOnly "com.google.firebase:firebase-core:17.4.3"
-    compileOnly "com.google.firebase:firebase-messaging:20.2.1"
+    compileOnly "com.google.firebase:firebase-messaging:22.0.0"
     compileOnly project(':sdk-stubs')
     compileOnly project(':sdk-processor')
     annotationProcessor project(':sdk-processor')
@@ -111,12 +111,12 @@ dependencies {
 
     androidTestImplementation 'junit:junit:4.12'
     androidTestImplementation "androidx.annotation:annotation:$androidXLibraryVersion"
-    androidTestImplementation 'androidx.test:rules:1.2.0'
-    androidTestImplementation 'androidx.test:runner:1.2.0'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.2.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    androidTestImplementation 'androidx.test.ext:truth:1.2.0'
+    androidTestImplementation 'androidx.test:rules:1.4.0'
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.4.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    androidTestImplementation 'androidx.test.ext:truth:1.4.0'
     androidTestImplementation 'org.mockito:mockito-android:3.2.0'
 
     androidTestImplementation "com.google.android.gms:play-services-ads:$playServicesVersion"
@@ -128,13 +128,13 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.mockito:mockito-core:3.2.0'
-    testImplementation 'androidx.test:core:1.2.0'
-    testImplementation 'androidx.test:rules:1.2.0'
-    testImplementation 'androidx.test.ext:junit:1.1.1'
-    testImplementation 'androidx.test.ext:junit-ktx:1.1.1'
-    testImplementation 'androidx.test.espresso:espresso-intents:3.2.0'
-    testImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    testImplementation 'androidx.test.ext:truth:1.2.0'
+    testImplementation 'androidx.test:core:1.4.0'
+    testImplementation 'androidx.test:rules:1.4.0'
+    testImplementation 'androidx.test.ext:junit:1.1.3'
+    testImplementation 'androidx.test.ext:junit-ktx:1.1.3'
+    testImplementation 'androidx.test.espresso:espresso-intents:3.4.0'
+    testImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    testImplementation 'androidx.test.ext:truth:1.4.0'
     testImplementation "com.google.android.gms:play-services-ads:$playServicesVersion"
     testImplementation "com.google.android.gms:play-services-gcm:$playServicesVersion"
     testImplementation "com.google.android.gms:play-services-location:$playServicesVersion"

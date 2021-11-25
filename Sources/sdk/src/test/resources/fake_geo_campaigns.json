@@ -12,6 +12,7 @@
             "foo": "bar"
           },
           "minimumApiLevel": 1,
+          "maximumApiLevel": 30,
           "priority": 2,
           "minDisplayInterval": 3,
           "startDate": {

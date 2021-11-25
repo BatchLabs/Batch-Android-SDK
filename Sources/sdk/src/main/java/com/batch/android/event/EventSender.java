@@ -1,17 +1,12 @@
 package com.batch.android.event;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 
 import com.batch.android.FailReason;
+import com.batch.android.WebserviceLauncher;
 import com.batch.android.core.Logger;
 import com.batch.android.core.NamedThreadFactory;
-import com.batch.android.core.Reachability;
 import com.batch.android.core.TaskRunnable;
-import com.batch.android.core.Webservice;
-import com.batch.android.di.providers.LocalBroadcastManagerProvider;
+
 import com.batch.android.event.RetryTimer.RetryTimerListener;
 import com.batch.android.runtime.RuntimeManager;
 import com.batch.android.runtime.State;
@@ -24,16 +19,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Class that is responsible of sending events to server
- *
  */
-public abstract class EventSender implements RetryTimerListener
+public class EventSender implements RetryTimerListener
 {
     private static final String TAG = "EventSender";
 
-    /**
-     * Broadcast receiver
-     */
-    private BroadcastReceiver receiver;
     /**
      * Runtime manager instance
      */
@@ -59,11 +49,10 @@ public abstract class EventSender implements RetryTimerListener
      */
     private RetryTimer retryTimer;
 
-// -------------------------------------------->
-
     /**
-     * @param runtimeManager
-     * @param listener
+     * Constructor
+     * @param runtimeManager runtime manager
+     * @param listener event sender callback
      */
     public EventSender(RuntimeManager runtimeManager, EventSenderListener listener)
     {
@@ -78,37 +67,7 @@ public abstract class EventSender implements RetryTimerListener
         this.runtimeManager = runtimeManager;
         this.listener = listener;
         this.retryTimer = new RetryTimer(runtimeManager.getContext(), this);
-
-        receiver = new BroadcastReceiver()
-        {
-            @Override
-            public void onReceive(Context context, Intent intent)
-            {
-                if (getWebserviceFinishedEvent().equals(intent.getAction())) {
-                    webserviceFinished();
-                } else if (Webservice.WEBSERVICE_SUCCEED_EVENT.equals(intent.getAction())) {
-                    onConnectionReady();
-                } else if (Reachability.CONNECTIVITY_CHANGED_EVENT.equals(intent.getAction())) {
-                    boolean isConnected = intent.getBooleanExtra(Reachability.IS_CONNECTED_KEY,
-                            true);
-                    if (isConnected) {
-                        onConnectionReady();
-                    }
-                }
-            }
-        };
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(getWebserviceFinishedEvent());
-        filter.addAction(Webservice.WEBSERVICE_SUCCEED_EVENT);
-        filter.addAction(Reachability.CONNECTIVITY_CHANGED_EVENT);
-
-        LocalBroadcastManagerProvider.get(runtimeManager.getContext()).registerReceiver(
-                receiver,
-                filter);
     }
-
-// -------------------------------------------->
 
     /**
      * Try to send events
@@ -158,7 +117,7 @@ public abstract class EventSender implements RetryTimerListener
                         public void onSuccess(final List<Event> events)
                         {
                             // Inform retry timer of success
-                            retryTimer.onSendSuccess();
+                            retryTimer.reset();
 
                             // Call listener if SDK is not OFF
                             runtimeManager.run(state -> {
@@ -172,14 +131,13 @@ public abstract class EventSender implements RetryTimerListener
                         @Override
                         public void onFailure(FailReason reason, final List<Event> events)
                         {
-                            // Inform retry timer of failure
-                            retryTimer.onSendFail(reason);
+                            // Inform retry timer of failure and schedule a retry
+                            retryTimer.reschedule();
 
                             // Call listener if SDK is not OFF
                             runtimeManager.run(state -> {
                                 if (state != State.OFF) {
                                     listener.onEventsSendFailure(events);
-                                    hasNewEvents.set(true);
                                 }
                             });
                         }
@@ -189,22 +147,12 @@ public abstract class EventSender implements RetryTimerListener
                         {
                             // Set sending to false
                             isSending.set(false);
-
-                            // Send finish broadcast if SDK is not off
-                            runtimeManager.run(state -> {
-                                if (state != State.OFF) {
-                                    LocalBroadcastManagerProvider.get(runtimeManager.getContext())
-                                            .sendBroadcast(
-                                                    new Intent(getWebserviceFinishedEvent()));
-                                }
-                            });
                         }
                     }).run();
                 });
             }
         });
     }
-
 
     /**
      * Inform the sender that new events are available to send
@@ -216,59 +164,27 @@ public abstract class EventSender implements RetryTimerListener
     }
 
     /**
-     * Handle webservice finished
+     * Retry method called in the RetryTimer when a task is rescheduled
      */
-    private void webserviceFinished()
-    {
-        if (hasNewEvents.get()) {
-            send();
-        }
-    }
-
-    /**
-     * Handle connection ready event (when network is back)
-     */
-    private void onConnectionReady()
-    {
-        retryTimer.onInternetRetrieved();
-
-        if (hasNewEvents.get()) {
-            send();
-        }
-    }
-
-// -------------------------------------------->
-
     @Override
     public void retry()
     {
         send(true);
     }
 
-// -------------------------------------------->
-
     /**
-     * Event to broadcast when webservice finish (Intent action)
+     * Get a task of the webservice to send the events
      *
-     * @return
+     * @param events events to send
+     * @param listener callback
+     * @return Runnable task
      */
-    protected abstract String getWebserviceFinishedEvent();
-
-    /**
-     * Should return a task runnable of the webservice to send events
-     *
-     * @param events
-     * @param listener
-     * @return
-     */
-    protected abstract TaskRunnable getWebserviceTask(List<Event> events,
-                                                      TrackerWebserviceListener listener);
-
-// -------------------------------------------->
+    private TaskRunnable getWebserviceTask(List<Event> events, TrackerWebserviceListener listener){
+        return WebserviceLauncher.initTrackerWebservice(runtimeManager, events, listener);
+    }
 
     /**
      * Listener of the event sender
-     *
      */
     public interface EventSenderListener
     {

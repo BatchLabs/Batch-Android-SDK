@@ -1,7 +1,6 @@
 package com.batch.android.core;
 
 import android.content.Context;
-import android.content.Intent;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -9,7 +8,6 @@ import androidx.annotation.Nullable;
 
 import com.batch.android.core.URLBuilder.CryptorMode;
 import com.batch.android.core.Webservice.WebserviceError.Reason;
-import com.batch.android.di.providers.LocalBroadcastManagerProvider;
 import com.batch.android.di.providers.OptOutModuleProvider;
 import com.batch.android.di.providers.ParametersProvider;
 import com.batch.android.di.providers.SecureDateProviderProvider;
@@ -52,11 +50,6 @@ import javax.net.ssl.SSLHandshakeException;
 public abstract class Webservice
 {
     private static final String TAG = "Webservice";
-
-    /**
-     * Event triggered when a webservice succeed
-     */
-    public static final String WEBSERVICE_SUCCEED_EVENT = "ba_ws_succeed";
 
     /**
      * HTTP error code sent by the server if our cipher can't be read
@@ -541,12 +534,6 @@ public abstract class Webservice
                 try {
                     connection.disconnect();
                 } catch (Exception ignored) {
-                }
-
-                if (error == null) {
-                    // Broadcast event
-                    LocalBroadcastManagerProvider.get(applicationContext).sendBroadcast(
-                            new Intent(WEBSERVICE_SUCCEED_EVENT));
                 }
             }
 

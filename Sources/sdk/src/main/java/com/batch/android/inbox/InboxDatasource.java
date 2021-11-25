@@ -26,7 +26,6 @@ import java.util.Map;
 
 /**
  * Inbox datasource. Wraps SQLite queries (DAO).
- *
  */
 @Module
 @Singleton
@@ -107,6 +106,7 @@ public final class InboxDatasource
                 + " ON " + InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS + "." + InboxDatabaseHelper.COLUMN_NOTIFICATION_ID
                 + " = " + InboxDatabaseHelper.TABLE_NOTIFICATIONS + "." + InboxDatabaseHelper.COLUMN_NOTIFICATION_ID
                 + " WHERE " + InboxDatabaseHelper.COLUMN_FETCHER_ID + " = ?"
+                + " AND " + InboxDatabaseHelper.TABLE_NOTIFICATIONS + "." + InboxDatabaseHelper.COLUMN_DELETED + "= 0"
                 + " AND " + InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS + "." + InboxDatabaseHelper.COLUMN_NOTIFICATION_ID
                 + " IN (" + createInClause(notificationIds.size()) + ")"
                 + " ORDER BY " + InboxDatabaseHelper.COLUMN_DATE + " DESC";
@@ -489,6 +489,40 @@ public final class InboxDatasource
     }
 
     /**
+     * Mark a notification as read
+     *
+     * @param notificationID the notification identifier
+     */
+    public void markNotificationAsRead(String notificationID)
+    {
+        ContentValues values = new ContentValues();
+        values.put(InboxDatabaseHelper.COLUMN_UNREAD, 0);
+        database.update(
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                values,
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " = ?",
+                new String[]{notificationID}
+        );
+    }
+
+    /**
+     * Mark a notification as deleted locally
+     *
+     * @param notificationID the notification identifier
+     */
+    public void markNotificationAsDeleted(String notificationID)
+    {
+        ContentValues values = new ContentValues();
+        values.put(InboxDatabaseHelper.COLUMN_DELETED, 1);
+        database.update(
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                values,
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " = ?",
+                new String[]{notificationID}
+        );
+    }
+
+    /**
      * Delete notification by ID
      *
      * @param notificationIds IDs of the notifications to delete
@@ -599,13 +633,11 @@ public final class InboxDatasource
             c.body = payload.reallyOptString(Batch.Push.BODY_KEY, null);
             c.title = payload.reallyOptString(Batch.Push.TITLE_KEY, null);
             c.isUnread = cursor.getInt(cursor.getColumnIndexOrThrow(InboxDatabaseHelper.COLUMN_UNREAD)) != 0;
-            c.isDeleted = false;
 
             return c;
 
         } catch (JSONException e) {
-            Logger.internal(TAG,
-                    "Could not parse notification from DB", e);
+            Logger.internal(TAG, "Could not parse notification from DB", e);
         }
 
         // JSON IN DB IS INVALID -- TODO DELETE LINE

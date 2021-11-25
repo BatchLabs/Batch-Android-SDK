@@ -437,6 +437,15 @@ public class JSONObject implements Serializable
     }
 
     /**
+     * Returns true if this object has a mapping for {@code name}. The mapping
+     * CANNOT be {@link #NULL}.
+     */
+    public boolean hasNonNull(String name)
+    {
+        return this.has(name) && !this.isNull(name);
+    }
+
+    /**
      * Returns the value mapped by {@code name}, or throws if no such mapping exists.
      *
      * @throws JSONException if no such mapping exists.

@@ -11,6 +11,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,8 +24,10 @@ import java.util.Map;
 public class BatchEventDataTest
 {
     @Test
-    public void testValidData() throws JSONException
+    public void testValidData() throws JSONException, URISyntaxException
     {
+        URI uri = new URI("batch://batch.com");
+
         BatchEventData data = new BatchEventData();
         data.addTag("FOO");
         data.addTag("bAr");
@@ -37,6 +41,7 @@ public class BatchEventDataTest
         data.put("STRING", "foobar");
         data.put("123", " 456 ");
         data.put("now", new Date(1589466748930L));
+        data.put("url", uri);
 
         JSONObject json = data.toInternalJSON();
 
@@ -55,6 +60,7 @@ public class BatchEventDataTest
         Assert.assertEquals("foobar", (String) values.get("string.s"));
         Assert.assertEquals(" 456 ", (String) values.get("123.s"));
         Assert.assertEquals(1589466748930L, values.get("now.t"));
+        Assert.assertEquals(uri, values.get("url.u"));
 
         Assert.assertEquals(null, json.opt("converted"));
     }
@@ -145,9 +151,10 @@ public class BatchEventDataTest
     }
 
     @Test
-    public void testLegacyDataConversion() throws JSONException
+    public void testLegacyDataConversion() throws JSONException, URISyntaxException
     {
         JSONObject legacyData = new JSONObject();
+        URI uri = new URI("batch://batch.com");
 
         // Don't remove the casts or the test fails due to JSONObject weirdness
         legacyData.put("int", 1);
@@ -156,6 +163,7 @@ public class BatchEventDataTest
         legacyData.put("double", (Double) 1.0d);
         legacyData.put("bool", true);
         legacyData.put("string", "foobar");
+        legacyData.put("url", uri);
 
 
         BatchEventData data = new BatchEventData(legacyData);
@@ -171,8 +179,9 @@ public class BatchEventDataTest
         Assert.assertEquals(1.0d, values.get("double.f"));
         Assert.assertEquals(true, values.get("bool.b"));
         Assert.assertEquals("foobar", (String) values.get("string.s"));
+        Assert.assertEquals(uri, (URI) values.get("url.u"));
 
-        Assert.assertEquals(true, json.getBoolean("converted"));
+        Assert.assertTrue(json.getBoolean("converted"));
     }
 
     @Test

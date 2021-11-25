@@ -23,18 +23,21 @@
     <!-- Geofences/Beacons permission -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-
     <application
         android:name="com.batch.android.TestApplication"
         android:debuggable="true">
-
         <activity
             android:name="com.batch.android.TestActivity"
             android:exported="false"
-            android:theme="@style/com_batchsdk_ActionActivityTheme">
+            android:theme="@style/com_batchsdk_ActionActivityTheme" />
+        <activity
+            android:name="com.batch.android.TestExcludedActivity"
+            android:exported="false">
+            <meta-data
+                android:name="com.batch.android.EXCLUDE_FROM_LIFECYCLE"
+                android:value="true" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

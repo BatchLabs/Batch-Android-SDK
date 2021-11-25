@@ -1,15 +1,10 @@
 package com.batch.android.query.response;
 
-import android.content.Context;
-
-import com.batch.android.json.JSONException;
-import com.batch.android.json.JSONObject;
 import com.batch.android.query.AttributesSendQuery;
 import com.batch.android.query.QueryType;
 
 /**
  * Response for {@link AttributesSendQuery}
- *
  */
 public class AttributesSendResponse extends Response
 {
@@ -17,17 +12,18 @@ public class AttributesSendResponse extends Response
 
     public long version = -1L;
 
-    public AttributesSendResponse(Context context, JSONObject response) throws JSONException
+    public AttributesSendResponse(String queryID)
     {
-        super(context, QueryType.ATTRIBUTES, response);
-
-        if (response.has("trid") && !response.isNull("trid")) {
-            transactionID = response.getString("trid");
-        }
-
-        if (response.has("ver") && !response.isNull("ver")) {
-            version = response.getLong("ver");
-        }
+        super(QueryType.ATTRIBUTES, queryID);
     }
 
+    public void setTransactionID(String transactionID)
+    {
+        this.transactionID = transactionID;
+    }
+
+    public void setVersion(long version)
+    {
+        this.version = version;
+    }
 }
