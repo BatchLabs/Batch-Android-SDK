@@ -198,7 +198,7 @@ public class BatchMessagingWebViewJavascriptBridge
     {
         try {
             AdvertisingID advertisingID = Batch.getAdvertisingID();
-            if (advertisingID.isNotNull()) {
+            if (advertisingID != null && advertisingID.isNotNull()) {
                 return advertisingID.get();
             }
         } catch (IllegalArgumentException ignored) {

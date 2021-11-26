@@ -379,7 +379,7 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
             data.put("cus", customID);
         }
 
-        if (Batch.shouldUseAdvertisingID() && advertisingID.isNotNull()) {
+        if (Batch.shouldUseAdvertisingID() && advertisingID != null && advertisingID.isNotNull()) {
             try {
                 String idv = advertisingID.get();
                 if (idv != null) {

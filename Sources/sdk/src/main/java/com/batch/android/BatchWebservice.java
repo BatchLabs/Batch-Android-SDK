@@ -210,18 +210,20 @@ abstract public class BatchWebservice extends Webservice
                 } else if (SystemParameterShortName.ADVERTISING_ID.shortName.equals(parameter)) {
                     if (Batch.shouldUseAdvertisingID()) {
                         AdvertisingID advertisingID = Batch.getAdvertisingID();
-
-                        boolean isIdfaAvailable = advertisingID.isReady() && advertisingID.isNotNull();
-                        if (isIdfaAvailable) {
-                            ids.put(parameter, advertisingID.get());
+                        if (advertisingID != null) {
+                            boolean isIdfaAvailable = advertisingID.isReady() && advertisingID.isNotNull();
+                            if (isIdfaAvailable) {
+                                ids.put(parameter, advertisingID.get());
+                            }
                         }
                     }
                 } else if (SystemParameterShortName.ADVERTISING_ID_OPTIN.shortName.equals(parameter)) {
                     AdvertisingID advertisingID = Batch.getAdvertisingID();
-
-                    boolean isIdfaAvailable = advertisingID.isReady();
-                    if (isIdfaAvailable) {
-                        ids.put(parameter, !advertisingID.isLimited());
+                    if (advertisingID != null) {
+                        boolean isIdfaAvailable = advertisingID.isReady();
+                        if (isIdfaAvailable) {
+                            ids.put(parameter, !advertisingID.isLimited());
+                        }
                     }
                 } else if (SystemParameterShortName.BRIDGE_VERSION.shortName.equals(parameter)) {
                     String val = SystemParameterHelper.getBridgeVersion();
