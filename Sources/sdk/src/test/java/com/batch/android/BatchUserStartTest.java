@@ -1,5 +1,4 @@
 package com.batch.android;
-
 /*
 @RunWith(AndroidJUnit4.class)
 @SmallTest

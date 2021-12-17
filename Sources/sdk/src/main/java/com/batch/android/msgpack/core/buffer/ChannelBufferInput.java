@@ -15,65 +15,57 @@
 //
 package com.batch.android.msgpack.core.buffer;
 
+import static com.batch.android.msgpack.core.Preconditions.checkArgument;
+import static com.batch.android.msgpack.core.Preconditions.checkNotNull;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
-import static com.batch.android.msgpack.core.Preconditions.checkArgument;
-import static com.batch.android.msgpack.core.Preconditions.checkNotNull;
-
 /**
  * {@link MessageBufferInput} adapter for {@link java.nio.channels.ReadableByteChannel}
  */
-public class ChannelBufferInput
-        implements MessageBufferInput
-{
-    private ReadableByteChannel channel;
-    private final MessageBuffer buffer;
+public class ChannelBufferInput implements MessageBufferInput {
 
-    public ChannelBufferInput(ReadableByteChannel channel)
-    {
-        this(channel, 8192);
-    }
+  private ReadableByteChannel channel;
+  private final MessageBuffer buffer;
 
-    public ChannelBufferInput(ReadableByteChannel channel, int bufferSize)
-    {
-        this.channel = checkNotNull(channel, "input channel is null");
-        checkArgument(bufferSize > 0, "buffer size must be > 0: " + bufferSize);
-        this.buffer = MessageBuffer.allocate(bufferSize);
-    }
+  public ChannelBufferInput(ReadableByteChannel channel) {
+    this(channel, 8192);
+  }
 
-    /**
-     * Reset channel. This method doesn't close the old resource.
-     *
-     * @param channel new channel
-     * @return the old resource
-     */
-    public ReadableByteChannel reset(ReadableByteChannel channel)
-            throws IOException
-    {
-        ReadableByteChannel old = this.channel;
-        this.channel = channel;
-        return old;
-    }
+  public ChannelBufferInput(ReadableByteChannel channel, int bufferSize) {
+    this.channel = checkNotNull(channel, "input channel is null");
+    checkArgument(bufferSize > 0, "buffer size must be > 0: " + bufferSize);
+    this.buffer = MessageBuffer.allocate(bufferSize);
+  }
 
-    @Override
-    public MessageBuffer next()
-            throws IOException
-    {
-        ByteBuffer b = buffer.sliceAsByteBuffer();
-        int ret = channel.read(b);
-        if (ret == -1) {
-            return null;
-        }
-        b.flip();
-        return buffer.slice(0, b.limit());
-    }
+  /**
+   * Reset channel. This method doesn't close the old resource.
+   *
+   * @param channel new channel
+   * @return the old resource
+   */
+  public ReadableByteChannel reset(ReadableByteChannel channel)
+    throws IOException {
+    ReadableByteChannel old = this.channel;
+    this.channel = channel;
+    return old;
+  }
 
-    @Override
-    public void close()
-            throws IOException
-    {
-        channel.close();
+  @Override
+  public MessageBuffer next() throws IOException {
+    ByteBuffer b = buffer.sliceAsByteBuffer();
+    int ret = channel.read(b);
+    if (ret == -1) {
+      return null;
     }
+    b.flip();
+    return buffer.slice(0, b.limit());
+  }
+
+  @Override
+  public void close() throws IOException {
+    channel.close();
+  }
 }

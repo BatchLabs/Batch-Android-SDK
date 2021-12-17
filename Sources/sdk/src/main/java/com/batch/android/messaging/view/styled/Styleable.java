@@ -7,7 +7,6 @@ import java.util.Map;
  * A styleable view will understand CSS-like rules and apply them on itself.
  *
  */
-public interface Styleable
-{
-    void applyStyleRules(Map<String, String> rules);
+public interface Styleable {
+  void applyStyleRules(Map<String, String> rules);
 }

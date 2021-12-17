@@ -1,14 +1,12 @@
 package com.batch.android.localcampaigns.persistence;
 
 import android.app.Activity;
-
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 import androidx.test.rule.ActivityTestRule;
-
 import com.batch.android.TestActivity;
 import com.batch.android.json.JSONObject;
-
+import java.util.UUID;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -18,80 +16,89 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
-import java.util.UUID;
-
 @RunWith(AndroidJUnit4.class)
 @SmallTest
-public class LocalCampaignsFilePersistenceTest
-{
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
+public class LocalCampaignsFilePersistenceTest {
 
-    @Rule
-    public ActivityTestRule<TestActivity> mActivityRule = new ActivityTestRule<>(TestActivity.class,
-            false,
-            true);
+  @Rule
+  public final ExpectedException exception = ExpectedException.none();
 
-    private LocalCampaignsFilePersistence persister;
-    private Activity activity;
+  @Rule
+  public ActivityTestRule<TestActivity> mActivityRule = new ActivityTestRule<>(
+    TestActivity.class,
+    false,
+    true
+  );
 
-    @Before
-    public void setUp()
-    {
-        persister = new LocalCampaignsFilePersistence();
-        activity = mActivityRule.getActivity();
-    }
+  private LocalCampaignsFilePersistence persister;
+  private Activity activity;
 
-    @After
-    public void tearDown() throws NoSuchFieldException, IllegalAccessException
-    {
-        Mockito.validateMockitoUsage();
-    }
+  @Before
+  public void setUp() {
+    persister = new LocalCampaignsFilePersistence();
+    activity = mActivityRule.getActivity();
+  }
 
-    @Test
-    public void testHasSavedData() throws PersistenceException
-    {
-        String randomFileName = UUID.randomUUID().toString() + ".toto";
+  @After
+  public void tearDown() throws NoSuchFieldException, IllegalAccessException {
+    Mockito.validateMockitoUsage();
+  }
 
-        Assert.assertFalse("The file must not exist",
-                persister.hasSavedData(activity, randomFileName));
+  @Test
+  public void testHasSavedData() throws PersistenceException {
+    String randomFileName = UUID.randomUUID().toString() + ".toto";
 
-        persister.persistData(activity, new JSONObject(), randomFileName);
-        Assert.assertTrue("The file was supposed to be created.",
-                persister.hasSavedData(activity, randomFileName));
+    Assert.assertFalse(
+      "The file must not exist",
+      persister.hasSavedData(activity, randomFileName)
+    );
 
-        persister.deleteData(activity, randomFileName);
-        Assert.assertFalse("The file was supposed to be deleted.",
-                persister.hasSavedData(activity, randomFileName));
-    }
+    persister.persistData(activity, new JSONObject(), randomFileName);
+    Assert.assertTrue(
+      "The file was supposed to be created.",
+      persister.hasSavedData(activity, randomFileName)
+    );
 
-    @Test
-    public void testSaveAndLoadData() throws Exception
-    {
-        String randomFileName = UUID.randomUUID().toString() + ".toto";
+    persister.deleteData(activity, randomFileName);
+    Assert.assertFalse(
+      "The file was supposed to be deleted.",
+      persister.hasSavedData(activity, randomFileName)
+    );
+  }
 
-        JSONObject savedData = new JSONObject();
-        savedData.put("toto", 11);
-        savedData.put("tata", 12);
+  @Test
+  public void testSaveAndLoadData() throws Exception {
+    String randomFileName = UUID.randomUUID().toString() + ".toto";
 
-        persister.persistData(activity, savedData, randomFileName);
+    JSONObject savedData = new JSONObject();
+    savedData.put("toto", 11);
+    savedData.put("tata", 12);
 
-        JSONObject expectedData = new JSONObject(savedData);
-        expectedData.put(LocalCampaignsFilePersistence.PERSISTENCE_SAVE_VERSION_KEY,
-                LocalCampaignsFilePersistence.PERSISTENCE_CURRENT_FILE_VERSION);
+    persister.persistData(activity, savedData, randomFileName);
 
-        JSONObject loadedData = persister.loadData(activity, randomFileName);
-        Assert.assertNotNull(loadedData);
+    JSONObject expectedData = new JSONObject(savedData);
+    expectedData.put(
+      LocalCampaignsFilePersistence.PERSISTENCE_SAVE_VERSION_KEY,
+      LocalCampaignsFilePersistence.PERSISTENCE_CURRENT_FILE_VERSION
+    );
 
-        Assert.assertEquals("Loaded data not equals to saved data",
-                expectedData.toString(),
-                loadedData.toString());
+    JSONObject loadedData = persister.loadData(activity, randomFileName);
+    Assert.assertNotNull(loadedData);
 
-        savedData.put(LocalCampaignsFilePersistence.PERSISTENCE_SAVE_VERSION_KEY, -1);
-        persister.persistData(activity, savedData, randomFileName);
+    Assert.assertEquals(
+      "Loaded data not equals to saved data",
+      expectedData.toString(),
+      loadedData.toString()
+    );
 
-        // Must throw an exception when loading a file with an invalid save version
-        exception.expect(PersistenceException.class);
-        persister.loadData(activity, randomFileName);
-    }
+    savedData.put(
+      LocalCampaignsFilePersistence.PERSISTENCE_SAVE_VERSION_KEY,
+      -1
+    );
+    persister.persistData(activity, savedData, randomFileName);
+
+    // Must throw an exception when loading a file with an invalid save version
+    exception.expect(PersistenceException.class);
+    persister.loadData(activity, randomFileName);
+  }
 }

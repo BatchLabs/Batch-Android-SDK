@@ -8,11 +8,10 @@ import com.batch.android.localcampaigns.trigger.NextSessionTrigger;
  * Functionally equal to the {@link com.batch.android.runtime.SessionManager#INTENT_NEW_SESSION} local
  * broadcast
  */
-public class NewSessionSignal implements Signal
-{
-    @Override
-    public boolean satisfiesTrigger(LocalCampaign.Trigger trigger)
-    {
-        return trigger instanceof NextSessionTrigger;
-    }
+public class NewSessionSignal implements Signal {
+
+  @Override
+  public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
+    return trigger instanceof NextSessionTrigger;
+  }
 }

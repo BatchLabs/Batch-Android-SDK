@@ -21,39 +21,37 @@ import java.util.Set;
  * Please note that all concepts here are the result of our take on LISP, and might be different than existing
  * implementations.
  */
-public class Value
-{
-    final static String escapedString(String string)
-    {
-        String value = string.replaceAll("\n", "\\n");
-        value = value.replaceAll("\r", "\\r");
-        value = value.replaceAll("\t", "\\t");
-        value = value.replaceAll("\'", "\\'");
-        value = value.replaceAll("\"", "\\\"");
-        return value;
+public class Value {
+
+  static final String escapedString(String string) {
+    String value = string.replaceAll("\n", "\\n");
+    value = value.replaceAll("\r", "\\r");
+    value = value.replaceAll("\t", "\\t");
+    value = value.replaceAll("\'", "\\'");
+    value = value.replaceAll("\"", "\\\"");
+    return value;
+  }
+
+  static final String setToString(Set<String> set) {
+    if (!set.getClass().isInstance(Set.class)) {
+      return "[error]";
     }
 
-    final static String setToString(Set<String> set)
-    {
-        if (!set.getClass().isInstance(Set.class)) {
-            return "[error]";
-        }
+    StringBuilder toString = new StringBuilder();
 
-        StringBuilder toString = new StringBuilder();
+    toString.append("[");
 
-        toString.append("[");
-
-        int idx = 0;
-        for (String value : set) {
-            if (idx > 0) {
-                toString.append(" ");
-            }
-            toString.append("\"" + escapedString(value) + "\"");
-            idx += 1;
-        }
-
-        toString.append("]");
-
-        return toString.toString();
+    int idx = 0;
+    for (String value : set) {
+      if (idx > 0) {
+        toString.append(" ");
+      }
+      toString.append("\"" + escapedString(value) + "\"");
+      idx += 1;
     }
+
+    toString.append("]");
+
+    return toString.toString();
+  }
 }

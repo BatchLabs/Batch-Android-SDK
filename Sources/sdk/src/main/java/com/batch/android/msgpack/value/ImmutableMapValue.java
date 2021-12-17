@@ -20,7 +20,4 @@ package com.batch.android.msgpack.value;
  * <p>
  * MessagePack's Map type can represent sequence of key-value pairs.
  */
-public interface ImmutableMapValue
-        extends MapValue, ImmutableValue
-{
-}
+public interface ImmutableMapValue extends MapValue, ImmutableValue {}

@@ -131,5 +131,4 @@ public final class ParameterKeys
     public final static String LIB_CURRENTVERSION_KEY					= "app.version.current";
     public final static String LIB_PREVIOUSVERSION_KEY					= "app.version.previous";
 }
-
 //@formatter:on

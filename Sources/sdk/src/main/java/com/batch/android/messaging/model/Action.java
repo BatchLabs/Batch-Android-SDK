@@ -1,24 +1,21 @@
 package com.batch.android.messaging.model;
 
 import com.batch.android.json.JSONObject;
-
 import java.io.Serializable;
 
-public class Action implements Serializable
-{
-    private static final long serialVersionUID = 0L;
+public class Action implements Serializable {
 
-    public String action;
-    public JSONObject args;
+  private static final long serialVersionUID = 0L;
 
-    public Action(String action, JSONObject args)
-    {
-        this.action = action;
-        this.args = args;
-    }
+  public String action;
+  public JSONObject args;
 
-    public boolean isDismissAction()
-    {
-        return action == null || "batch.dismiss".equals(action);
-    }
+  public Action(String action, JSONObject args) {
+    this.action = action;
+    this.args = args;
+  }
+
+  public boolean isDismissAction() {
+    return action == null || "batch.dismiss".equals(action);
+  }
 }

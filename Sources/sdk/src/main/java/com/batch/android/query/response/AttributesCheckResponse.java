@@ -6,70 +6,61 @@ import com.batch.android.query.QueryType;
 /**
  * Response for {@link AttributesCheckQuery}
  */
-public class AttributesCheckResponse extends Response
-{
+public class AttributesCheckResponse extends Response {
 
-    private String actionString;
+  private String actionString;
 
-    public long version = -1L;
+  public long version = -1L;
 
-    public Long time = null;
+  public Long time = null;
 
-    public AttributesCheckResponse(String queryID)
-    {
-        super(QueryType.ATTRIBUTES_CHECK, queryID);
+  public AttributesCheckResponse(String queryID) {
+    super(QueryType.ATTRIBUTES_CHECK, queryID);
+  }
+
+  public Action getAction() {
+    if (actionString == null) {
+      return Action.UNKNOWN;
     }
 
-    public Action getAction()
-    {
-        if (actionString == null) {
-            return Action.UNKNOWN;
-        }
-
-        if ("OK".equalsIgnoreCase(actionString)) {
-            return Action.OK;
-        } else if ("BUMP".equalsIgnoreCase(actionString)) {
-            return Action.BUMP;
-        } else if ("RECHECK".equalsIgnoreCase(actionString)) {
-            return Action.RECHECK;
-        } else if ("RESEND".equalsIgnoreCase(actionString)) {
-            return Action.RESEND;
-        }
-
-        return Action.UNKNOWN;
+    if ("OK".equalsIgnoreCase(actionString)) {
+      return Action.OK;
+    } else if ("BUMP".equalsIgnoreCase(actionString)) {
+      return Action.BUMP;
+    } else if ("RECHECK".equalsIgnoreCase(actionString)) {
+      return Action.RECHECK;
+    } else if ("RESEND".equalsIgnoreCase(actionString)) {
+      return Action.RESEND;
     }
 
-    public enum Action
-    {
-        OK,
-        BUMP,
-        RECHECK,
-        RESEND,
-        UNKNOWN
-    }
+    return Action.UNKNOWN;
+  }
 
-    public void setActionString(String actionString)
-    {
-        this.actionString = actionString;
-    }
+  public enum Action {
+    OK,
+    BUMP,
+    RECHECK,
+    RESEND,
+    UNKNOWN,
+  }
 
-    public long getVersion()
-    {
-        return version;
-    }
+  public void setActionString(String actionString) {
+    this.actionString = actionString;
+  }
 
-    public void setVersion(long version)
-    {
-        this.version = version;
-    }
+  public long getVersion() {
+    return version;
+  }
 
-    public Long getTime()
-    {
-        return time;
-    }
+  public void setVersion(long version) {
+    this.version = version;
+  }
 
-    public void setTime(Long time)
-    {
-        this.time = time;
-    }
+  public Long getTime() {
+    return time;
+  }
+
+  public void setTime(Long time) {
+    this.time = time;
+  }
 }

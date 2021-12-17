@@ -1,24 +1,21 @@
 package com.batch.android.core;
 
-import android.content.Context;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
+import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Test UserPreferences object storage
@@ -26,129 +23,125 @@ import static org.junit.Assert.assertNull;
  */
 @RunWith(AndroidJUnit4.class)
 @SmallTest
-public class ObjectUserPreferencesStorageTest
-{
-    private Context appContext;
+public class ObjectUserPreferencesStorageTest {
 
-    @Before
-    public void setUp()
-    {
-        appContext = ApplicationProvider.getApplicationContext();
-    }
+  private Context appContext;
 
-    /**
-     * Test one write & read
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testUserPreferencesWriteRead() throws Exception
-    {
-        String key = "wrkey";
-        ObjectTest obj = generateObject();
+  @Before
+  public void setUp() {
+    appContext = ApplicationProvider.getApplicationContext();
+  }
 
-        ObjectUserPreferencesStorage storage = new ObjectUserPreferencesStorage(appContext);
-        storage.persist(key, obj);
+  /**
+   * Test one write & read
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testUserPreferencesWriteRead() throws Exception {
+    String key = "wrkey";
+    ObjectTest obj = generateObject();
 
-        assertEquals(obj, storage.get(key));
-    }
+    ObjectUserPreferencesStorage storage = new ObjectUserPreferencesStorage(
+      appContext
+    );
+    storage.persist(key, obj);
 
-    /**
-     * Test write & delete
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testUserPreferencesDelete() throws Exception
-    {
-        String key = "delkey";
-        ObjectTest obj = generateObject();
+    assertEquals(obj, storage.get(key));
+  }
 
-        ObjectUserPreferencesStorage storage = new ObjectUserPreferencesStorage(appContext);
-        storage.persist(key, obj);
+  /**
+   * Test write & delete
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testUserPreferencesDelete() throws Exception {
+    String key = "delkey";
+    ObjectTest obj = generateObject();
 
-        assertNotNull(storage.get(key));
+    ObjectUserPreferencesStorage storage = new ObjectUserPreferencesStorage(
+      appContext
+    );
+    storage.persist(key, obj);
 
-        storage.remove(key);
+    assertNotNull(storage.get(key));
 
-        assertNull(storage.get(key));
-    }
+    storage.remove(key);
 
-// --------------------------------------------->
+    assertNull(storage.get(key));
+  }
 
-    /**
-     * A test object that implements Serializable
-     *
-     */
-    private static class ObjectTest implements Serializable
-    {
-        private static final long serialVersionUID = 1L;
+  // --------------------------------------------->
 
-        public String id;
-        public Map<String, String> values = new HashMap<>();
-        public List<String> array = new ArrayList<>();
+  /**
+   * A test object that implements Serializable
+   *
+   */
+  private static class ObjectTest implements Serializable {
 
-        @Override
-        public boolean equals(Object obj)
-        {
-            if (this == obj) {
-                return true;
-            }
+    private static final long serialVersionUID = 1L;
 
-            if (obj == null) {
-                return false;
-            }
+    public String id;
+    public Map<String, String> values = new HashMap<>();
+    public List<String> array = new ArrayList<>();
 
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
 
-            ObjectTest other = (ObjectTest) obj;
-            if (array == null) {
-                if (other.array != null) {
-                    return false;
-                }
+      if (obj == null) {
+        return false;
+      }
 
-            } else if (!array.equals(other.array)) {
-                return false;
-            }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
 
-            if (id == null) {
-                if (other.id != null) {
-                    return false;
-                }
-
-            } else if (!id.equals(other.id)) {
-                return false;
-            }
-
-            if (values == null) {
-                if (other.values != null) {
-                    return false;
-                }
-
-            } else if (!values.equals(other.values)) {
-                return false;
-            }
-
-            return true;
+      ObjectTest other = (ObjectTest) obj;
+      if (array == null) {
+        if (other.array != null) {
+          return false;
         }
-    }
+      } else if (!array.equals(other.array)) {
+        return false;
+      }
 
-    /**
-     * Generate a test object with values
-     *
-     * @return
-     */
-    private static ObjectTest generateObject()
-    {
-        ObjectTest obj = new ObjectTest();
-        obj.id = "defaultID";
-        obj.values.put("Test", "Test");
-        obj.values.put("Test2", "Test2");
-        obj.array.add("Test");
-        obj.array.add("Test2");
+      if (id == null) {
+        if (other.id != null) {
+          return false;
+        }
+      } else if (!id.equals(other.id)) {
+        return false;
+      }
 
-        return obj;
+      if (values == null) {
+        if (other.values != null) {
+          return false;
+        }
+      } else if (!values.equals(other.values)) {
+        return false;
+      }
+
+      return true;
     }
+  }
+
+  /**
+   * Generate a test object with values
+   *
+   * @return
+   */
+  private static ObjectTest generateObject() {
+    ObjectTest obj = new ObjectTest();
+    obj.id = "defaultID";
+    obj.values.put("Test", "Test");
+    obj.values.put("Test2", "Test2");
+    obj.array.add("Test");
+    obj.array.add("Test2");
+
+    return obj;
+  }
 }

@@ -19,7 +19,6 @@ import com.batch.android.msgpack.core.MessagePacker;
 import com.batch.android.msgpack.value.ImmutableStringValue;
 import com.batch.android.msgpack.value.Value;
 import com.batch.android.msgpack.value.ValueType;
-
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -30,70 +29,61 @@ import java.util.Arrays;
  * @see com.batch.android.msgpack.value.StringValue
  */
 public class ImmutableStringValueImpl
-        extends AbstractImmutableRawValue
-        implements ImmutableStringValue
-{
-    public ImmutableStringValueImpl(byte[] data)
-    {
-        super(data);
+  extends AbstractImmutableRawValue
+  implements ImmutableStringValue {
+
+  public ImmutableStringValueImpl(byte[] data) {
+    super(data);
+  }
+
+  public ImmutableStringValueImpl(String string) {
+    super(string);
+  }
+
+  @Override
+  public ValueType getValueType() {
+    return ValueType.STRING;
+  }
+
+  @Override
+  public ImmutableStringValue immutableValue() {
+    return this;
+  }
+
+  @Override
+  public ImmutableStringValue asStringValue() {
+    return this;
+  }
+
+  @Override
+  public void writeTo(MessagePacker pk) throws IOException {
+    pk.packRawStringHeader(data.length);
+    pk.writePayload(data);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof Value)) {
+      return false;
+    }
+    Value v = (Value) o;
+    if (!v.isStringValue()) {
+      return false;
     }
 
-    public ImmutableStringValueImpl(String string)
-    {
-        super(string);
+    if (v instanceof ImmutableStringValueImpl) {
+      ImmutableStringValueImpl bv = (ImmutableStringValueImpl) v;
+      return Arrays.equals(data, bv.data);
+    } else {
+      return Arrays.equals(data, v.asStringValue().asByteArray());
     }
+  }
 
-    @Override
-    public ValueType getValueType()
-    {
-        return ValueType.STRING;
-    }
-
-    @Override
-    public ImmutableStringValue immutableValue()
-    {
-        return this;
-    }
-
-    @Override
-    public ImmutableStringValue asStringValue()
-    {
-        return this;
-    }
-
-    @Override
-    public void writeTo(MessagePacker pk)
-            throws IOException
-    {
-        pk.packRawStringHeader(data.length);
-        pk.writePayload(data);
-    }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (!( o instanceof Value )) {
-            return false;
-        }
-        Value v = (Value) o;
-        if (!v.isStringValue()) {
-            return false;
-        }
-
-        if (v instanceof ImmutableStringValueImpl) {
-            ImmutableStringValueImpl bv = (ImmutableStringValueImpl) v;
-            return Arrays.equals(data, bv.data);
-        } else {
-            return Arrays.equals(data, v.asStringValue().asByteArray());
-        }
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return Arrays.hashCode(data);
-    }
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(data);
+  }
 }

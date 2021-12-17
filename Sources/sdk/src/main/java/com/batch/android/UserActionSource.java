@@ -6,6 +6,4 @@ import com.batch.android.annotation.PublicSDK;
  * Represents an action source.
  */
 @PublicSDK
-public interface UserActionSource
-{
-}
+public interface UserActionSource {}

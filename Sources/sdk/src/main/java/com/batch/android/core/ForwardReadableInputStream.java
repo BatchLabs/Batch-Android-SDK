@@ -1,7 +1,6 @@
 package com.batch.android.core;
 
 import androidx.annotation.NonNull;
-
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -15,50 +14,47 @@ import java.io.InputStream;
  * <p>
  * IMPORTANT NOTE: This class does NOT forward .close() to the wrapped input stream.
  */
-public class ForwardReadableInputStream extends InputStream
-{
-    private int[] firstBytes;
+public class ForwardReadableInputStream extends InputStream {
 
-    private InputStream wrappedInputStream;
+  private int[] firstBytes;
 
-    private int readPosition = 0;
-    private int maxReadPosition;
+  private InputStream wrappedInputStream;
 
-    public ForwardReadableInputStream(@NonNull InputStream is, int bytesToRead) throws IOException
-    {
-        firstBytes = new int[bytesToRead];
-        maxReadPosition = bytesToRead - 1;
-        wrappedInputStream = is;
-        readFirstBytes(bytesToRead);
+  private int readPosition = 0;
+  private int maxReadPosition;
+
+  public ForwardReadableInputStream(@NonNull InputStream is, int bytesToRead)
+    throws IOException {
+    firstBytes = new int[bytesToRead];
+    maxReadPosition = bytesToRead - 1;
+    wrappedInputStream = is;
+    readFirstBytes(bytesToRead);
+  }
+
+  private void readFirstBytes(int count) throws IOException {
+    for (int i = 0; i < count; i++) {
+      int b = wrappedInputStream.read();
+      if (b == -1) {
+        throw new IOException("Stream terminated abruptly");
+      }
+      firstBytes[i] = b;
     }
+  }
 
-    private void readFirstBytes(int count) throws IOException
-    {
-        for (int i = 0; i < count; i++) {
-            int b = wrappedInputStream.read();
-            if (b == -1) {
-                throw new IOException("Stream terminated abruptly");
-            }
-            firstBytes[i] = b;
-        }
+  @Override
+  public int read() throws IOException {
+    if (readPosition <= maxReadPosition) {
+      int b = firstBytes[readPosition];
+      readPosition++;
+      return b;
     }
+    return wrappedInputStream.read();
+  }
 
-    @Override
-    public int read() throws IOException
-    {
-        if (readPosition <= maxReadPosition) {
-            int b = firstBytes[readPosition];
-            readPosition++;
-            return b;
-        }
-        return wrappedInputStream.read();
-    }
-
-    /**
-     * Get the first bytes that have already been read
-     */
-    public int[] getFirstBytes()
-    {
-        return firstBytes.clone();
-    }
+  /**
+   * Get the first bytes that have already been read
+   */
+  public int[] getFirstBytes() {
+    return firstBytes.clone();
+  }
 }

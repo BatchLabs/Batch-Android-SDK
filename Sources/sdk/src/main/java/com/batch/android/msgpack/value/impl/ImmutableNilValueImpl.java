@@ -19,7 +19,6 @@ import com.batch.android.msgpack.core.MessagePacker;
 import com.batch.android.msgpack.value.ImmutableNilValue;
 import com.batch.android.msgpack.value.Value;
 import com.batch.android.msgpack.value.ValueType;
-
 import java.io.IOException;
 
 /**
@@ -30,72 +29,60 @@ import java.io.IOException;
  * @see com.batch.android.msgpack.value.NilValue
  */
 public class ImmutableNilValueImpl
-        extends AbstractImmutableValue
-        implements ImmutableNilValue
-{
-    private static ImmutableNilValue instance = new ImmutableNilValueImpl();
+  extends AbstractImmutableValue
+  implements ImmutableNilValue {
 
-    public static ImmutableNilValue get()
-    {
-        return instance;
-    }
+  private static ImmutableNilValue instance = new ImmutableNilValueImpl();
 
-    private ImmutableNilValueImpl()
-    {
-    }
+  public static ImmutableNilValue get() {
+    return instance;
+  }
 
-    @Override
-    public ValueType getValueType()
-    {
-        return ValueType.NIL;
-    }
+  private ImmutableNilValueImpl() {}
 
-    @Override
-    public ImmutableNilValue immutableValue()
-    {
-        return this;
-    }
+  @Override
+  public ValueType getValueType() {
+    return ValueType.NIL;
+  }
 
-    @Override
-    public ImmutableNilValue asNilValue()
-    {
-        return this;
-    }
+  @Override
+  public ImmutableNilValue immutableValue() {
+    return this;
+  }
 
-    @Override
-    public void writeTo(MessagePacker pk)
-            throws IOException
-    {
-        pk.packNil();
-    }
+  @Override
+  public ImmutableNilValue asNilValue() {
+    return this;
+  }
 
-    @Override
-    public boolean equals(Object o)
-    {
-        if (o == this) {
-            return true;
-        }
-        if (!( o instanceof Value )) {
-            return false;
-        }
-        return ( (Value) o ).isNilValue();
-    }
+  @Override
+  public void writeTo(MessagePacker pk) throws IOException {
+    pk.packNil();
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return 0;
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) {
+      return true;
     }
+    if (!(o instanceof Value)) {
+      return false;
+    }
+    return ((Value) o).isNilValue();
+  }
 
-    @Override
-    public String toString()
-    {
-        return toJson();
-    }
+  @Override
+  public int hashCode() {
+    return 0;
+  }
 
-    @Override
-    public String toJson()
-    {
-        return "null";
-    }
+  @Override
+  public String toString() {
+    return toJson();
+  }
+
+  @Override
+  public String toJson() {
+    return "null";
+  }
 }

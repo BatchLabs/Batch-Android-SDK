@@ -3,10 +3,8 @@ package com.batch.android.core;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.os.Build;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-
 import java.util.List;
 
 /**
@@ -14,46 +12,50 @@ import java.util.List;
  */
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-public class JobHelper
-{
-    private static final int MAX_GENERATION_ATTEMPTS = 20;
+public class JobHelper {
 
-    public synchronized static int generateUniqueJobId(@NonNull JobScheduler scheduler) throws GenerationException
-    {
-        // Consider letting developers override this
-        int generatedId;
+  private static final int MAX_GENERATION_ATTEMPTS = 20;
 
-        for (int attempts = 0; attempts <= MAX_GENERATION_ATTEMPTS; attempts++) {
-            generatedId = (int) ( Math.random() * Integer.MAX_VALUE );
+  public static synchronized int generateUniqueJobId(
+    @NonNull JobScheduler scheduler
+  ) throws GenerationException {
+    // Consider letting developers override this
+    int generatedId;
 
-            if (!jobListContainsJobId(scheduler.getAllPendingJobs(), generatedId)) {
-                return generatedId;
-            }
-        }
+    for (int attempts = 0; attempts <= MAX_GENERATION_ATTEMPTS; attempts++) {
+      generatedId = (int) (Math.random() * Integer.MAX_VALUE);
 
-        throw new GenerationException("Could not generate an unique id: attempts exhausted");
+      if (!jobListContainsJobId(scheduler.getAllPendingJobs(), generatedId)) {
+        return generatedId;
+      }
     }
 
-    private static boolean jobListContainsJobId(List<JobInfo> jobList, int jobId)
-    {
-        if (jobList == null || jobList.size() == 0) {
-            return false;
-        }
+    throw new GenerationException(
+      "Could not generate an unique id: attempts exhausted"
+    );
+  }
 
-        for (JobInfo job : jobList) {
-            if (job.getId() == jobId) {
-                return true;
-            }
-        }
-
-        return false;
+  private static boolean jobListContainsJobId(
+    List<JobInfo> jobList,
+    int jobId
+  ) {
+    if (jobList == null || jobList.size() == 0) {
+      return false;
     }
 
-    public static class GenerationException extends Exception
-    {
-        public GenerationException(String message)
-        {
-            super(message);
-        }
+    for (JobInfo job : jobList) {
+      if (job.getId() == jobId) {
+        return true;
+      }
     }
+
+    return false;
+  }
+
+  public static class GenerationException extends Exception {
+
+    public GenerationException(String message) {
+      super(message);
+    }
+  }
 }

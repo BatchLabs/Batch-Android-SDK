@@ -9,18 +9,16 @@ package com.batch.android;
  *
  * @hide
  */
-class NotificationInterceptorRuntimeException extends Exception
-{
-    private RuntimeException wrappedRuntimeException;
+class NotificationInterceptorRuntimeException extends Exception {
 
-    NotificationInterceptorRuntimeException(RuntimeException cause)
-    {
-        super(cause);
-        this.wrappedRuntimeException = cause;
-    }
+  private RuntimeException wrappedRuntimeException;
 
-    public RuntimeException getWrappedRuntimeException()
-    {
-        return wrappedRuntimeException;
-    }
+  NotificationInterceptorRuntimeException(RuntimeException cause) {
+    super(cause);
+    this.wrappedRuntimeException = cause;
+  }
+
+  public RuntimeException getWrappedRuntimeException() {
+    return wrappedRuntimeException;
+  }
 }

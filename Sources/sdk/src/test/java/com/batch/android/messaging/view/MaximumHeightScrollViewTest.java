@@ -4,11 +4,9 @@ import android.content.Context;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View.MeasureSpec;
-
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,42 +14,52 @@ import org.robolectric.annotation.Config;
 
 @RunWith(AndroidJUnit4.class)
 @SmallTest
-public class MaximumHeightScrollViewTest
-{
-    @Test
-    @Config(qualifiers = "xhdpi")
-    public void testMaxHeight()
-    {
-        int expectedWidth = 100;
-        int widthMeasureSpec = MeasureSpec.makeMeasureSpec(expectedWidth, MeasureSpec.EXACTLY);
+public class MaximumHeightScrollViewTest {
 
-        int heightMeasureSpec = MeasureSpec.makeMeasureSpec(5000, MeasureSpec.AT_MOST);
+  @Test
+  @Config(qualifiers = "xhdpi")
+  public void testMaxHeight() {
+    int expectedWidth = 100;
+    int widthMeasureSpec = MeasureSpec.makeMeasureSpec(
+      expectedWidth,
+      MeasureSpec.EXACTLY
+    );
 
-        final Context context = ApplicationProvider.getApplicationContext();
-        final DisplayMetrics dm = context.getResources().getDisplayMetrics();
+    int heightMeasureSpec = MeasureSpec.makeMeasureSpec(
+      5000,
+      MeasureSpec.AT_MOST
+    );
 
-        final MaximumHeightScrollView view = new MaximumHeightScrollView(context);
+    final Context context = ApplicationProvider.getApplicationContext();
+    final DisplayMetrics dm = context.getResources().getDisplayMetrics();
 
-        view.measure(widthMeasureSpec, heightMeasureSpec);
-        Assert.assertEquals(expectedWidth, view.getMeasuredWidth());
-        Assert.assertEquals(0, view.getMeasuredHeight());
+    final MaximumHeightScrollView view = new MaximumHeightScrollView(context);
 
-        int maxHeightDp = 200;
-        int maxHeightPx = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                maxHeightDp,
-                dm);
+    view.measure(widthMeasureSpec, heightMeasureSpec);
+    Assert.assertEquals(expectedWidth, view.getMeasuredWidth());
+    Assert.assertEquals(0, view.getMeasuredHeight());
 
-        view.setMaxHeight(maxHeightDp);
-        view.measure(widthMeasureSpec, heightMeasureSpec);
-        Assert.assertEquals(expectedWidth, view.getMeasuredWidth());
-        Assert.assertEquals(maxHeightPx, view.getMeasuredHeight(), 0);
+    int maxHeightDp = 200;
+    int maxHeightPx = (int) TypedValue.applyDimension(
+      TypedValue.COMPLEX_UNIT_DIP,
+      maxHeightDp,
+      dm
+    );
 
-        maxHeightDp = 400;
+    view.setMaxHeight(maxHeightDp);
+    view.measure(widthMeasureSpec, heightMeasureSpec);
+    Assert.assertEquals(expectedWidth, view.getMeasuredWidth());
+    Assert.assertEquals(maxHeightPx, view.getMeasuredHeight(), 0);
 
-        view.setMaxHeight(maxHeightDp);
-        view.measure(widthMeasureSpec, heightMeasureSpec);
-        Assert.assertEquals(expectedWidth, view.getMeasuredWidth());
-        Assert.assertEquals(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, maxHeightDp, dm),
-                view.getMeasuredHeight(), 0);
-    }
+    maxHeightDp = 400;
+
+    view.setMaxHeight(maxHeightDp);
+    view.measure(widthMeasureSpec, heightMeasureSpec);
+    Assert.assertEquals(expectedWidth, view.getMeasuredWidth());
+    Assert.assertEquals(
+      TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, maxHeightDp, dm),
+      view.getMeasuredHeight(),
+      0
+    );
+  }
 }

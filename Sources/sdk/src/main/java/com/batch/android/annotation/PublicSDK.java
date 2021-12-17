@@ -11,6 +11,5 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
-public @interface PublicSDK
-{
+public @interface PublicSDK {
 }

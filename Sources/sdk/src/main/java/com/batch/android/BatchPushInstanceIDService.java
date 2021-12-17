@@ -9,13 +9,12 @@ import com.google.android.gms.iid.InstanceIDListenerService;
  *
  */
 @PublicSDK
-public class BatchPushInstanceIDService extends InstanceIDListenerService
-{
-    @Override
-    public void onTokenRefresh()
-    {
-        Batch.onServiceCreate(this, false);
-        PushModuleProvider.get().refreshRegistration();
-        Batch.onServiceDestroy(this);
-    }
+public class BatchPushInstanceIDService extends InstanceIDListenerService {
+
+  @Override
+  public void onTokenRefresh() {
+    Batch.onServiceCreate(this, false);
+    PushModuleProvider.get().refreshRegistration();
+    Batch.onServiceDestroy(this);
+  }
 }

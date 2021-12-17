@@ -62,93 +62,95 @@ import android.widget.FrameLayout;
  * if the percentage size is too small for the View's content, it will be resized using
  * {@code wrap_content} rule.
  */
-public class PercentFrameLayout extends FrameLayout
-{
-    private final PercentLayoutHelper mHelper = new PercentLayoutHelper(this);
+public class PercentFrameLayout extends FrameLayout {
 
-    public PercentFrameLayout(Context context)
-    {
-        super(context);
+  private final PercentLayoutHelper mHelper = new PercentLayoutHelper(this);
+
+  public PercentFrameLayout(Context context) {
+    super(context);
+  }
+
+  public PercentFrameLayout(Context context, AttributeSet attrs) {
+    super(context, attrs);
+  }
+
+  public PercentFrameLayout(
+    Context context,
+    AttributeSet attrs,
+    int defStyleAttr
+  ) {
+    super(context, attrs, defStyleAttr);
+  }
+
+  @Override
+  protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    mHelper.adjustChildren(widthMeasureSpec, heightMeasureSpec);
+    super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    if (mHelper.handleMeasuredStateTooSmall()) {
+      super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
+  }
+
+  @Override
+  protected void onLayout(
+    boolean changed,
+    int left,
+    int top,
+    int right,
+    int bottom
+  ) {
+    super.onLayout(changed, left, top, right, bottom);
+    mHelper.restoreOriginalParams();
+  }
+
+  public static class LayoutParams
+    extends FrameLayout.LayoutParams
+    implements PercentLayoutHelper.PercentLayoutParams {
+
+    private PercentLayoutHelper.PercentLayoutInfo mPercentLayoutInfo;
+
+    public LayoutParams(int width, int height) {
+      super(width, height);
     }
 
-    public PercentFrameLayout(Context context, AttributeSet attrs)
-    {
-        super(context, attrs);
+    public LayoutParams(int width, int height, int gravity) {
+      super(width, height, gravity);
     }
 
-    public PercentFrameLayout(Context context, AttributeSet attrs, int defStyleAttr)
-    {
-        super(context, attrs, defStyleAttr);
+    public LayoutParams(ViewGroup.LayoutParams source) {
+      super(source);
+    }
+
+    public LayoutParams(MarginLayoutParams source) {
+      super(source);
+    }
+
+    public LayoutParams(FrameLayout.LayoutParams source) {
+      super((MarginLayoutParams) source);
+      gravity = source.gravity;
+    }
+
+    public LayoutParams(LayoutParams source) {
+      this((FrameLayout.LayoutParams) source);
+      mPercentLayoutInfo = source.mPercentLayoutInfo;
     }
 
     @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
-    {
-        mHelper.adjustChildren(widthMeasureSpec, heightMeasureSpec);
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (mHelper.handleMeasuredStateTooSmall()) {
-            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        }
+    public PercentLayoutHelper.PercentLayoutInfo getPercentLayoutInfo() {
+      if (mPercentLayoutInfo == null) {
+        mPercentLayoutInfo = new PercentLayoutHelper.PercentLayoutInfo();
+      }
+
+      return mPercentLayoutInfo;
     }
 
     @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom)
-    {
-        super.onLayout(changed, left, top, right, bottom);
-        mHelper.restoreOriginalParams();
+    protected void setBaseAttributes(
+      TypedArray a,
+      int widthAttr,
+      int heightAttr
+    ) {
+      PercentLayoutHelper.fetchWidthAndHeight(this, a, widthAttr, heightAttr);
     }
-
-    public static class LayoutParams extends FrameLayout.LayoutParams
-            implements PercentLayoutHelper.PercentLayoutParams
-    {
-        private PercentLayoutHelper.PercentLayoutInfo mPercentLayoutInfo;
-
-        public LayoutParams(int width, int height)
-        {
-            super(width, height);
-        }
-
-        public LayoutParams(int width, int height, int gravity)
-        {
-            super(width, height, gravity);
-        }
-
-        public LayoutParams(ViewGroup.LayoutParams source)
-        {
-            super(source);
-        }
-
-        public LayoutParams(MarginLayoutParams source)
-        {
-            super(source);
-        }
-
-        public LayoutParams(FrameLayout.LayoutParams source)
-        {
-            super((MarginLayoutParams) source);
-            gravity = source.gravity;
-        }
-
-        public LayoutParams(LayoutParams source)
-        {
-            this((FrameLayout.LayoutParams) source);
-            mPercentLayoutInfo = source.mPercentLayoutInfo;
-        }
-
-        @Override
-        public PercentLayoutHelper.PercentLayoutInfo getPercentLayoutInfo()
-        {
-            if (mPercentLayoutInfo == null) {
-                mPercentLayoutInfo = new PercentLayoutHelper.PercentLayoutInfo();
-            }
-
-            return mPercentLayoutInfo;
-        }
-
-        @Override
-        protected void setBaseAttributes(TypedArray a, int widthAttr, int heightAttr)
-        {
-            PercentLayoutHelper.fetchWidthAndHeight(this, a, widthAttr, heightAttr);
-        }
-    }
+  }
 }

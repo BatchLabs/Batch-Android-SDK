@@ -1,8 +1,8 @@
 package com.batch.android.messaging.css;
 
-public class Declaration
-{
-    public String name;
+public class Declaration {
 
-    public String value;
+  public String name;
+
+  public String value;
 }

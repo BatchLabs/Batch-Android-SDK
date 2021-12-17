@@ -7,10 +7,9 @@ import com.batch.android.annotation.PublicSDK;
  * The value might be unknown for forward compatibility, or if the information was missing.
  */
 @PublicSDK
-public enum BatchNotificationSource
-{
-    UNKNOWN,
-    CAMPAIGN,
-    TRANSACTIONAL,
-    TRIGGER
+public enum BatchNotificationSource {
+  UNKNOWN,
+  CAMPAIGN,
+  TRANSACTIONAL,
+  TRIGGER,
 }

@@ -21,6 +21,4 @@ package com.batch.android.msgpack.value;
  * @see com.batch.android.msgpack.value.ExtensionValue
  */
 public interface ImmutableExtensionValue
-        extends ExtensionValue, ImmutableValue
-{
-}
+  extends ExtensionValue, ImmutableValue {}

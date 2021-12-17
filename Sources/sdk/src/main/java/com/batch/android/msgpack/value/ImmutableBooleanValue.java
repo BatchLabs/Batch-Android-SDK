@@ -20,7 +20,4 @@ package com.batch.android.msgpack.value;
  * <p>
  * MessagePack's Boolean type can represent {@code true} or {@code false}.
  */
-public interface ImmutableBooleanValue
-        extends BooleanValue, ImmutableValue
-{
-}
+public interface ImmutableBooleanValue extends BooleanValue, ImmutableValue {}

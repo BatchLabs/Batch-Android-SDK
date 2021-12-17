@@ -1,56 +1,57 @@
 package com.batch.android.post;
 
-import com.batch.android.json.JSONObject;
-
-import org.junit.Test;
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import com.batch.android.json.JSONObject;
+import org.junit.Test;
 
 /**
  * Test for JSONPostDataProvider
  *
  */
-public class JSONPostDataProviderTest
-{
-    /**
-     * Test that extracted data can be read
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testReadData() throws Exception
-    {
-        String key = "key";
-        String value = "value";
+public class JSONPostDataProviderTest {
 
-        JSONObject input = new JSONObject();
-        input.put(key, value);
+  /**
+   * Test that extracted data can be read
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testReadData() throws Exception {
+    String key = "key";
+    String value = "value";
 
-        JSONPostDataProvider provider = new JSONPostDataProvider(input);
-        assertTrue("Given input is not equals to raw data returned",
-                areEquals(input, provider.getRawData()));
+    JSONObject input = new JSONObject();
+    input.put(key, value);
 
-        byte[] data = provider.getData();
-        assertNotNull("data returned is null", data);
+    JSONPostDataProvider provider = new JSONPostDataProvider(input);
+    assertTrue(
+      "Given input is not equals to raw data returned",
+      areEquals(input, provider.getRawData())
+    );
 
-        assertTrue("decoded data is not equals to input",
-                areEquals(input, new JSONObject(new String(data))));
+    byte[] data = provider.getData();
+    assertNotNull("data returned is null", data);
+
+    assertTrue(
+      "decoded data is not equals to input",
+      areEquals(input, new JSONObject(new String(data)))
+    );
+  }
+
+  /**
+   * Are those 2 json object equals
+   *
+   * @param obj1
+   * @param obj2
+   * @return
+   */
+  private boolean areEquals(JSONObject obj1, JSONObject obj2) {
+    if (obj1 == obj2) {
+      return true;
     }
 
-    /**
-     * Are those 2 json object equals
-     *
-     * @param obj1
-     * @param obj2
-     * @return
-     */
-    private boolean areEquals(JSONObject obj1, JSONObject obj2)
-    {
-        if (obj1 == obj2) {
-            return true;
-        }
-
-        return obj1.toString().equals(obj2.toString());
-    }
+    return obj1.toString().equals(obj2.toString());
+  }
 }

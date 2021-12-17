@@ -22,7 +22,4 @@ package com.batch.android.msgpack.value;
  *
  * @see com.batch.android.msgpack.value.ImmutableNumberValue
  */
-public interface ImmutableFloatValue
-        extends FloatValue, ImmutableNumberValue
-{
-}
+public interface ImmutableFloatValue extends FloatValue, ImmutableNumberValue {}

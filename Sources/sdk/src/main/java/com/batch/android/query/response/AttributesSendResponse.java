@@ -6,24 +6,21 @@ import com.batch.android.query.QueryType;
 /**
  * Response for {@link AttributesSendQuery}
  */
-public class AttributesSendResponse extends Response
-{
-    public String transactionID;
+public class AttributesSendResponse extends Response {
 
-    public long version = -1L;
+  public String transactionID;
 
-    public AttributesSendResponse(String queryID)
-    {
-        super(QueryType.ATTRIBUTES, queryID);
-    }
+  public long version = -1L;
 
-    public void setTransactionID(String transactionID)
-    {
-        this.transactionID = transactionID;
-    }
+  public AttributesSendResponse(String queryID) {
+    super(QueryType.ATTRIBUTES, queryID);
+  }
 
-    public void setVersion(long version)
-    {
-        this.version = version;
-    }
+  public void setTransactionID(String transactionID) {
+    this.transactionID = transactionID;
+  }
+
+  public void setVersion(long version) {
+    this.version = version;
+  }
 }

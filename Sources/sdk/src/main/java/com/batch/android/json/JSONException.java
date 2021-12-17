@@ -44,11 +44,9 @@ import androidx.annotation.Keep;
  * }</pre>
  */
 @Keep
-public class JSONException extends Exception
-{
+public class JSONException extends Exception {
 
-    public JSONException(String s)
-    {
-        super(s);
-    }
+  public JSONException(String s) {
+    super(s);
+  }
 }

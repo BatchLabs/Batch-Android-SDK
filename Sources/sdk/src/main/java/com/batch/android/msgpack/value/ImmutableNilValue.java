@@ -18,7 +18,4 @@ package com.batch.android.msgpack.value;
 /**
  * Immutable representation of MessagePack's Nil type.
  */
-public interface ImmutableNilValue
-        extends NilValue, ImmutableValue
-{
-}
+public interface ImmutableNilValue extends NilValue, ImmutableValue {}

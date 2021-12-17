@@ -9,65 +9,66 @@ import com.batch.android.webservice.listener.AttributesCheckWebserviceListener;
  * Default implementation for attributes send webservice
  *
  */
-public class AttributesCheckWebserviceListenerImpl implements AttributesCheckWebserviceListener
-{
-    private static final long DEFAULT_RECHECK_TIME = 15000L; // 15s
+public class AttributesCheckWebserviceListenerImpl
+  implements AttributesCheckWebserviceListener {
 
-    @Override
-    public void onSuccess(AttributesCheckResponse response)
-    {
-        boolean foundValidAction = false;
+  private static final long DEFAULT_RECHECK_TIME = 15000L; // 15s
 
-        switch (response.getAction()) {
-            case OK:
-                // All good
-                foundValidAction = true;
-                break;
-            case RESEND: {
-                Long delay = response.time;
-                if (delay == null || delay < 0) {
-                    delay = 0L;
-                }
+  @Override
+  public void onSuccess(AttributesCheckResponse response) {
+    boolean foundValidAction = false;
 
-                UserModuleProvider.get().startSendWS(delay);
-                foundValidAction = true;
-                break;
-            }
-            case RECHECK: {
-                Long delay = response.time;
-                if (delay == null) {
-                    delay = DEFAULT_RECHECK_TIME;
-                }
+    switch (response.getAction()) {
+      case OK:
+        // All good
+        foundValidAction = true;
+        break;
+      case RESEND:
+        {
+          Long delay = response.time;
+          if (delay == null || delay < 0) {
+            delay = 0L;
+          }
 
-                if (delay < 0) {
-                    delay = 0L;
-                }
+          UserModuleProvider.get().startSendWS(delay);
+          foundValidAction = true;
+          break;
+        }
+      case RECHECK:
+        {
+          Long delay = response.time;
+          if (delay == null) {
+            delay = DEFAULT_RECHECK_TIME;
+          }
 
-                UserModuleProvider.get().startCheckWS(delay);
-                foundValidAction = true;
-                break;
-            }
-            case BUMP:
-                if (response.version <= 0) {
-                    // The server can't be at 0 and ask to bump.
-                    break;
-                }
+          if (delay < 0) {
+            delay = 0L;
+          }
 
-                UserModuleProvider.get().bumpVersion(response.version);
-                foundValidAction = true;
-                break;
-            case UNKNOWN:
-                break;
+          UserModuleProvider.get().startCheckWS(delay);
+          foundValidAction = true;
+          break;
+        }
+      case BUMP:
+        if (response.version <= 0) {
+          // The server can't be at 0 and ask to bump.
+          break;
         }
 
-        if (!foundValidAction) {
-            UserModuleProvider.get().startCheckWS(DEFAULT_RECHECK_TIME);
-        }
+        UserModuleProvider.get().bumpVersion(response.version);
+        foundValidAction = true;
+        break;
+      case UNKNOWN:
+        break;
     }
 
-    @Override
-    public void onError(FailReason reason)
-    {
-        UserModuleProvider.get().startCheckWS(DEFAULT_RECHECK_TIME);
+    if (!foundValidAction) {
+      UserModuleProvider.get().startCheckWS(DEFAULT_RECHECK_TIME);
     }
+  }
+
+  @Override
+  public void onError(FailReason reason) {
+    UserModuleProvider.get().startCheckWS(DEFAULT_RECHECK_TIME);
+  }
 }

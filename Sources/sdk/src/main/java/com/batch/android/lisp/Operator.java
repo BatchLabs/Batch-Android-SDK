@@ -1,14 +1,13 @@
 package com.batch.android.lisp;
 
-public final class Operator
-{
-    final String symbol;
+public final class Operator {
 
-    final OperatorHandler handler;
+  final String symbol;
 
-    public Operator(String symbol, OperatorHandler handler)
-    {
-        this.symbol = symbol;
-        this.handler = handler;
-    }
+  final OperatorHandler handler;
+
+  public Operator(String symbol, OperatorHandler handler) {
+    this.symbol = symbol;
+    this.handler = handler;
+  }
 }

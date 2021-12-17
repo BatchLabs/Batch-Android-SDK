@@ -23,7 +23,4 @@ package com.batch.android.msgpack.value;
  * @see com.batch.android.msgpack.value.ImmutableStringValue
  * @see com.batch.android.msgpack.value.ImmutableBinaryValue
  */
-public interface ImmutableRawValue
-        extends RawValue, ImmutableValue
-{
-}
+public interface ImmutableRawValue extends RawValue, ImmutableValue {}

@@ -7,27 +7,25 @@ import com.batch.android.query.response.TrackingResponse;
 /**
  * Deserializer class for {@link TrackingResponse}
  */
-public class TrackingResponseDeserializer extends ResponseDeserializer
-{
-    /**
-     * Constructor
-     *
-     * @param json json response
-     */
-    public TrackingResponseDeserializer(JSONObject json)
-    {
-        super(json);
-    }
+public class TrackingResponseDeserializer extends ResponseDeserializer {
 
-    /**
-     * Deserialize method
-     *
-     * @return TrackingResponse deserialized
-     * @throws JSONException parsing exception
-     */
-    @Override
-    public TrackingResponse deserialize() throws JSONException
-    {
-        return new TrackingResponse(getId());
-    }
+  /**
+   * Constructor
+   *
+   * @param json json response
+   */
+  public TrackingResponseDeserializer(JSONObject json) {
+    super(json);
+  }
+
+  /**
+   * Deserialize method
+   *
+   * @return TrackingResponse deserialized
+   * @throws JSONException parsing exception
+   */
+  @Override
+  public TrackingResponse deserialize() throws JSONException {
+    return new TrackingResponse(getId());
+  }
 }

@@ -20,11 +20,9 @@ package com.batch.android.msgpack.value;
  * <p>
  * MessagePack's Boolean type can represent {@code true} or {@code false}.
  */
-public interface BooleanValue
-        extends Value
-{
-    /**
-     * Returns the value as a {@code boolean}.
-     */
-    boolean getBoolean();
+public interface BooleanValue extends Value {
+  /**
+   * Returns the value as a {@code boolean}.
+   */
+  boolean getBoolean();
 }

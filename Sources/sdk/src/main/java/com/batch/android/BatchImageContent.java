@@ -1,10 +1,8 @@
 package com.batch.android;
 
 import android.graphics.Point;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.batch.android.annotation.PublicSDK;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
@@ -15,104 +13,92 @@ import com.batch.android.messaging.model.ImageMessage;
  * Model for the content of an image-only message
  */
 @PublicSDK
-public class BatchImageContent implements BatchInAppMessage.Content
-{
-    private Action globalTapAction;
-    private long globalTapDelay; // ms
-    private boolean allowSwipeToDismiss;
-    private String imageURL;
-    private String imageDescription;
-    private Size2D imageSize;
-    private int autoCloseDelay; // ms
-    private boolean isFullscreen;
+public class BatchImageContent implements BatchInAppMessage.Content {
 
-    BatchImageContent(@NonNull ImageMessage from)
-    {
-        globalTapDelay = from.globalTapDelay;
-        allowSwipeToDismiss = from.allowSwipeToDismiss;
-        imageURL = from.imageURL;
-        imageDescription = from.imageDescription;
-        imageSize = from.imageSize;
-        autoCloseDelay = from.autoCloseDelay;
-        isFullscreen = from.isFullscreen;
+  private Action globalTapAction;
+  private long globalTapDelay; // ms
+  private boolean allowSwipeToDismiss;
+  private String imageURL;
+  private String imageDescription;
+  private Size2D imageSize;
+  private int autoCloseDelay; // ms
+  private boolean isFullscreen;
 
-        if (from.globalTapAction != null) {
-            globalTapAction = new BatchImageContent.Action(from.globalTapAction);
+  BatchImageContent(@NonNull ImageMessage from) {
+    globalTapDelay = from.globalTapDelay;
+    allowSwipeToDismiss = from.allowSwipeToDismiss;
+    imageURL = from.imageURL;
+    imageDescription = from.imageDescription;
+    imageSize = from.imageSize;
+    autoCloseDelay = from.autoCloseDelay;
+    isFullscreen = from.isFullscreen;
+
+    if (from.globalTapAction != null) {
+      globalTapAction = new BatchImageContent.Action(from.globalTapAction);
+    }
+  }
+
+  @PublicSDK
+  public static class Action {
+
+    private String action;
+
+    private JSONObject args;
+
+    Action(@NonNull com.batch.android.messaging.model.Action from) {
+      action = from.action;
+      if (from.args != null) {
+        try {
+          args = new JSONObject(from.args);
+        } catch (JSONException e) {
+          args = new JSONObject();
         }
+      }
     }
 
-    @PublicSDK
-    public static class Action
-    {
-        private String action;
-
-        private JSONObject args;
-
-        Action(@NonNull com.batch.android.messaging.model.Action from)
-        {
-            action = from.action;
-            if (from.args != null) {
-                try {
-                    args = new JSONObject(from.args);
-                } catch (JSONException e) {
-                    args = new JSONObject();
-                }
-            }
-        }
-
-        @Nullable
-        public String getAction()
-        {
-            return action;
-        }
-
-        @Nullable
-        public JSONObject getArgs()
-        {
-            return args;
-        }
+    @Nullable
+    public String getAction() {
+      return action;
     }
 
-    public boolean isFullscreen()
-    {
-        return isFullscreen;
+    @Nullable
+    public JSONObject getArgs() {
+      return args;
     }
+  }
 
-    public int getAutoCloseDelay()
-    {
-        return autoCloseDelay;
-    }
+  public boolean isFullscreen() {
+    return isFullscreen;
+  }
 
-    public Point getImageSize()
-    {
-        if (imageSize == null) {
-            return null;
-        }
-        return new Point(imageSize.width, imageSize.height);
-    }
+  public int getAutoCloseDelay() {
+    return autoCloseDelay;
+  }
 
-    public String getImageDescription()
-    {
-        return imageDescription;
+  public Point getImageSize() {
+    if (imageSize == null) {
+      return null;
     }
+    return new Point(imageSize.width, imageSize.height);
+  }
 
-    public String getImageURL()
-    {
-        return imageURL;
-    }
+  public String getImageDescription() {
+    return imageDescription;
+  }
 
-    public boolean isAllowSwipeToDismiss()
-    {
-        return allowSwipeToDismiss;
-    }
+  public String getImageURL() {
+    return imageURL;
+  }
 
-    public long getGlobalTapDelay()
-    {
-        return globalTapDelay;
-    }
+  public boolean isAllowSwipeToDismiss() {
+    return allowSwipeToDismiss;
+  }
 
-    public Action getGlobalTapAction()
-    {
-        return globalTapAction;
-    }
+  public long getGlobalTapDelay() {
+    return globalTapDelay;
+  }
+
+  public Action getGlobalTapAction() {
+    return globalTapAction;
+  }
 }

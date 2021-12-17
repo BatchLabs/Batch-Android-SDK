@@ -6,14 +6,12 @@ import com.batch.android.query.QueryType;
 /**
  * Response for {@link PushQuery}
  */
-public class PushResponse extends Response
-{
-    /**
-     * @param queryID
-     */
-    public PushResponse(String queryID)
-    {
-        super(QueryType.PUSH, queryID);
-    }
+public class PushResponse extends Response {
 
+  /**
+   * @param queryID
+   */
+  public PushResponse(String queryID) {
+    super(QueryType.PUSH, queryID);
+  }
 }

@@ -7,12 +7,13 @@ import com.batch.android.messaging.model.BannerMessage;
  *
  * @hide
  */
-public class BatchBannerViewPrivateHelper
-{
-    public static BatchBannerView newInstance(BatchMessage rawMsg,
-                                              BannerMessage msg,
-                                              MessagingAnalyticsDelegate analyticsDelegate)
-    {
-        return new BatchBannerView(rawMsg, msg, analyticsDelegate);
-    }
+public class BatchBannerViewPrivateHelper {
+
+  public static BatchBannerView newInstance(
+    BatchMessage rawMsg,
+    BannerMessage msg,
+    MessagingAnalyticsDelegate analyticsDelegate
+  ) {
+    return new BatchBannerView(rawMsg, msg, analyticsDelegate);
+  }
 }

@@ -1,5 +1,3 @@
 package com.batch.android.messaging.css;
 
-public class Variable extends Declaration
-{
-}
+public class Variable extends Declaration {}

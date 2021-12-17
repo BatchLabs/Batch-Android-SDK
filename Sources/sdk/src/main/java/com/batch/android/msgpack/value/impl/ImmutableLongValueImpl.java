@@ -23,7 +23,6 @@ import com.batch.android.msgpack.value.ImmutableNumberValue;
 import com.batch.android.msgpack.value.IntegerValue;
 import com.batch.android.msgpack.value.Value;
 import com.batch.android.msgpack.value.ValueType;
-
 import java.io.IOException;
 import java.math.BigInteger;
 
@@ -33,205 +32,177 @@ import java.math.BigInteger;
  * @see com.batch.android.msgpack.value.IntegerValue
  */
 public class ImmutableLongValueImpl
-        extends AbstractImmutableValue
-        implements ImmutableIntegerValue
-{
-    private final long value;
+  extends AbstractImmutableValue
+  implements ImmutableIntegerValue {
 
-    public ImmutableLongValueImpl(long value)
-    {
-        this.value = value;
+  private final long value;
+
+  public ImmutableLongValueImpl(long value) {
+    this.value = value;
+  }
+
+  private static final long BYTE_MIN = (long) Byte.MIN_VALUE;
+  private static final long BYTE_MAX = (long) Byte.MAX_VALUE;
+  private static final long SHORT_MIN = (long) Short.MIN_VALUE;
+  private static final long SHORT_MAX = (long) Short.MAX_VALUE;
+  private static final long INT_MIN = (long) Integer.MIN_VALUE;
+  private static final long INT_MAX = (long) Integer.MAX_VALUE;
+
+  @Override
+  public ValueType getValueType() {
+    return ValueType.INTEGER;
+  }
+
+  @Override
+  public ImmutableIntegerValue immutableValue() {
+    return this;
+  }
+
+  @Override
+  public ImmutableNumberValue asNumberValue() {
+    return this;
+  }
+
+  @Override
+  public ImmutableIntegerValue asIntegerValue() {
+    return this;
+  }
+
+  @Override
+  public byte toByte() {
+    return (byte) value;
+  }
+
+  @Override
+  public short toShort() {
+    return (short) value;
+  }
+
+  @Override
+  public int toInt() {
+    return (int) value;
+  }
+
+  @Override
+  public long toLong() {
+    return value;
+  }
+
+  @Override
+  public BigInteger toBigInteger() {
+    return BigInteger.valueOf(value);
+  }
+
+  @Override
+  public float toFloat() {
+    return (float) value;
+  }
+
+  @Override
+  public double toDouble() {
+    return (double) value;
+  }
+
+  @Override
+  public boolean isInByteRange() {
+    return BYTE_MIN <= value && value <= BYTE_MAX;
+  }
+
+  @Override
+  public boolean isInShortRange() {
+    return SHORT_MIN <= value && value <= SHORT_MAX;
+  }
+
+  @Override
+  public boolean isInIntRange() {
+    return INT_MIN <= value && value <= INT_MAX;
+  }
+
+  @Override
+  public boolean isInLongRange() {
+    return true;
+  }
+
+  @Override
+  public MessageFormat mostSuccinctMessageFormat() {
+    return ImmutableBigIntegerValueImpl.mostSuccinctMessageFormat(this);
+  }
+
+  @Override
+  public byte asByte() {
+    if (!isInByteRange()) {
+      throw new MessageIntegerOverflowException(value);
+    }
+    return (byte) value;
+  }
+
+  @Override
+  public short asShort() {
+    if (!isInShortRange()) {
+      throw new MessageIntegerOverflowException(value);
+    }
+    return (short) value;
+  }
+
+  @Override
+  public int asInt() {
+    if (!isInIntRange()) {
+      throw new MessageIntegerOverflowException(value);
+    }
+    return (int) value;
+  }
+
+  @Override
+  public long asLong() {
+    return value;
+  }
+
+  @Override
+  public BigInteger asBigInteger() {
+    return BigInteger.valueOf((long) value);
+  }
+
+  @Override
+  public void writeTo(MessagePacker pk) throws IOException {
+    pk.packLong(value);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) {
+      return true;
+    }
+    if (!(o instanceof Value)) {
+      return false;
+    }
+    Value v = (Value) o;
+    if (!v.isIntegerValue()) {
+      return false;
     }
 
-    private static final long BYTE_MIN = (long) Byte.MIN_VALUE;
-    private static final long BYTE_MAX = (long) Byte.MAX_VALUE;
-    private static final long SHORT_MIN = (long) Short.MIN_VALUE;
-    private static final long SHORT_MAX = (long) Short.MAX_VALUE;
-    private static final long INT_MIN = (long) Integer.MIN_VALUE;
-    private static final long INT_MAX = (long) Integer.MAX_VALUE;
-
-    @Override
-    public ValueType getValueType()
-    {
-        return ValueType.INTEGER;
+    IntegerValue iv = v.asIntegerValue();
+    if (!iv.isInLongRange()) {
+      return false;
     }
+    return value == iv.toLong();
+  }
 
-    @Override
-    public ImmutableIntegerValue immutableValue()
-    {
-        return this;
+  @Override
+  public int hashCode() {
+    if (INT_MIN <= value && value <= INT_MAX) {
+      return (int) value;
+    } else {
+      return (int) (value ^ (value >>> 32));
     }
+  }
 
-    @Override
-    public ImmutableNumberValue asNumberValue()
-    {
-        return this;
-    }
+  @Override
+  public String toJson() {
+    return Long.toString(value);
+  }
 
-    @Override
-    public ImmutableIntegerValue asIntegerValue()
-    {
-        return this;
-    }
-
-    @Override
-    public byte toByte()
-    {
-        return (byte) value;
-    }
-
-    @Override
-    public short toShort()
-    {
-        return (short) value;
-    }
-
-    @Override
-    public int toInt()
-    {
-        return (int) value;
-    }
-
-    @Override
-    public long toLong()
-    {
-        return value;
-    }
-
-    @Override
-    public BigInteger toBigInteger()
-    {
-        return BigInteger.valueOf(value);
-    }
-
-    @Override
-    public float toFloat()
-    {
-        return (float) value;
-    }
-
-    @Override
-    public double toDouble()
-    {
-        return (double) value;
-    }
-
-    @Override
-    public boolean isInByteRange()
-    {
-        return BYTE_MIN <= value && value <= BYTE_MAX;
-    }
-
-    @Override
-    public boolean isInShortRange()
-    {
-        return SHORT_MIN <= value && value <= SHORT_MAX;
-    }
-
-    @Override
-    public boolean isInIntRange()
-    {
-        return INT_MIN <= value && value <= INT_MAX;
-    }
-
-    @Override
-    public boolean isInLongRange()
-    {
-        return true;
-    }
-
-    @Override
-    public MessageFormat mostSuccinctMessageFormat()
-    {
-        return ImmutableBigIntegerValueImpl.mostSuccinctMessageFormat(this);
-    }
-
-    @Override
-    public byte asByte()
-    {
-        if (!isInByteRange()) {
-            throw new MessageIntegerOverflowException(value);
-        }
-        return (byte) value;
-    }
-
-    @Override
-    public short asShort()
-    {
-        if (!isInShortRange()) {
-            throw new MessageIntegerOverflowException(value);
-        }
-        return (short) value;
-    }
-
-    @Override
-    public int asInt()
-    {
-        if (!isInIntRange()) {
-            throw new MessageIntegerOverflowException(value);
-        }
-        return (int) value;
-    }
-
-    @Override
-    public long asLong()
-    {
-        return value;
-    }
-
-    @Override
-    public BigInteger asBigInteger()
-    {
-        return BigInteger.valueOf((long) value);
-    }
-
-    @Override
-    public void writeTo(MessagePacker pk)
-            throws IOException
-    {
-        pk.packLong(value);
-    }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if (o == this) {
-            return true;
-        }
-        if (!( o instanceof Value )) {
-            return false;
-        }
-        Value v = (Value) o;
-        if (!v.isIntegerValue()) {
-            return false;
-        }
-
-        IntegerValue iv = v.asIntegerValue();
-        if (!iv.isInLongRange()) {
-            return false;
-        }
-        return value == iv.toLong();
-    }
-
-    @Override
-    public int hashCode()
-    {
-        if (INT_MIN <= value && value <= INT_MAX) {
-            return (int) value;
-        } else {
-            return (int) ( value ^ ( value >>> 32 ) );
-        }
-    }
-
-    @Override
-    public String toJson()
-    {
-        return Long.toString(value);
-    }
-
-    @Override
-    public String toString()
-    {
-        return toJson();
-    }
+  @Override
+  public String toString() {
+    return toJson();
+  }
 }

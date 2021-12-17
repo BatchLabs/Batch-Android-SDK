@@ -11,51 +11,51 @@ import com.batch.android.processor.Module;
 import com.batch.android.processor.Provide;
 import com.batch.android.query.response.LocalCampaignsResponse;
 import com.batch.android.webservice.listener.LocalCampaignsWebserviceListener;
-
 import java.util.List;
 
 /**
  * Listener for the local campaigns webservice. It will redirect the campaigns to the right modules depending on their type
  */
 @Module
-public class LocalCampaignsWebserviceListenerImpl implements LocalCampaignsWebserviceListener
-{
-    private LocalCampaignsModule localCampaignsModule;
-    private CampaignManager campaignManager;
+public class LocalCampaignsWebserviceListenerImpl
+  implements LocalCampaignsWebserviceListener {
 
-    private LocalCampaignsWebserviceListenerImpl(LocalCampaignsModule localCampaignsModule,
-                                                 CampaignManager campaignManager)
-    {
-        this.localCampaignsModule = localCampaignsModule;
-        this.campaignManager = campaignManager;
-    }
+  private LocalCampaignsModule localCampaignsModule;
+  private CampaignManager campaignManager;
 
-    @Provide
-    public static LocalCampaignsWebserviceListenerImpl provide()
-    {
-        return new LocalCampaignsWebserviceListenerImpl(
-                LocalCampaignsModuleProvider.get(),
-                CampaignManagerProvider.get()
-        );
-    }
+  private LocalCampaignsWebserviceListenerImpl(
+    LocalCampaignsModule localCampaignsModule,
+    CampaignManager campaignManager
+  ) {
+    this.localCampaignsModule = localCampaignsModule;
+    this.campaignManager = campaignManager;
+  }
 
-    @Override
-    public void onSuccess(List<LocalCampaignsResponse> responses)
-    {
-        for (LocalCampaignsResponse response : responses) {
-            handleInAppResponse(response);
-        }
-    }
+  @Provide
+  public static LocalCampaignsWebserviceListenerImpl provide() {
+    return new LocalCampaignsWebserviceListenerImpl(
+      LocalCampaignsModuleProvider.get(),
+      CampaignManagerProvider.get()
+    );
+  }
 
-    @Override
-    public void onError(FailReason reason)
-    {
-        Logger.internal(LocalCampaignsModule.TAG, "Error while refreshing local campaigns: " + reason.toString());
+  @Override
+  public void onSuccess(List<LocalCampaignsResponse> responses) {
+    for (LocalCampaignsResponse response : responses) {
+      handleInAppResponse(response);
     }
+  }
 
-    private void handleInAppResponse(LocalCampaignsResponse response)
-    {
-        campaignManager.updateCampaignList(response.getCampaigns());
-        localCampaignsModule.sendSignal(new CampaignsRefreshedSignal());
-    }
+  @Override
+  public void onError(FailReason reason) {
+    Logger.internal(
+      LocalCampaignsModule.TAG,
+      "Error while refreshing local campaigns: " + reason.toString()
+    );
+  }
+
+  private void handleInAppResponse(LocalCampaignsResponse response) {
+    campaignManager.updateCampaignList(response.getCampaigns());
+    localCampaignsModule.sendSignal(new CampaignsRefreshedSignal());
+  }
 }

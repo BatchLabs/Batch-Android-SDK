@@ -19,7 +19,6 @@ import com.batch.android.msgpack.core.MessagePacker;
 import com.batch.android.msgpack.value.ImmutableBooleanValue;
 import com.batch.android.msgpack.value.Value;
 import com.batch.android.msgpack.value.ValueType;
-
 import java.io.IOException;
 
 /**
@@ -30,86 +29,79 @@ import java.io.IOException;
  * @see com.batch.android.msgpack.value.BooleanValue
  */
 public class ImmutableBooleanValueImpl
-        extends AbstractImmutableValue
-        implements ImmutableBooleanValue
-{
-    public static final ImmutableBooleanValue TRUE = new ImmutableBooleanValueImpl(true);
-    public static final ImmutableBooleanValue FALSE = new ImmutableBooleanValueImpl(false);
+  extends AbstractImmutableValue
+  implements ImmutableBooleanValue {
 
-    private final boolean value;
+  public static final ImmutableBooleanValue TRUE = new ImmutableBooleanValueImpl(
+    true
+  );
+  public static final ImmutableBooleanValue FALSE = new ImmutableBooleanValueImpl(
+    false
+  );
 
-    private ImmutableBooleanValueImpl(boolean value)
-    {
-        this.value = value;
+  private final boolean value;
+
+  private ImmutableBooleanValueImpl(boolean value) {
+    this.value = value;
+  }
+
+  @Override
+  public ValueType getValueType() {
+    return ValueType.BOOLEAN;
+  }
+
+  @Override
+  public ImmutableBooleanValue asBooleanValue() {
+    return this;
+  }
+
+  @Override
+  public ImmutableBooleanValue immutableValue() {
+    return this;
+  }
+
+  @Override
+  public boolean getBoolean() {
+    return value;
+  }
+
+  @Override
+  public void writeTo(MessagePacker packer) throws IOException {
+    packer.packBoolean(value);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) {
+      return true;
     }
-
-    @Override
-    public ValueType getValueType()
-    {
-        return ValueType.BOOLEAN;
+    if (!(o instanceof Value)) {
+      return false;
     }
+    Value v = (Value) o;
 
-    @Override
-    public ImmutableBooleanValue asBooleanValue()
-    {
-        return this;
+    if (!v.isBooleanValue()) {
+      return false;
     }
+    return value == v.asBooleanValue().getBoolean();
+  }
 
-    @Override
-    public ImmutableBooleanValue immutableValue()
-    {
-        return this;
+  @Override
+  public int hashCode() {
+    if (value) {
+      return 1231;
+    } else {
+      return 1237;
     }
+  }
 
-    @Override
-    public boolean getBoolean()
-    {
-        return value;
-    }
+  @Override
+  public String toJson() {
+    return Boolean.toString(value);
+  }
 
-    @Override
-    public void writeTo(MessagePacker packer)
-            throws IOException
-    {
-        packer.packBoolean(value);
-    }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if (o == this) {
-            return true;
-        }
-        if (!( o instanceof Value )) {
-            return false;
-        }
-        Value v = (Value) o;
-
-        if (!v.isBooleanValue()) {
-            return false;
-        }
-        return value == v.asBooleanValue().getBoolean();
-    }
-
-    @Override
-    public int hashCode()
-    {
-        if (value) {
-            return 1231;
-        } else {
-            return 1237;
-        }
-    }
-
-    @Override
-    public String toJson()
-    {
-        return Boolean.toString(value);
-    }
-
-    @Override
-    public String toString()
-    {
-        return toJson();
-    }
+  @Override
+  public String toString() {
+    return toJson();
+  }
 }

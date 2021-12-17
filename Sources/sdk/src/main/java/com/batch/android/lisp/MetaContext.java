@@ -9,27 +9,24 @@ import java.util.ArrayList;
  * (not to be confused with a BALPrimitiveValue with a nil type, which is considered a result)
  * will "win".
  */
-public final class MetaContext implements EvaluationContext
-{
-    private final ArrayList<EvaluationContext> contexts;
+public final class MetaContext implements EvaluationContext {
 
-    public MetaContext(ArrayList<EvaluationContext> contexts)
-    {
-        this.contexts = contexts;
+  private final ArrayList<EvaluationContext> contexts;
+
+  public MetaContext(ArrayList<EvaluationContext> contexts) {
+    this.contexts = contexts;
+  }
+
+  @Override
+  public Value resolveVariableNamed(String name) {
+    Value val;
+    for (EvaluationContext ctx : contexts) {
+      val = ctx.resolveVariableNamed(name);
+      if (val != null) {
+        return val;
+      }
     }
 
-    @Override
-    public Value resolveVariableNamed(String name)
-    {
-        Value val;
-        for (EvaluationContext ctx : contexts) {
-            val = ctx.resolveVariableNamed(name);
-            if (val != null) {
-                return val;
-            }
-        }
-
-        return null;
-    }
+    return null;
+  }
 }
-

@@ -18,26 +18,21 @@ package com.batch.android.msgpack.core;
 /**
  * Thrown when a type mismatch error occurs
  */
-public class MessageTypeException
-        extends MessagePackException
-{
-    public MessageTypeException()
-    {
-        super();
-    }
+public class MessageTypeException extends MessagePackException {
 
-    public MessageTypeException(String message)
-    {
-        super(message);
-    }
+  public MessageTypeException() {
+    super();
+  }
 
-    public MessageTypeException(String message, Throwable cause)
-    {
-        super(message, cause);
-    }
+  public MessageTypeException(String message) {
+    super(message);
+  }
 
-    public MessageTypeException(Throwable cause)
-    {
-        super(cause);
-    }
+  public MessageTypeException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public MessageTypeException(Throwable cause) {
+    super(cause);
+  }
 }

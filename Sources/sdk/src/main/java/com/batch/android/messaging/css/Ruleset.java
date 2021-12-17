@@ -3,14 +3,13 @@ package com.batch.android.messaging.css;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Ruleset
-{
-    public String selector;
+public class Ruleset {
 
-    public List<Declaration> declarations;
+  public String selector;
 
-    public Ruleset()
-    {
-        declarations = new ArrayList<>();
-    }
+  public List<Declaration> declarations;
+
+  public Ruleset() {
+    declarations = new ArrayList<>();
+  }
 }

@@ -1,34 +1,34 @@
 package com.batch.android.push.formats;
 
 import android.graphics.Bitmap;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public abstract class BaseFormat
-{
-    protected String title;
+public abstract class BaseFormat {
 
-    protected String body;
+  protected String title;
 
-    /**
-     * Large icon
-     */
-    protected Bitmap icon;
+  protected String body;
 
-    /**
-     * Large image. Called picture to make it more understandable
-     */
-    protected Bitmap picture;
+  /**
+   * Large icon
+   */
+  protected Bitmap icon;
 
-    public BaseFormat(@NonNull String title,
-                      @NonNull String body,
-                      @Nullable Bitmap icon,
-                      @Nullable Bitmap picture)
-    {
-        this.title = title;
-        this.body = body;
-        this.icon = icon;
-        this.picture = picture;
-    }
+  /**
+   * Large image. Called picture to make it more understandable
+   */
+  protected Bitmap picture;
+
+  public BaseFormat(
+    @NonNull String title,
+    @NonNull String body,
+    @Nullable Bitmap icon,
+    @Nullable Bitmap picture
+  ) {
+    this.title = title;
+    this.body = body;
+    this.icon = icon;
+    this.picture = picture;
+  }
 }

@@ -18,7 +18,4 @@ package com.batch.android.msgpack.value;
 /**
  * Representation of MessagePack's Nil type.
  */
-public interface NilValue
-        extends Value
-{
-}
+public interface NilValue extends Value {}

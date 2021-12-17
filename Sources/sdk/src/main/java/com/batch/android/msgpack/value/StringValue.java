@@ -24,7 +24,4 @@ package com.batch.android.msgpack.value;
  *
  * @see com.batch.android.msgpack.value.RawValue
  */
-public interface StringValue
-        extends RawValue
-{
-}
+public interface StringValue extends RawValue {}

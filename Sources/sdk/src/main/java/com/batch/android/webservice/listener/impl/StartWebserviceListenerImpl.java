@@ -7,20 +7,16 @@ import com.batch.android.webservice.listener.StartWebserviceListener;
  * Start webservice listener implementation
  *
  */
-public final class StartWebserviceListenerImpl implements StartWebserviceListener
-{
+public final class StartWebserviceListenerImpl
+  implements StartWebserviceListener {
 
-    @Override
-    public void onSuccess()
-    {
-        // Currently nothing to do on success
-    }
+  @Override
+  public void onSuccess() {
+    // Currently nothing to do on success
+  }
 
-    @Override
-    public void onError(FailReason reason)
-    {
-        // Currently nothing to do on error
-    }
-
+  @Override
+  public void onError(FailReason reason) {
+    // Currently nothing to do on error
+  }
 }
-

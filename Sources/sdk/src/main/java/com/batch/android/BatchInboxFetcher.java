@@ -1,12 +1,9 @@
 package com.batch.android;
 
 import android.os.Handler;
-
 import androidx.annotation.NonNull;
-
 import com.batch.android.annotation.PublicSDK;
 import com.batch.android.inbox.InboxFetcherInternal;
-
 import java.util.List;
 
 /**
@@ -32,182 +29,180 @@ import java.util.List;
  */
 
 @PublicSDK
-public class BatchInboxFetcher
-{
+public class BatchInboxFetcher {
 
-    private InboxFetcherInternal impl;
+  private InboxFetcherInternal impl;
 
-    private Handler handler = new Handler();
+  private Handler handler = new Handler();
 
-    BatchInboxFetcher(InboxFetcherInternal internal)
-    {
-        this.impl = internal;
+  BatchInboxFetcher(InboxFetcherInternal internal) {
+    this.impl = internal;
+  }
+
+  /**
+   * Number of notifications to fetch on each call, up to 100 messages per page.
+   * Note that the actual count of fetched messages might differ from the value you've set here.
+   */
+  public void setMaxPageSize(int maxPageSize) {
+    impl.setMaxPageSize(maxPageSize);
+  }
+
+  /**
+   * Maximum number of notifications to fetch. This allows you to let Batch manage the upper limit itself, so you can be sure not to use a crazy amount of memory.
+   * If you want to fetch unlimited messages, set this property to 0.
+   *
+   * @param fetchLimit Limit of notifications to fetch. Default: 200
+   */
+  public void setFetchLimit(int fetchLimit) {
+    impl.setFetchLimit(fetchLimit);
+  }
+
+  /**
+   * Returns whether all of the user or installation's notifications have been fetched.
+   * If this method returns true, calling fetchNextPage will always return an error, as there is nothing left to fetch.
+   * Also artificially returns true if the maximum number of fetched messages has been reached.
+   */
+  public boolean hasMore() {
+    return !impl.isEndReached();
+  }
+
+  /**
+   * Mark a specific notification as read.
+   *
+   * @param notification The notification to be marked as read.
+   */
+  public void markAsRead(BatchInboxNotificationContent notification) {
+    impl.markAsRead(notification);
+  }
+
+  /**
+   * Marks all notifications as read.
+   */
+  public void markAllAsRead() {
+    impl.markAllAsRead();
+  }
+
+  /**
+   * Mark a specific notification as deleted.
+   *
+   * @param notification The notification to be marked as deleted.
+   */
+  public void markAsDeleted(BatchInboxNotificationContent notification) {
+    impl.markAsDeleted(notification);
+  }
+
+  /**
+   * Returns a copy of all notifications that have been fetched until now, ordered by reverse chronological order (meaning that the first message is the newest one, and the last one the oldest).
+   * Note that this array will be empty until you call {@link #fetchNewNotifications(OnNewNotificationsFetchedListener)}, and will only grow on subsequent fetches.
+   * This operation is quite extensive: you should cache this result until you call fetch*.
+   */
+  @NonNull
+  public List<BatchInboxNotificationContent> getFetchedNotifications() {
+    return impl.getPublicFetchedNotifications();
+  }
+
+  /**
+   * Fetch new notifications.<br/>
+   * While {@link #fetchNextPage(OnNextPageFetchedListener)} is used to fetch older notifications than the ones currently loaded, this method checks for new notifications. For example, this is the method you would call on initial load, or on a "pull to refresh".
+   * If new notifications are found, the previously loaded ones will be kept if possible, but might be cleared to ensure consistency. For example, if a gap were to happen because of a refresh, old notifications would be removed from the cache.
+   *
+   * @param listener An optional listener can be executed on success or failure with either the fetched notifications or the detailed error.
+   */
+  public void fetchNewNotifications(
+    @NonNull OnNewNotificationsFetchedListener listener
+  ) {
+    // Change the listener to make sure we call the developer back on the thread that they called us on
+    if (listener != null && handler != null) {
+      final OnNewNotificationsFetchedListener originalListener = listener;
+      listener =
+        new OnNewNotificationsFetchedListener() {
+          @Override
+          public void onFetchSuccess(
+            @NonNull final List<BatchInboxNotificationContent> notifications,
+            final boolean foundNewNotifications,
+            final boolean endReached
+          ) {
+            handler.post(() ->
+              originalListener.onFetchSuccess(
+                notifications,
+                foundNewNotifications,
+                endReached
+              )
+            );
+          }
+
+          @Override
+          public void onFetchFailure(@NonNull final String error) {
+            handler.post(() -> originalListener.onFetchFailure(error));
+          }
+        };
     }
+    impl.fetchNewNotifications(listener);
+  }
 
-    /**
-     * Number of notifications to fetch on each call, up to 100 messages per page.
-     * Note that the actual count of fetched messages might differ from the value you've set here.
-     */
-    public void setMaxPageSize(int maxPageSize)
-    {
-        impl.setMaxPageSize(maxPageSize);
+  /**
+   * Fetch a page of notifications.<br/>
+   * Calling this method when no messages have been loaded will be equivalent to calling {@link #fetchNewNotifications(OnNewNotificationsFetchedListener)}<br/>
+   * <b>Warning: callbacks might not be called on the thread you're expecting. See {@link #setHandlerOverride(Handler)}</b>
+   *
+   * @param listener An optional listener can be executed on success or failure with either the fetched notifications or the detailed error.
+   */
+  public void fetchNextPage(OnNextPageFetchedListener listener) {
+    if (listener != null && handler != null) {
+      final OnNextPageFetchedListener originalListener = listener;
+      listener =
+        new OnNextPageFetchedListener() {
+          @Override
+          public void onFetchSuccess(
+            @NonNull final List<BatchInboxNotificationContent> notifications,
+            final boolean endReached
+          ) {
+            handler.post(() ->
+              originalListener.onFetchSuccess(notifications, endReached)
+            );
+          }
+
+          @Override
+          public void onFetchFailure(@NonNull final String error) {
+            handler.post(() -> originalListener.onFetchFailure(error));
+          }
+        };
     }
+    impl.fetchNextPage(listener);
+  }
 
-    /**
-     * Maximum number of notifications to fetch. This allows you to let Batch manage the upper limit itself, so you can be sure not to use a crazy amount of memory.
-     * If you want to fetch unlimited messages, set this property to 0.
-     *
-     * @param fetchLimit Limit of notifications to fetch. Default: 200
-     */
-    public void setFetchLimit(int fetchLimit)
-    {
-        impl.setFetchLimit(fetchLimit);
+  /**
+   * Specify a handler to post the callbacks on. By default, this is the thread that you've created
+   * the inbox fetcher on.
+   *
+   * @param handler Handler to post the callbacks on
+   */
+  public void setHandlerOverride(@NonNull Handler handler) {
+    if (handler != null) {
+      this.handler = handler;
     }
+  }
 
-    /**
-     * Returns whether all of the user or installation's notifications have been fetched.
-     * If this method returns true, calling fetchNextPage will always return an error, as there is nothing left to fetch.
-     * Also artificially returns true if the maximum number of fetched messages has been reached.
-     */
-    public boolean hasMore()
-    {
-        return !impl.isEndReached();
-    }
+  @PublicSDK
+  public interface OnNewNotificationsFetchedListener {
+    void onFetchSuccess(
+      @NonNull List<BatchInboxNotificationContent> notifications,
+      boolean foundNewNotifications,
+      boolean endReached
+    );
 
-    /**
-     * Mark a specific notification as read.
-     *
-     * @param notification The notification to be marked as read.
-     */
-    public void markAsRead(BatchInboxNotificationContent notification)
-    {
-        impl.markAsRead(notification);
-    }
+    //TODO maybe add a typed failure reason
+    void onFetchFailure(@NonNull String error);
+  }
 
-    /**
-     * Marks all notifications as read.
-     */
-    public void markAllAsRead()
-    {
-        impl.markAllAsRead();
-    }
+  @PublicSDK
+  public interface OnNextPageFetchedListener {
+    void onFetchSuccess(
+      @NonNull List<BatchInboxNotificationContent> notifications,
+      boolean endReached
+    );
 
-    /**
-     * Mark a specific notification as deleted.
-     *
-     * @param notification The notification to be marked as deleted.
-     */
-    public void markAsDeleted(BatchInboxNotificationContent notification)
-    {
-        impl.markAsDeleted(notification);
-    }
-
-    /**
-     * Returns a copy of all notifications that have been fetched until now, ordered by reverse chronological order (meaning that the first message is the newest one, and the last one the oldest).
-     * Note that this array will be empty until you call {@link #fetchNewNotifications(OnNewNotificationsFetchedListener)}, and will only grow on subsequent fetches.
-     * This operation is quite extensive: you should cache this result until you call fetch*.
-     */
-    @NonNull
-    public List<BatchInboxNotificationContent> getFetchedNotifications()
-    {
-        return impl.getPublicFetchedNotifications();
-    }
-
-    /**
-     * Fetch new notifications.<br/>
-     * While {@link #fetchNextPage(OnNextPageFetchedListener)} is used to fetch older notifications than the ones currently loaded, this method checks for new notifications. For example, this is the method you would call on initial load, or on a "pull to refresh".
-     * If new notifications are found, the previously loaded ones will be kept if possible, but might be cleared to ensure consistency. For example, if a gap were to happen because of a refresh, old notifications would be removed from the cache.
-     *
-     * @param listener An optional listener can be executed on success or failure with either the fetched notifications or the detailed error.
-     */
-    public void fetchNewNotifications(@NonNull OnNewNotificationsFetchedListener listener)
-    {
-        // Change the listener to make sure we call the developer back on the thread that they called us on
-        if (listener != null && handler != null) {
-            final OnNewNotificationsFetchedListener originalListener = listener;
-            listener = new OnNewNotificationsFetchedListener()
-            {
-                @Override
-                public void onFetchSuccess(@NonNull final List<BatchInboxNotificationContent> notifications,
-                                           final boolean foundNewNotifications,
-                                           final boolean endReached)
-                {
-                    handler.post(() -> originalListener.onFetchSuccess(notifications,
-                            foundNewNotifications,
-                            endReached));
-                }
-
-                @Override
-                public void onFetchFailure(@NonNull final String error)
-                {
-                    handler.post(() -> originalListener.onFetchFailure(error));
-                }
-            };
-        }
-        impl.fetchNewNotifications(listener);
-    }
-
-    /**
-     * Fetch a page of notifications.<br/>
-     * Calling this method when no messages have been loaded will be equivalent to calling {@link #fetchNewNotifications(OnNewNotificationsFetchedListener)}<br/>
-     * <b>Warning: callbacks might not be called on the thread you're expecting. See {@link #setHandlerOverride(Handler)}</b>
-     *
-     * @param listener An optional listener can be executed on success or failure with either the fetched notifications or the detailed error.
-     */
-    public void fetchNextPage(OnNextPageFetchedListener listener)
-    {
-        if (listener != null && handler != null) {
-            final OnNextPageFetchedListener originalListener = listener;
-            listener = new OnNextPageFetchedListener()
-            {
-                @Override
-                public void onFetchSuccess(@NonNull final List<BatchInboxNotificationContent> notifications,
-                                           final boolean endReached)
-                {
-                    handler.post(() -> originalListener.onFetchSuccess(notifications, endReached));
-                }
-
-                @Override
-                public void onFetchFailure(@NonNull final String error)
-                {
-                    handler.post(() -> originalListener.onFetchFailure(error));
-                }
-            };
-        }
-        impl.fetchNextPage(listener);
-    }
-
-    /**
-     * Specify a handler to post the callbacks on. By default, this is the thread that you've created
-     * the inbox fetcher on.
-     *
-     * @param handler Handler to post the callbacks on
-     */
-    public void setHandlerOverride(@NonNull Handler handler)
-    {
-        if (handler != null) {
-            this.handler = handler;
-        }
-    }
-
-    @PublicSDK
-    public interface OnNewNotificationsFetchedListener
-    {
-        void onFetchSuccess(@NonNull List<BatchInboxNotificationContent> notifications,
-                            boolean foundNewNotifications,
-                            boolean endReached);
-
-        //TODO maybe add a typed failure reason
-        void onFetchFailure(@NonNull String error);
-    }
-
-    @PublicSDK
-    public interface OnNextPageFetchedListener
-    {
-        void onFetchSuccess(@NonNull List<BatchInboxNotificationContent> notifications,
-                            boolean endReached);
-
-        //TODO maybe add a typed failure reason
-        void onFetchFailure(@NonNull String error);
-    }
+    //TODO maybe add a typed failure reason
+    void onFetchFailure(@NonNull String error);
+  }
 }

@@ -8,31 +8,26 @@ import java.util.concurrent.ThreadFactory;
  * No further configuration is changed.
  *
  */
-public class NamedThreadFactory implements ThreadFactory
-{
-    private static ThreadFactory defaultFactory = Executors.defaultThreadFactory();
+public class NamedThreadFactory implements ThreadFactory {
 
-    private String suffix = null;
+  private static ThreadFactory defaultFactory = Executors.defaultThreadFactory();
 
-    public NamedThreadFactory()
-    {
+  private String suffix = null;
 
+  public NamedThreadFactory() {}
+
+  public NamedThreadFactory(String suffix) {
+    this.suffix = suffix;
+  }
+
+  @Override
+  public Thread newThread(Runnable r) {
+    final Thread t = defaultFactory.newThread(r);
+    if (suffix != null) {
+      t.setName("com.batch.android." + suffix);
+    } else {
+      t.setName("com.batch.android");
     }
-
-    public NamedThreadFactory(String suffix)
-    {
-        this.suffix = suffix;
-    }
-
-    @Override
-    public Thread newThread(Runnable r)
-    {
-        final Thread t = defaultFactory.newThread(r);
-        if (suffix != null) {
-            t.setName("com.batch.android." + suffix);
-        } else {
-            t.setName("com.batch.android");
-        }
-        return t;
-    }
+    return t;
+  }
 }

@@ -8,43 +8,40 @@ import java.util.Map;
  * <p>
  * This is NOT thread safe
  */
-public final class CachingContext implements EvaluationContext
-{
-    private EvaluationContext context;
+public final class CachingContext implements EvaluationContext {
 
-    private Map<String, Value> cache;
+  private EvaluationContext context;
 
-    private static Value NULL_VALUE = new PrimitiveValue("");
+  private Map<String, Value> cache;
 
-    public CachingContext(EvaluationContext context)
-    {
-        this.context = context;
-        this.cache = new HashMap<>();
+  private static Value NULL_VALUE = new PrimitiveValue("");
+
+  public CachingContext(EvaluationContext context) {
+    this.context = context;
+    this.cache = new HashMap<>();
+  }
+
+  @Override
+  public Value resolveVariableNamed(String name) {
+    Value cachedValue = cache.get(name);
+
+    if (cachedValue == null) { // First pass for given `name`.
+      Value resolved = context.resolveVariableNamed(name);
+
+      if (resolved != null) {
+        cache.put(name, resolved);
+      } else {
+        cache.put(name, NULL_VALUE);
+      }
+
+      return resolved;
     }
 
-    @Override
-    public Value resolveVariableNamed(String name)
-    {
-        Value cachedValue = cache.get(name);
-
-        if (cachedValue == null) { // First pass for given `name`.
-            Value resolved = context.resolveVariableNamed(name);
-
-            if (resolved != null) {
-                cache.put(name, resolved);
-            } else {
-                cache.put(name, NULL_VALUE);
-            }
-
-            return resolved;
-        }
-
-        if (cachedValue == CachingContext.NULL_VALUE) {
-            // Cache hit, but it was null
-            return null;
-        }
-
-        return cachedValue;
+    if (cachedValue == CachingContext.NULL_VALUE) {
+      // Cache hit, but it was null
+      return null;
     }
+
+    return cachedValue;
+  }
 }
-

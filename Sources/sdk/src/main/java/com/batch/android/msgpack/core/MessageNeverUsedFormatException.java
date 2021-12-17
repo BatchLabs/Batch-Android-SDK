@@ -18,21 +18,17 @@ package com.batch.android.msgpack.core;
 /**
  * Thrown when the input message pack format is invalid
  */
-public class MessageNeverUsedFormatException
-        extends MessageFormatException
-{
-    public MessageNeverUsedFormatException(Throwable e)
-    {
-        super(e);
-    }
+public class MessageNeverUsedFormatException extends MessageFormatException {
 
-    public MessageNeverUsedFormatException(String message)
-    {
-        super(message);
-    }
+  public MessageNeverUsedFormatException(Throwable e) {
+    super(e);
+  }
 
-    public MessageNeverUsedFormatException(String message, Throwable cause)
-    {
-        super(message, cause);
-    }
+  public MessageNeverUsedFormatException(String message) {
+    super(message);
+  }
+
+  public MessageNeverUsedFormatException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

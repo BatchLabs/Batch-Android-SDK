@@ -22,7 +22,4 @@ package com.batch.android.msgpack.value;
  *
  * @see com.batch.android.msgpack.value.RawValue
  */
-public interface BinaryValue
-        extends RawValue
-{
-}
+public interface BinaryValue extends RawValue {}

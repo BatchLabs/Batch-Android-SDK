@@ -32,86 +32,153 @@ package sun.misc;
  * embedded in the MessagePack library. At runtime, Unsafe class is intentionally missing as
  * MessagePack use reflection to detect it at runtime.
  */
-public class Unsafe
-{
-    public Object allocateInstance(Class<?> clazz) throws InstantiationException { /* null implementation */ return null; }
+public class Unsafe {
 
-    public int arrayIndexScale(Class arrayClass) { /* null implementation */ return 0; }
+  public Object allocateInstance(Class<?> clazz) throws InstantiationException {
+    /* null implementation */return null;
+  }
 
-    public int arrayBaseOffset(Class arrayClass) { /* null implementation */ return 0; }
+  public int arrayIndexScale(Class arrayClass) {
+    /* null implementation */return 0;
+  }
 
-    public void copyMemory(long srcAddress,
-                           long targetAddress,
-                           long length)
-    { /* null implementation */ }
+  public int arrayBaseOffset(Class arrayClass) {
+    /* null implementation */return 0;
+  }
 
-    public void copyMemory(byte[] src,
-                           long srcIndex,
-                           byte[] target,
-                           long targetIndex,
-                           long length)
-    { /* null implementation */ }
+  public void copyMemory(long srcAddress, long targetAddress, long length) {
+    /* null implementation */
+  }
 
-    public void copyMemory(Object srcBase,
-                           long srcOffset,
-                           Object destBase,
-                           long destOffset,
-                           long bytes)
-    { /* null implementation */ }
+  public void copyMemory(
+    byte[] src,
+    long srcIndex,
+    byte[] target,
+    long targetIndex,
+    long length
+  ) {
+    /* null implementation */
+  }
 
-    public boolean getBoolean(Object o, long offset) { /* null implementation */ return false; }
+  public void copyMemory(
+    Object srcBase,
+    long srcOffset,
+    Object destBase,
+    long destOffset,
+    long bytes
+  ) {
+    /* null implementation */
+  }
 
-    public boolean getBoolean(long address) { /* null implementation */ return false; }
+  public boolean getBoolean(Object o, long offset) {
+    /* null implementation */return false;
+  }
 
-    public byte getByte(Object o, long offset) { /* null implementation */ return 0; }
+  public boolean getBoolean(long address) {
+    /* null implementation */return false;
+  }
 
-    public byte getByte(long address) { /* null implementation */ return 0; }
+  public byte getByte(Object o, long offset) {
+    /* null implementation */return 0;
+  }
 
-    public float getFloat(Object o, long offset) { /* null implementation */ return 0; }
+  public byte getByte(long address) {
+    /* null implementation */return 0;
+  }
 
-    public double getDouble(Object o, long offset) { /* null implementation */ return 0; }
+  public float getFloat(Object o, long offset) {
+    /* null implementation */return 0;
+  }
 
-    public short getShort(Object o, long offset) { /* null implementation */ return 0; }
+  public double getDouble(Object o, long offset) {
+    /* null implementation */return 0;
+  }
 
-    public int getInt(Object o, long offset) { /* null implementation */ return 0; }
+  public short getShort(Object o, long offset) {
+    /* null implementation */return 0;
+  }
 
-    public int getInt(long address) { /* null implementation */ return 0; }
+  public int getInt(Object o, long offset) {
+    /* null implementation */return 0;
+  }
 
-    public long getLong(Object o, long offset) { /* null implementation */ return 0; }
+  public int getInt(long address) {
+    /* null implementation */return 0;
+  }
 
-    public long getLong(long address) { /* null implementation */ return 0; }
+  public long getLong(Object o, long offset) {
+    /* null implementation */return 0;
+  }
 
-    public Object getObject(Object o, long offset) { /* null implementation */ return null; }
+  public long getLong(long address) {
+    /* null implementation */return 0;
+  }
 
-    public long objectFieldOffset(java.lang.reflect.Field f) { /* null implementation */ return 0; }
+  public Object getObject(Object o, long offset) {
+    /* null implementation */return null;
+  }
 
-    public void putBoolean(Object o, long offset, boolean x) { /* null implementation */ }
+  public long objectFieldOffset(java.lang.reflect.Field f) {
+    /* null implementation */return 0;
+  }
 
-    public void putBoolean(long address, boolean x) { /* null implementation */ }
+  public void putBoolean(Object o, long offset, boolean x) {
+    /* null implementation */
+  }
 
-    public void putByte(Object o, long offset, byte x) { /* null implementation */ }
+  public void putBoolean(long address, boolean x) {
+    /* null implementation */
+  }
 
-    public void putByte(long address, byte x) { /* null implementation */ }
+  public void putByte(Object o, long offset, byte x) {
+    /* null implementation */
+  }
 
-    public void putFloat(Object o, long offset, float x) { /* null implementation */ }
+  public void putByte(long address, byte x) {
+    /* null implementation */
+  }
 
-    public void putDouble(Object o, long offset, double x) { /* null implementation */ }
+  public void putFloat(Object o, long offset, float x) {
+    /* null implementation */
+  }
 
-    public void putShort(Object o, long offset, short x) { /* null implementation */ }
+  public void putDouble(Object o, long offset, double x) {
+    /* null implementation */
+  }
 
-    public void putInt(Object o, long offset, int x) { /* null implementation */ }
+  public void putShort(Object o, long offset, short x) {
+    /* null implementation */
+  }
 
-    public void putInt(long address, int x) { /* null implementation */ }
+  public void putInt(Object o, long offset, int x) {
+    /* null implementation */
+  }
 
-    public void putLong(Object o, long offset, long x) { /* null implementation */ }
+  public void putInt(long address, int x) {
+    /* null implementation */
+  }
 
-    public void putLong(long address, long x) { /* null implementation */ }
+  public void putLong(Object o, long offset, long x) {
+    /* null implementation */
+  }
 
-    public void putObject(Object o, long offset, Object x) { /* null implementation */ }
+  public void putLong(long address, long x) {
+    /* null implementation */
+  }
 
-    public Object staticFieldBase(java.lang.reflect.Field f) { /* null implementation */ return null; }
+  public void putObject(Object o, long offset, Object x) {
+    /* null implementation */
+  }
 
-    public long staticFieldOffset(java.lang.reflect.Field f) { /* null implementation */ return 0; }
+  public Object staticFieldBase(java.lang.reflect.Field f) {
+    /* null implementation */return null;
+  }
 
-    public void freeMemory(long address) { /* null implementation */ }
+  public long staticFieldOffset(java.lang.reflect.Field f) {
+    /* null implementation */return 0;
+  }
+
+  public void freeMemory(long address) {
+    /* null implementation */
+  }
 }

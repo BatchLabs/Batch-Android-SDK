@@ -8,31 +8,29 @@ import java.util.ArrayList;
  *
  * @param <T>
  */
-public class FixedSizeArrayList<T> extends ArrayList<T>
-{
-    /**
-     *
-     */
-    private static final long serialVersionUID = 1L;
+public class FixedSizeArrayList<T> extends ArrayList<T> {
 
-// --------------------------------------->
+  /**
+   *
+   */
+  private static final long serialVersionUID = 1L;
 
-    private final int maxSize;
+  // --------------------------------------->
 
-// --------------------------------------->
+  private final int maxSize;
 
-    public FixedSizeArrayList(int maxSize)
-    {
-        super();
-        this.maxSize = maxSize;
+  // --------------------------------------->
+
+  public FixedSizeArrayList(int maxSize) {
+    super();
+    this.maxSize = maxSize;
+  }
+
+  public boolean add(T t) {
+    if (size() >= maxSize) {
+      remove(0);
     }
 
-    public boolean add(T t)
-    {
-        if (size() >= maxSize) {
-            remove(0);
-        }
-
-        return super.add(t);
-    }
+    return super.add(t);
+  }
 }

@@ -9,7 +9,6 @@ import com.batch.android.localcampaigns.model.LocalCampaign;
  * In-App campaign
  */
 
-public interface Signal
-{
-    boolean satisfiesTrigger(LocalCampaign.Trigger trigger);
+public interface Signal {
+  boolean satisfiesTrigger(LocalCampaign.Trigger trigger);
 }

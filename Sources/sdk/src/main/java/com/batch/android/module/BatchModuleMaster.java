@@ -11,7 +11,6 @@ import com.batch.android.di.providers.UserModuleProvider;
 import com.batch.android.processor.Module;
 import com.batch.android.processor.Provide;
 import com.batch.android.processor.Singleton;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,85 +20,76 @@ import java.util.List;
  */
 @Module
 @Singleton
-public class BatchModuleMaster extends BatchModule
-{
-    /**
-     * Subscribed modules
-     */
-    private List<BatchModule> modules;
+public class BatchModuleMaster extends BatchModule {
 
-    private BatchModuleMaster(List<BatchModule> modules)
-    {
-        this.modules = modules;
+  /**
+   * Subscribed modules
+   */
+  private List<BatchModule> modules;
+
+  private BatchModuleMaster(List<BatchModule> modules) {
+    this.modules = modules;
+  }
+
+  @Provide
+  public static BatchModuleMaster provide() {
+    List<BatchModule> modules = new ArrayList<>(8);
+
+    modules.add(ActionModuleProvider.get());
+    modules.add(DisplayReceiptModuleProvider.get());
+    modules.add(EventDispatcherModuleProvider.get());
+    modules.add(LocalCampaignsModuleProvider.get());
+    modules.add(MessagingModuleProvider.get());
+    modules.add(PushModuleProvider.get());
+    modules.add(TrackerModuleProvider.get());
+    modules.add(UserModuleProvider.get());
+    return new BatchModuleMaster(modules);
+  }
+
+  // ------------------------------------------->
+
+  @Override
+  public String getId() {
+    return "master";
+  }
+
+  @Override
+  public int getState() {
+    return 1;
+  }
+
+  @Override
+  public void batchWillStart() {
+    for (BatchModule module : modules) {
+      module.batchWillStart();
     }
+  }
 
-    @Provide
-    public static BatchModuleMaster provide()
-    {
-        List<BatchModule> modules = new ArrayList<>(8);
-
-        modules.add(ActionModuleProvider.get());
-        modules.add(DisplayReceiptModuleProvider.get());
-        modules.add(EventDispatcherModuleProvider.get());
-        modules.add(LocalCampaignsModuleProvider.get());
-        modules.add(MessagingModuleProvider.get());
-        modules.add(PushModuleProvider.get());
-        modules.add(TrackerModuleProvider.get());
-        modules.add(UserModuleProvider.get());
-        return new BatchModuleMaster(modules);
+  @Override
+  public void batchDidStart() {
+    for (BatchModule module : modules) {
+      module.batchDidStart();
     }
+  }
 
-// ------------------------------------------->
-
-    @Override
-    public String getId()
-    {
-        return "master";
+  @Override
+  public void batchIsFinishing() {
+    for (BatchModule module : modules) {
+      module.batchIsFinishing();
     }
+  }
 
-    @Override
-    public int getState()
-    {
-        return 1;
+  @Override
+  public void batchWillStop() {
+    for (BatchModule module : modules) {
+      module.batchWillStop();
     }
+  }
 
-    @Override
-    public void batchWillStart()
-    {
-        for (BatchModule module : modules) {
-            module.batchWillStart();
-        }
+  @Override
+  public void batchDidStop() {
+    for (BatchModule module : modules) {
+      module.batchDidStop();
     }
-
-    @Override
-    public void batchDidStart()
-    {
-        for (BatchModule module : modules) {
-            module.batchDidStart();
-        }
-    }
-
-    @Override
-    public void batchIsFinishing()
-    {
-        for (BatchModule module : modules) {
-            module.batchIsFinishing();
-        }
-    }
-
-    @Override
-    public void batchWillStop()
-    {
-        for (BatchModule module : modules) {
-            module.batchWillStop();
-        }
-    }
-
-    @Override
-    public void batchDidStop()
-    {
-        for (BatchModule module : modules) {
-            module.batchDidStop();
-        }
-    }
+  }
 }

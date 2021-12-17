@@ -22,7 +22,4 @@ package com.batch.android.msgpack.value;
  *
  * @see com.batch.android.msgpack.value.NumberValue
  */
-public interface FloatValue
-        extends NumberValue
-{
-}
+public interface FloatValue extends NumberValue {}

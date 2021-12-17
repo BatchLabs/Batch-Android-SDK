@@ -11,10 +11,12 @@ import com.batch.android.localcampaigns.trigger.NowTrigger;
  * (be it at the first SDK start from disk, or when we get an answer from the backend)
  */
 
-public class CampaignsRefreshedSignal implements Signal
-{
-    public boolean satisfiesTrigger(LocalCampaign.Trigger trigger)
-    {
-        return trigger instanceof NowTrigger || trigger instanceof CampaignsRefreshedTrigger;
-    }
+public class CampaignsRefreshedSignal implements Signal {
+
+  public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
+    return (
+      trigger instanceof NowTrigger ||
+      trigger instanceof CampaignsRefreshedTrigger
+    );
+  }
 }
