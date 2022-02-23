@@ -7,15 +7,15 @@ import com.batch.android.FailReason;
  *
  */
 public interface PushWebserviceListener {
-  /**
-   * Called on success
-   */
-  void onSuccess();
+    /**
+     * Called on success
+     */
+    void onSuccess();
 
-  /**
-   * Called on error
-   *
-   * @param reason
-   */
-  void onError(FailReason reason);
+    /**
+     * Called on error
+     *
+     * @param reason
+     */
+    void onError(FailReason reason);
 }

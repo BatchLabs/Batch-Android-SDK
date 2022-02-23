@@ -23,89 +23,79 @@ import org.junit.runner.RunWith;
 @SmallTest
 public class GooglePlayServicesHelperTest {
 
-  private Context appContext;
-  private CountDownLatch latch;
+    private Context appContext;
+    private CountDownLatch latch;
 
-  @Before
-  public void setUp() {
-    appContext = ApplicationProvider.getApplicationContext();
-  }
+    @Before
+    public void setUp() {
+        appContext = ApplicationProvider.getApplicationContext();
+    }
 
-  /**
-   * Test the version get
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testGetLibVersion() throws Exception {
-    Integer version = GooglePlayServicesHelper.getGooglePlayServicesLibVersion(
-      appContext
-    );
+    /**
+     * Test the version get
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testGetLibVersion() throws Exception {
+        Integer version = GooglePlayServicesHelper.getGooglePlayServicesLibVersion(appContext);
 
-    assertNotNull(version);
-    assertTrue(version >= 4030500);
-  }
+        assertNotNull(version);
+        assertTrue(version >= 4030500);
+    }
 
-  /**
-   * Test the availability get
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testGetLibAvailability() throws Exception {
-    Integer availability = GooglePlayServicesHelper.getGooglePlayServicesAvailabilityInteger(
-      appContext
-    );
+    /**
+     * Test the availability get
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testGetLibAvailability() throws Exception {
+        Integer availability = GooglePlayServicesHelper.getGooglePlayServicesAvailabilityInteger(appContext);
 
-    assertNotNull(availability);
-    assertTrue(availability == 0);
-    assertTrue(
-      "SUCCESS".equals(
-          GooglePlayServicesHelper.getGooglePlayServicesAvailabilityString(
-            availability
-          )
-        )
-    );
-  }
+        assertNotNull(availability);
+        assertTrue(availability == 0);
+        assertTrue("SUCCESS".equals(GooglePlayServicesHelper.getGooglePlayServicesAvailabilityString(availability)));
+    }
 
-  /**
-   * Test the google environnement availability response
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testCheckGoogleServicesAvailability() throws Exception {
-    final Integer playServicesAvailability = GooglePlayServicesHelper.getGooglePlayServicesAvailabilityInteger(
-      appContext
-    );
-    assertNotNull(playServicesAvailability);
-    assertEquals(ConnectionResult.SUCCESS, (int) playServicesAvailability);
-  }
+    /**
+     * Test the google environnement availability response
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testCheckGoogleServicesAvailability() throws Exception {
+        final Integer playServicesAvailability = GooglePlayServicesHelper.getGooglePlayServicesAvailabilityInteger(
+            appContext
+        );
+        assertNotNull(playServicesAvailability);
+        assertEquals(ConnectionResult.SUCCESS, (int) playServicesAvailability);
+    }
 
-  /**
-   * Test the advertising id value response
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testGetAdvertisingIDValue() throws Exception {
-    latch = new CountDownLatch(1);
-    GooglePlayServicesHelper.getAdvertisingIDValue(
-      appContext,
-      new GooglePlayServicesHelper.AdvertisingValueListener() {
-        @Override
-        public void onValue(String value, boolean limited) {
-          assertNotNull(value);
-          latch.countDown();
-        }
+    /**
+     * Test the advertising id value response
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testGetAdvertisingIDValue() throws Exception {
+        latch = new CountDownLatch(1);
+        GooglePlayServicesHelper.getAdvertisingIDValue(
+            appContext,
+            new GooglePlayServicesHelper.AdvertisingValueListener() {
+                @Override
+                public void onValue(String value, boolean limited) {
+                    assertNotNull(value);
+                    latch.countDown();
+                }
 
-        @Override
-        public void onError(Exception e) {
-          fail("Error occured : " + e.getMessage());
-          latch.countDown();
-        }
-      }
-    );
-    latch.await();
-  }
+                @Override
+                public void onError(Exception e) {
+                    fail("Error occured : " + e.getMessage());
+                    latch.countDown();
+                }
+            }
+        );
+        latch.await();
+    }
 }

@@ -8,19 +8,19 @@ import com.batch.android.query.QueryType;
  */
 public class AttributesSendResponse extends Response {
 
-  public String transactionID;
+    public String transactionID;
 
-  public long version = -1L;
+    public long version = -1L;
 
-  public AttributesSendResponse(String queryID) {
-    super(QueryType.ATTRIBUTES, queryID);
-  }
+    public AttributesSendResponse(String queryID) {
+        super(QueryType.ATTRIBUTES, queryID);
+    }
 
-  public void setTransactionID(String transactionID) {
-    this.transactionID = transactionID;
-  }
+    public void setTransactionID(String transactionID) {
+        this.transactionID = transactionID;
+    }
 
-  public void setVersion(long version) {
-    this.version = version;
-  }
+    public void setVersion(long version) {
+        this.version = version;
+    }
 }

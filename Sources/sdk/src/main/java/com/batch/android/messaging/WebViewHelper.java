@@ -6,12 +6,12 @@ import androidx.annotation.Nullable;
 
 public class WebViewHelper {
 
-  @Nullable
-  public static String getAnalyticsIDFromURL(@NonNull String url) {
-    try {
-      Uri uri = Uri.parse(url);
-      return uri.getQueryParameter("batchAnalyticsID");
-    } catch (UnsupportedOperationException ignored) {}
-    return null;
-  }
+    @Nullable
+    public static String getAnalyticsIDFromURL(@NonNull String url) {
+        try {
+            Uri uri = Uri.parse(url);
+            return uri.getQueryParameter("batchAnalyticsID");
+        } catch (UnsupportedOperationException ignored) {}
+        return null;
+    }
 }

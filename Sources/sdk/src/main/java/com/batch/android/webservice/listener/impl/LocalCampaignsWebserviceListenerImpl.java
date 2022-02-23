@@ -17,45 +17,41 @@ import java.util.List;
  * Listener for the local campaigns webservice. It will redirect the campaigns to the right modules depending on their type
  */
 @Module
-public class LocalCampaignsWebserviceListenerImpl
-  implements LocalCampaignsWebserviceListener {
+public class LocalCampaignsWebserviceListenerImpl implements LocalCampaignsWebserviceListener {
 
-  private LocalCampaignsModule localCampaignsModule;
-  private CampaignManager campaignManager;
+    private LocalCampaignsModule localCampaignsModule;
+    private CampaignManager campaignManager;
 
-  private LocalCampaignsWebserviceListenerImpl(
-    LocalCampaignsModule localCampaignsModule,
-    CampaignManager campaignManager
-  ) {
-    this.localCampaignsModule = localCampaignsModule;
-    this.campaignManager = campaignManager;
-  }
-
-  @Provide
-  public static LocalCampaignsWebserviceListenerImpl provide() {
-    return new LocalCampaignsWebserviceListenerImpl(
-      LocalCampaignsModuleProvider.get(),
-      CampaignManagerProvider.get()
-    );
-  }
-
-  @Override
-  public void onSuccess(List<LocalCampaignsResponse> responses) {
-    for (LocalCampaignsResponse response : responses) {
-      handleInAppResponse(response);
+    private LocalCampaignsWebserviceListenerImpl(
+        LocalCampaignsModule localCampaignsModule,
+        CampaignManager campaignManager
+    ) {
+        this.localCampaignsModule = localCampaignsModule;
+        this.campaignManager = campaignManager;
     }
-  }
 
-  @Override
-  public void onError(FailReason reason) {
-    Logger.internal(
-      LocalCampaignsModule.TAG,
-      "Error while refreshing local campaigns: " + reason.toString()
-    );
-  }
+    @Provide
+    public static LocalCampaignsWebserviceListenerImpl provide() {
+        return new LocalCampaignsWebserviceListenerImpl(
+            LocalCampaignsModuleProvider.get(),
+            CampaignManagerProvider.get()
+        );
+    }
 
-  private void handleInAppResponse(LocalCampaignsResponse response) {
-    campaignManager.updateCampaignList(response.getCampaigns());
-    localCampaignsModule.sendSignal(new CampaignsRefreshedSignal());
-  }
+    @Override
+    public void onSuccess(List<LocalCampaignsResponse> responses) {
+        for (LocalCampaignsResponse response : responses) {
+            handleInAppResponse(response);
+        }
+    }
+
+    @Override
+    public void onError(FailReason reason) {
+        Logger.internal(LocalCampaignsModule.TAG, "Error while refreshing local campaigns: " + reason.toString());
+    }
+
+    private void handleInAppResponse(LocalCampaignsResponse response) {
+        campaignManager.updateCampaignList(response.getCampaigns());
+        localCampaignsModule.sendSignal(new CampaignsRefreshedSignal());
+    }
 }

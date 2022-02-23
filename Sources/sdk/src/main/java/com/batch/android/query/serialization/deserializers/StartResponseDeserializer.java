@@ -9,23 +9,23 @@ import com.batch.android.query.response.StartResponse;
  */
 public class StartResponseDeserializer extends ResponseDeserializer {
 
-  /**
-   * Constructor
-   *
-   * @param json json response
-   */
-  public StartResponseDeserializer(JSONObject json) {
-    super(json);
-  }
+    /**
+     * Constructor
+     *
+     * @param json json response
+     */
+    public StartResponseDeserializer(JSONObject json) {
+        super(json);
+    }
 
-  /**
-   * Deserialize method
-   *
-   * @return StartResponse deserialized
-   * @throws JSONException parsing exception
-   */
-  @Override
-  public StartResponse deserialize() throws JSONException {
-    return new StartResponse(getId());
-  }
+    /**
+     * Deserialize method
+     *
+     * @return StartResponse deserialized
+     * @throws JSONException parsing exception
+     */
+    @Override
+    public StartResponse deserialize() throws JSONException {
+        return new StartResponse(getId());
+    }
 }

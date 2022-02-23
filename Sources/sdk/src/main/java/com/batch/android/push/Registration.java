@@ -5,22 +5,18 @@ import androidx.annotation.Nullable;
 
 public class Registration {
 
-  @NonNull
-  public String provider;
+    @NonNull
+    public String provider;
 
-  @NonNull
-  public String registrationID;
+    @NonNull
+    public String registrationID;
 
-  @Nullable
-  public String senderID;
+    @Nullable
+    public String senderID;
 
-  public Registration(
-    @NonNull String provider,
-    @NonNull String registrationID,
-    @Nullable String senderID
-  ) {
-    this.provider = provider;
-    this.registrationID = registrationID;
-    this.senderID = senderID;
-  }
+    public Registration(@NonNull String provider, @NonNull String registrationID, @Nullable String senderID) {
+        this.provider = provider;
+        this.registrationID = registrationID;
+        this.senderID = senderID;
+    }
 }

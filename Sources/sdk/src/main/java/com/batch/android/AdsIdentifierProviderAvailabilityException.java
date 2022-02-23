@@ -5,7 +5,7 @@ import com.batch.android.annotation.PublicSDK;
 @PublicSDK
 public class AdsIdentifierProviderAvailabilityException extends Exception {
 
-  public AdsIdentifierProviderAvailabilityException(String message) {
-    super(message);
-  }
+    public AdsIdentifierProviderAvailabilityException(String message) {
+        super(message);
+    }
 }

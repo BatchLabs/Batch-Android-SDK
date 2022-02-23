@@ -22,74 +22,74 @@ import java.util.List;
 @Singleton
 public class BatchModuleMaster extends BatchModule {
 
-  /**
-   * Subscribed modules
-   */
-  private List<BatchModule> modules;
+    /**
+     * Subscribed modules
+     */
+    private List<BatchModule> modules;
 
-  private BatchModuleMaster(List<BatchModule> modules) {
-    this.modules = modules;
-  }
-
-  @Provide
-  public static BatchModuleMaster provide() {
-    List<BatchModule> modules = new ArrayList<>(8);
-
-    modules.add(ActionModuleProvider.get());
-    modules.add(DisplayReceiptModuleProvider.get());
-    modules.add(EventDispatcherModuleProvider.get());
-    modules.add(LocalCampaignsModuleProvider.get());
-    modules.add(MessagingModuleProvider.get());
-    modules.add(PushModuleProvider.get());
-    modules.add(TrackerModuleProvider.get());
-    modules.add(UserModuleProvider.get());
-    return new BatchModuleMaster(modules);
-  }
-
-  // ------------------------------------------->
-
-  @Override
-  public String getId() {
-    return "master";
-  }
-
-  @Override
-  public int getState() {
-    return 1;
-  }
-
-  @Override
-  public void batchWillStart() {
-    for (BatchModule module : modules) {
-      module.batchWillStart();
+    private BatchModuleMaster(List<BatchModule> modules) {
+        this.modules = modules;
     }
-  }
 
-  @Override
-  public void batchDidStart() {
-    for (BatchModule module : modules) {
-      module.batchDidStart();
-    }
-  }
+    @Provide
+    public static BatchModuleMaster provide() {
+        List<BatchModule> modules = new ArrayList<>(8);
 
-  @Override
-  public void batchIsFinishing() {
-    for (BatchModule module : modules) {
-      module.batchIsFinishing();
+        modules.add(ActionModuleProvider.get());
+        modules.add(DisplayReceiptModuleProvider.get());
+        modules.add(EventDispatcherModuleProvider.get());
+        modules.add(LocalCampaignsModuleProvider.get());
+        modules.add(MessagingModuleProvider.get());
+        modules.add(PushModuleProvider.get());
+        modules.add(TrackerModuleProvider.get());
+        modules.add(UserModuleProvider.get());
+        return new BatchModuleMaster(modules);
     }
-  }
 
-  @Override
-  public void batchWillStop() {
-    for (BatchModule module : modules) {
-      module.batchWillStop();
-    }
-  }
+    // ------------------------------------------->
 
-  @Override
-  public void batchDidStop() {
-    for (BatchModule module : modules) {
-      module.batchDidStop();
+    @Override
+    public String getId() {
+        return "master";
     }
-  }
+
+    @Override
+    public int getState() {
+        return 1;
+    }
+
+    @Override
+    public void batchWillStart() {
+        for (BatchModule module : modules) {
+            module.batchWillStart();
+        }
+    }
+
+    @Override
+    public void batchDidStart() {
+        for (BatchModule module : modules) {
+            module.batchDidStart();
+        }
+    }
+
+    @Override
+    public void batchIsFinishing() {
+        for (BatchModule module : modules) {
+            module.batchIsFinishing();
+        }
+    }
+
+    @Override
+    public void batchWillStop() {
+        for (BatchModule module : modules) {
+            module.batchWillStop();
+        }
+    }
+
+    @Override
+    public void batchDidStop() {
+        for (BatchModule module : modules) {
+            module.batchDidStop();
+        }
+    }
 }

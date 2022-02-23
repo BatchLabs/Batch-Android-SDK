@@ -5,17 +5,17 @@ import java.io.Serializable;
 
 public class Action implements Serializable {
 
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
 
-  public String action;
-  public JSONObject args;
+    public String action;
+    public JSONObject args;
 
-  public Action(String action, JSONObject args) {
-    this.action = action;
-    this.args = args;
-  }
+    public Action(String action, JSONObject args) {
+        this.action = action;
+        this.args = args;
+    }
 
-  public boolean isDismissAction() {
-    return action == null || "batch.dismiss".equals(action);
-  }
+    public boolean isDismissAction() {
+        return action == null || "batch.dismiss".equals(action);
+    }
 }

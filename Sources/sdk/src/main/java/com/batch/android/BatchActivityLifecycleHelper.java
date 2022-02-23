@@ -16,35 +16,34 @@ import com.batch.android.annotation.PublicSDK;
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 @SuppressWarnings("unused")
 @PublicSDK
-public class BatchActivityLifecycleHelper
-  implements Application.ActivityLifecycleCallbacks {
+public class BatchActivityLifecycleHelper implements Application.ActivityLifecycleCallbacks {
 
-  @Override
-  public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-    Batch.onCreate(activity);
-  }
+    @Override
+    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+        Batch.onCreate(activity);
+    }
 
-  @Override
-  public void onActivityStarted(Activity activity) {
-    Batch.onStart(activity);
-  }
+    @Override
+    public void onActivityStarted(Activity activity) {
+        Batch.onStart(activity);
+    }
 
-  @Override
-  public void onActivityResumed(Activity activity) {}
+    @Override
+    public void onActivityResumed(Activity activity) {}
 
-  @Override
-  public void onActivityPaused(Activity activity) {}
+    @Override
+    public void onActivityPaused(Activity activity) {}
 
-  @Override
-  public void onActivityStopped(Activity activity) {
-    Batch.onStop(activity);
-  }
+    @Override
+    public void onActivityStopped(Activity activity) {
+        Batch.onStop(activity);
+    }
 
-  @Override
-  public void onActivitySaveInstanceState(Activity activity, Bundle outState) {}
+    @Override
+    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {}
 
-  @Override
-  public void onActivityDestroyed(Activity activity) {
-    Batch.onDestroy(activity);
-  }
+    @Override
+    public void onActivityDestroyed(Activity activity) {
+        Batch.onDestroy(activity);
+    }
 }

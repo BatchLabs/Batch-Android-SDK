@@ -10,13 +10,13 @@ import java.util.List;
  */
 public class InboxWebserviceResponse {
 
-  public boolean hasMore;
+    public boolean hasMore;
 
-  public boolean didTimeout;
+    public boolean didTimeout;
 
-  @Nullable
-  public String cursor;
+    @Nullable
+    public String cursor;
 
-  @NonNull
-  public List<InboxNotificationContentInternal> notifications = new ArrayList<>();
+    @NonNull
+    public List<InboxNotificationContentInternal> notifications = new ArrayList<>();
 }

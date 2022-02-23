@@ -7,15 +7,12 @@ import androidx.annotation.NonNull;
  */
 public class InboxCandidateNotificationInternal {
 
-  public String identifier;
+    public String identifier;
 
-  public boolean isUnread;
+    public boolean isUnread;
 
-  public InboxCandidateNotificationInternal(
-    @NonNull String identifier,
-    boolean isUnread
-  ) {
-    this.identifier = identifier;
-    this.isUnread = isUnread;
-  }
+    public InboxCandidateNotificationInternal(@NonNull String identifier, boolean isUnread) {
+        this.identifier = identifier;
+        this.isUnread = isUnread;
+    }
 }

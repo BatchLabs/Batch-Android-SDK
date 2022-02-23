@@ -11,29 +11,25 @@ import org.junit.Test;
 
 public class CampaignsLoadedSignalTest {
 
-  @Test
-  public void testSatisfiesTrigger() {
-    Signal signal = new CampaignsLoadedSignal();
+    @Test
+    public void testSatisfiesTrigger() {
+        Signal signal = new CampaignsLoadedSignal();
 
-    Assert.assertTrue(signal.satisfiesTrigger(new NowTrigger()));
-    Assert.assertTrue(signal.satisfiesTrigger(new CampaignsLoadedTrigger()));
-    Assert.assertTrue(signal.satisfiesTrigger(new NextSessionTrigger()));
+        Assert.assertTrue(signal.satisfiesTrigger(new NowTrigger()));
+        Assert.assertTrue(signal.satisfiesTrigger(new CampaignsLoadedTrigger()));
+        Assert.assertTrue(signal.satisfiesTrigger(new NextSessionTrigger()));
 
-    Assert.assertFalse(
-      signal.satisfiesTrigger(new CampaignsRefreshedTrigger())
-    );
-    Assert.assertFalse(
-      signal.satisfiesTrigger(new EventLocalCampaignTrigger("eventname", null))
-    );
-    Assert.assertFalse(
-      signal.satisfiesTrigger(
-        new LocalCampaign.Trigger() {
-          @Override
-          public String getType() {
-            return null;
-          }
-        }
-      )
-    );
-  }
+        Assert.assertFalse(signal.satisfiesTrigger(new CampaignsRefreshedTrigger()));
+        Assert.assertFalse(signal.satisfiesTrigger(new EventLocalCampaignTrigger("eventname", null)));
+        Assert.assertFalse(
+            signal.satisfiesTrigger(
+                new LocalCampaign.Trigger() {
+                    @Override
+                    public String getType() {
+                        return null;
+                    }
+                }
+            )
+        );
+    }
 }

@@ -13,10 +13,10 @@ import org.junit.Test;
  */
 public class DisplayReceiptPostDataProviderTest {
 
-  @Test
-  public void testData() {
-    List<DisplayReceipt> receiptList = new ArrayList<>();
-    // prettier-ignore
+    @Test
+    public void testData() {
+        List<DisplayReceipt> receiptList = new ArrayList<>();
+        // prettier-ignore
         receiptList.add(
             DisplayReceipt.unpack(new byte[]{-50, 0, 1, -30, 64, -62, 19, -121, -95, 116, -71, 106, 101,
                     45, 115, 117, 105, 115, 45, 117, 110, 45, 99, 97, 109, 112, 97, 105, 103, 110, 45,
@@ -36,7 +36,7 @@ public class DisplayReceiptPostDataProviderTest {
                 )
         );
 
-    // prettier-ignore
+        // prettier-ignore
         byte[] body = new byte[]{-111, -50, 0, 1, -30, 64, -62, 19, -121, -95, 116, -71, 106, 101,
                 45, 115, 117, 105, 115, 45, 117, 110, 45, 99, 97, 109, 112, 97, 105, 103, 110, 45,
                 116, 111, 107, 101, 110, -92, 110, 117, 108, 108, -64, -94, 100, 105, -75, 106, 101,
@@ -53,11 +53,9 @@ public class DisplayReceiptPostDataProviderTest {
                 105, -78, 106, 101, 45, 115, 117, 105, 115, 45, 117, 110, 45, 115, 101, 110, 100,
                 45, 105, 100};
 
-    DisplayReceiptPostDataProvider provider = new DisplayReceiptPostDataProvider(
-      receiptList
-    );
-    assertEquals("application/msgpack", provider.getContentType());
-    assertArrayEquals(receiptList.toArray(), provider.getRawData().toArray());
-    assertArrayEquals(body, provider.getData());
-  }
+        DisplayReceiptPostDataProvider provider = new DisplayReceiptPostDataProvider(receiptList);
+        assertEquals("application/msgpack", provider.getContentType());
+        assertArrayEquals(receiptList.toArray(), provider.getRawData().toArray());
+        assertArrayEquals(body, provider.getData());
+    }
 }

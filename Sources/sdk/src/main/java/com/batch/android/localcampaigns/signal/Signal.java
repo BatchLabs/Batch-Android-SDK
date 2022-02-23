@@ -10,5 +10,5 @@ import com.batch.android.localcampaigns.model.LocalCampaign;
  */
 
 public interface Signal {
-  boolean satisfiesTrigger(LocalCampaign.Trigger trigger);
+    boolean satisfiesTrigger(LocalCampaign.Trigger trigger);
 }

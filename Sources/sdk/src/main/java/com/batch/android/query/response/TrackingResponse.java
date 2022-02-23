@@ -8,10 +8,10 @@ import com.batch.android.query.TrackingQuery;
  */
 public class TrackingResponse extends Response {
 
-  /**
-   * @param queryID id of the query
-   */
-  public TrackingResponse(String queryID) {
-    super(QueryType.TRACKING, queryID);
-  }
+    /**
+     * @param queryID id of the query
+     */
+    public TrackingResponse(String queryID) {
+        super(QueryType.TRACKING, queryID);
+    }
 }

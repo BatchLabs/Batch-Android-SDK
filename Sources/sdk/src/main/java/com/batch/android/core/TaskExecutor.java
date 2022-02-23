@@ -25,175 +25,152 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public final class TaskExecutor extends ThreadPoolExecutor {
 
-  /**
-   * Intent action when work is over
-   */
-  public static final String INTENT_WORK_FINISHED =
-    Parameters.LIBRARY_BUNDLE + ".executor.finished";
+    /**
+     * Intent action when work is over
+     */
+    public static final String INTENT_WORK_FINISHED = Parameters.LIBRARY_BUNDLE + ".executor.finished";
 
-  // ----------------------------------------->
+    // ----------------------------------------->
 
-  /**
-   * Map of currently in queue or executing Future
-   */
-  private final Map<Future<?>, String> futures = new HashMap<>();
+    /**
+     * Map of currently in queue or executing Future
+     */
+    private final Map<Future<?>, String> futures = new HashMap<>();
 
-  /**
-   * App context
-   */
-  private Context context;
+    /**
+     * App context
+     */
+    private Context context;
 
-  // ------------------------------------------>
+    // ------------------------------------------>
 
-  /**
-   * @param corePoolSize
-   * @param maximumPoolSize
-   * @param keepAliveTime
-   * @param unit
-   * @param workQueue
-   * @see {@link ThreadPoolExecutor#ThreadPoolExecutor(int, int, long, TimeUnit, BlockingQueue)}
-   */
-  protected TaskExecutor(
-    Context context,
-    int corePoolSize,
-    int maximumPoolSize,
-    long keepAliveTime,
-    TimeUnit unit,
-    BlockingQueue<Runnable> workQueue
-  ) {
-    super(
-      corePoolSize,
-      maximumPoolSize,
-      keepAliveTime,
-      unit,
-      workQueue,
-      new NamedThreadFactory()
-    );
-    if (context == null) {
-      throw new NullPointerException("Null context");
-    }
-
-    this.context = context.getApplicationContext();
-  }
-
-  @Provide
-  public static TaskExecutor provide(Context context) {
-    Parameters parameters = ParametersProvider.get(context);
-    int minSize = Integer.parseInt(
-      parameters.get(ParameterKeys.TASK_EXECUTOR_MIN_POOL, "0")
-    );
-    int maxSize = Integer.parseInt(
-      parameters.get(ParameterKeys.TASK_EXECUTOR_MAX_POOL, "5")
-    );
-    int ttl = Integer.parseInt(
-      parameters.get(ParameterKeys.TASK_EXECUTOR_THREADTTL, "1000")
-    );
-
-    return new TaskExecutor(
-      context,
-      minSize,
-      maxSize,
-      ttl,
-      TimeUnit.MILLISECONDS,
-      new LinkedBlockingQueue<>()
-    );
-  }
-
-  /**
-   * Submit a	new task to the executor.<br>
-   * If a task with the same identifier is running, it will be cancel<br>
-   * If a task with the same identifier is in queue, it will be removed.
-   *
-   * @param task
-   * @return
-   */
-  public Future<?> submit(TaskRunnable task) {
-    if (task == null) {
-      throw new NullPointerException("Null task");
-    }
-
-    synchronized (futures) {
-      /*
-       * Remove scheduled tasks with the same identifier
-       */
-      Iterator<Runnable> runnables = getQueue().iterator();
-      while (runnables.hasNext()) {
-        Runnable r = runnables.next();
-        if (r instanceof Future<?>) {
-          Future<?> future = (Future<?>) r;
-
-          String taskID = futures.get(future);
-          if (taskID != null && taskID.equals(task.getTaskIdentifier())) {
-            future.cancel(true);
-            runnables.remove();
-
-            futures.remove(future);
-          }
+    /**
+     * @param corePoolSize
+     * @param maximumPoolSize
+     * @param keepAliveTime
+     * @param unit
+     * @param workQueue
+     * @see {@link ThreadPoolExecutor#ThreadPoolExecutor(int, int, long, TimeUnit, BlockingQueue)}
+     */
+    protected TaskExecutor(
+        Context context,
+        int corePoolSize,
+        int maximumPoolSize,
+        long keepAliveTime,
+        TimeUnit unit,
+        BlockingQueue<Runnable> workQueue
+    ) {
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, new NamedThreadFactory());
+        if (context == null) {
+            throw new NullPointerException("Null context");
         }
-      }
 
-      /*
-       * Remove tasks that are already running with the same identifier
-       */
-      Iterator<Future<?>> runnings = futures.keySet().iterator();
-      while (runnings.hasNext()) {
-        Future<?> running = runnings.next();
-        String taskid = futures.get(running);
+        this.context = context.getApplicationContext();
+    }
 
-        if (taskid.equals(task.getTaskIdentifier())) {
-          running.cancel(true);
-          runnings.remove();
+    @Provide
+    public static TaskExecutor provide(Context context) {
+        Parameters parameters = ParametersProvider.get(context);
+        int minSize = Integer.parseInt(parameters.get(ParameterKeys.TASK_EXECUTOR_MIN_POOL, "0"));
+        int maxSize = Integer.parseInt(parameters.get(ParameterKeys.TASK_EXECUTOR_MAX_POOL, "5"));
+        int ttl = Integer.parseInt(parameters.get(ParameterKeys.TASK_EXECUTOR_THREADTTL, "1000"));
+
+        return new TaskExecutor(context, minSize, maxSize, ttl, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+    }
+
+    /**
+     * Submit a	new task to the executor.<br>
+     * If a task with the same identifier is running, it will be cancel<br>
+     * If a task with the same identifier is in queue, it will be removed.
+     *
+     * @param task
+     * @return
+     */
+    public Future<?> submit(TaskRunnable task) {
+        if (task == null) {
+            throw new NullPointerException("Null task");
         }
-      }
 
-      /*
-       * Submit task
-       */
-      Future<?> future = super.submit(task);
-      futures.put(future, task.getTaskIdentifier());
+        synchronized (futures) {
+            /*
+             * Remove scheduled tasks with the same identifier
+             */
+            Iterator<Runnable> runnables = getQueue().iterator();
+            while (runnables.hasNext()) {
+                Runnable r = runnables.next();
+                if (r instanceof Future<?>) {
+                    Future<?> future = (Future<?>) r;
 
-      return future;
-    }
-  }
+                    String taskID = futures.get(future);
+                    if (taskID != null && taskID.equals(task.getTaskIdentifier())) {
+                        future.cancel(true);
+                        runnables.remove();
 
-  /**
-   * Is the task executor currently busy at running tasks
-   *
-   * @return true is working, false otherwise
-   */
-  public boolean isBusy() {
-    synchronized (futures) {
-      return !futures.isEmpty();
-    }
-  }
+                        futures.remove(future);
+                    }
+                }
+            }
 
-  @Override
-  public void execute(Runnable command) {
-    super.execute(command);
-  }
+            /*
+             * Remove tasks that are already running with the same identifier
+             */
+            Iterator<Future<?>> runnings = futures.keySet().iterator();
+            while (runnings.hasNext()) {
+                Future<?> running = runnings.next();
+                String taskid = futures.get(running);
 
-  // --------------------------------------------->
+                if (taskid.equals(task.getTaskIdentifier())) {
+                    running.cancel(true);
+                    runnings.remove();
+                }
+            }
 
-  @Override
-  protected void afterExecute(Runnable r, Throwable t) {
-    try {
-      if (!(r instanceof FutureTask)) {
-        return; // Not our job
-      }
+            /*
+             * Submit task
+             */
+            Future<?> future = super.submit(task);
+            futures.put(future, task.getTaskIdentifier());
 
-      /*
-       * Try to retrieve this task and delete it from the map
-       */
-      synchronized (futures) {
-        futures.remove(r);
-        if (futures.isEmpty()) {
-          LocalBroadcastManagerProvider
-            .get(context)
-            .sendBroadcast(new Intent(INTENT_WORK_FINISHED));
+            return future;
         }
-      }
-    } finally {
-      super.afterExecute(r, t);
     }
-  }
+
+    /**
+     * Is the task executor currently busy at running tasks
+     *
+     * @return true is working, false otherwise
+     */
+    public boolean isBusy() {
+        synchronized (futures) {
+            return !futures.isEmpty();
+        }
+    }
+
+    @Override
+    public void execute(Runnable command) {
+        super.execute(command);
+    }
+
+    // --------------------------------------------->
+
+    @Override
+    protected void afterExecute(Runnable r, Throwable t) {
+        try {
+            if (!(r instanceof FutureTask)) {
+                return; // Not our job
+            }
+
+            /*
+             * Try to retrieve this task and delete it from the map
+             */
+            synchronized (futures) {
+                futures.remove(r);
+                if (futures.isEmpty()) {
+                    LocalBroadcastManagerProvider.get(context).sendBroadcast(new Intent(INTENT_WORK_FINISHED));
+                }
+            }
+        } finally {
+            super.afterExecute(r, t);
+        }
+    }
 }

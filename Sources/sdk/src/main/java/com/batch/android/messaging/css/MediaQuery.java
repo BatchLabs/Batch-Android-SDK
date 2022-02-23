@@ -5,11 +5,11 @@ import java.util.List;
 
 public class MediaQuery {
 
-  public String rule;
+    public String rule;
 
-  public List<Ruleset> rulesets;
+    public List<Ruleset> rulesets;
 
-  public MediaQuery() {
-    rulesets = new ArrayList<>();
-  }
+    public MediaQuery() {
+        rulesets = new ArrayList<>();
+    }
 }

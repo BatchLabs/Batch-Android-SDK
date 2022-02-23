@@ -26,70 +26,70 @@ import java.nio.ByteBuffer;
  */
 public class MessageBufferBE extends MessageBuffer {
 
-  MessageBufferBE(byte[] arr, int offset, int length) {
-    super(arr, offset, length);
-  }
-
-  MessageBufferBE(ByteBuffer bb) {
-    super(bb);
-  }
-
-  private MessageBufferBE(Object base, long address, int length) {
-    super(base, address, length);
-  }
-
-  @Override
-  public MessageBufferBE slice(int offset, int length) {
-    if (offset == 0 && length == size()) {
-      return this;
-    } else {
-      checkArgument(offset + length <= size());
-      return new MessageBufferBE(base, address + offset, length);
+    MessageBufferBE(byte[] arr, int offset, int length) {
+        super(arr, offset, length);
     }
-  }
 
-  @Override
-  public short getShort(int index) {
-    return unsafe.getShort(base, address + index);
-  }
+    MessageBufferBE(ByteBuffer bb) {
+        super(bb);
+    }
 
-  @Override
-  public int getInt(int index) {
-    // We can simply return the integer value as big-endian value
-    return unsafe.getInt(base, address + index);
-  }
+    private MessageBufferBE(Object base, long address, int length) {
+        super(base, address, length);
+    }
 
-  public long getLong(int index) {
-    return unsafe.getLong(base, address + index);
-  }
+    @Override
+    public MessageBufferBE slice(int offset, int length) {
+        if (offset == 0 && length == size()) {
+            return this;
+        } else {
+            checkArgument(offset + length <= size());
+            return new MessageBufferBE(base, address + offset, length);
+        }
+    }
 
-  @Override
-  public float getFloat(int index) {
-    return unsafe.getFloat(base, address + index);
-  }
+    @Override
+    public short getShort(int index) {
+        return unsafe.getShort(base, address + index);
+    }
 
-  @Override
-  public double getDouble(int index) {
-    return unsafe.getDouble(base, address + index);
-  }
+    @Override
+    public int getInt(int index) {
+        // We can simply return the integer value as big-endian value
+        return unsafe.getInt(base, address + index);
+    }
 
-  @Override
-  public void putShort(int index, short v) {
-    unsafe.putShort(base, address + index, v);
-  }
+    public long getLong(int index) {
+        return unsafe.getLong(base, address + index);
+    }
 
-  @Override
-  public void putInt(int index, int v) {
-    unsafe.putInt(base, address + index, v);
-  }
+    @Override
+    public float getFloat(int index) {
+        return unsafe.getFloat(base, address + index);
+    }
 
-  @Override
-  public void putLong(int index, long v) {
-    unsafe.putLong(base, address + index, v);
-  }
+    @Override
+    public double getDouble(int index) {
+        return unsafe.getDouble(base, address + index);
+    }
 
-  @Override
-  public void putDouble(int index, double v) {
-    unsafe.putDouble(base, address + index, v);
-  }
+    @Override
+    public void putShort(int index, short v) {
+        unsafe.putShort(base, address + index, v);
+    }
+
+    @Override
+    public void putInt(int index, int v) {
+        unsafe.putInt(base, address + index, v);
+    }
+
+    @Override
+    public void putLong(int index, long v) {
+        unsafe.putLong(base, address + index, v);
+    }
+
+    @Override
+    public void putDouble(int index, double v) {
+        unsafe.putDouble(base, address + index, v);
+    }
 }

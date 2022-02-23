@@ -5,11 +5,11 @@ import java.util.List;
 
 public class Ruleset {
 
-  public String selector;
+    public String selector;
 
-  public List<Declaration> declarations;
+    public List<Declaration> declarations;
 
-  public Ruleset() {
-    declarations = new ArrayList<>();
-  }
+    public Ruleset() {
+        declarations = new ArrayList<>();
+    }
 }

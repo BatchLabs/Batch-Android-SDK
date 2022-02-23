@@ -9,14 +9,11 @@ import com.batch.android.annotation.PublicSDK;
  */
 @PublicSDK
 public interface BatchEventDispatcher {
-  /**
-   * Callback when a new events just happened in the Batch SDK
-   *
-   * @param eventType
-   * @param payload
-   */
-  void dispatchEvent(
-    @NonNull Batch.EventDispatcher.Type eventType,
-    @NonNull Batch.EventDispatcher.Payload payload
-  );
+    /**
+     * Callback when a new events just happened in the Batch SDK
+     *
+     * @param eventType
+     * @param payload
+     */
+    void dispatchEvent(@NonNull Batch.EventDispatcher.Type eventType, @NonNull Batch.EventDispatcher.Payload payload);
 }

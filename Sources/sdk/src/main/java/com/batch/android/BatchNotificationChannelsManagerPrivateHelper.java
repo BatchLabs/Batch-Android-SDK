@@ -8,15 +8,12 @@ import androidx.annotation.NonNull;
  */
 public class BatchNotificationChannelsManagerPrivateHelper {
 
-  @NonNull
-  public static String getChannelId(BatchNotificationChannelsManager manager) {
-    return manager.getChannelId(null);
-  }
+    @NonNull
+    public static String getChannelId(BatchNotificationChannelsManager manager) {
+        return manager.getChannelId(null);
+    }
 
-  public static void registerBatchChannelIfNeeded(
-    BatchNotificationChannelsManager manager,
-    Context context
-  ) {
-    manager.registerBatchChannelIfNeeded(context);
-  }
+    public static void registerBatchChannelIfNeeded(BatchNotificationChannelsManager manager, Context context) {
+        manager.registerBatchChannelIfNeeded(context);
+    }
 }

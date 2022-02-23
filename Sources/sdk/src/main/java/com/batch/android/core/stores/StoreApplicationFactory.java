@@ -7,32 +7,26 @@ import com.batch.android.core.PackageUtils;
 
 public class StoreApplicationFactory {
 
-  private StoreApplicationFactory() {}
+    private StoreApplicationFactory() {}
 
-  // Get the main app store. Google Play is the preferred one,
-  // then comes huawei AppGallery
-  @Nullable
-  public static StoreApplication getMainStore(@NonNull Context context) {
-    if (isPlayStoreInstalled(context)) {
-      return new GooglePlayStoreApplication();
+    // Get the main app store. Google Play is the preferred one,
+    // then comes huawei AppGallery
+    @Nullable
+    public static StoreApplication getMainStore(@NonNull Context context) {
+        if (isPlayStoreInstalled(context)) {
+            return new GooglePlayStoreApplication();
+        }
+        if (isHuaweiAppGalleryInstalled(context)) {
+            return new HuaweiAppGalleryApplication();
+        }
+        return null;
     }
-    if (isHuaweiAppGalleryInstalled(context)) {
-      return new HuaweiAppGalleryApplication();
+
+    private static boolean isPlayStoreInstalled(@NonNull Context context) {
+        return PackageUtils.isPackageInstalled(context.getPackageManager(), "com.android.vending");
     }
-    return null;
-  }
 
-  private static boolean isPlayStoreInstalled(@NonNull Context context) {
-    return PackageUtils.isPackageInstalled(
-      context.getPackageManager(),
-      "com.android.vending"
-    );
-  }
-
-  private static boolean isHuaweiAppGalleryInstalled(@NonNull Context context) {
-    return PackageUtils.isPackageInstalled(
-      context.getPackageManager(),
-      "com.huawei.appmarket"
-    );
-  }
+    private static boolean isHuaweiAppGalleryInstalled(@NonNull Context context) {
+        return PackageUtils.isPackageInstalled(context.getPackageManager(), "com.huawei.appmarket");
+    }
 }

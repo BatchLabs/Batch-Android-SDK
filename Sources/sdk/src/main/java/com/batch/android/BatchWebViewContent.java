@@ -11,14 +11,14 @@ import com.batch.android.messaging.model.WebViewMessage;
 @PublicSDK
 public class BatchWebViewContent implements BatchInAppMessage.Content {
 
-  private final String url;
+    private final String url;
 
-  BatchWebViewContent(@NonNull WebViewMessage from) {
-    url = from.url;
-  }
+    BatchWebViewContent(@NonNull WebViewMessage from) {
+        url = from.url;
+    }
 
-  @Nullable
-  public String getURL() {
-    return url;
-  }
+    @Nullable
+    public String getURL() {
+        return url;
+    }
 }

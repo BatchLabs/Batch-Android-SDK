@@ -5,10 +5,10 @@ package com.batch.android.core;
  *
  */
 public interface TaskRunnable extends Runnable {
-  /**
-   * Return a string that identify this task
-   *
-   * @return
-   */
-  String getTaskIdentifier();
+    /**
+     * Return a string that identify this task
+     *
+     * @return
+     */
+    String getTaskIdentifier();
 }

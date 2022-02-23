@@ -9,11 +9,11 @@ import com.batch.android.PushRegistrationProvider;
  */
 @Keep
 public interface PushRegistrationRegistrar {
-  /**
-   * Instantiate the push registration provider
-   *
-   * @param context
-   * @return
-   */
-  PushRegistrationProvider getPushRegistrationProvider(Context context);
+    /**
+     * Instantiate the push registration provider
+     *
+     * @param context
+     * @return
+     */
+    PushRegistrationProvider getPushRegistrationProvider(Context context);
 }

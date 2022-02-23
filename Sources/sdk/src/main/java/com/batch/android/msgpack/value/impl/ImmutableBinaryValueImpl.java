@@ -28,58 +28,56 @@ import java.util.Arrays;
  *
  * @see com.batch.android.msgpack.value.StringValue
  */
-public class ImmutableBinaryValueImpl
-  extends AbstractImmutableRawValue
-  implements ImmutableBinaryValue {
+public class ImmutableBinaryValueImpl extends AbstractImmutableRawValue implements ImmutableBinaryValue {
 
-  public ImmutableBinaryValueImpl(byte[] data) {
-    super(data);
-  }
-
-  @Override
-  public ValueType getValueType() {
-    return ValueType.BINARY;
-  }
-
-  @Override
-  public ImmutableBinaryValue immutableValue() {
-    return this;
-  }
-
-  @Override
-  public ImmutableBinaryValue asBinaryValue() {
-    return this;
-  }
-
-  @Override
-  public void writeTo(MessagePacker pk) throws IOException {
-    pk.packBinaryHeader(data.length);
-    pk.writePayload(data);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof Value)) {
-      return false;
-    }
-    Value v = (Value) o;
-    if (!v.isBinaryValue()) {
-      return false;
+    public ImmutableBinaryValueImpl(byte[] data) {
+        super(data);
     }
 
-    if (v instanceof ImmutableBinaryValueImpl) {
-      ImmutableBinaryValueImpl bv = (ImmutableBinaryValueImpl) v;
-      return Arrays.equals(data, bv.data);
-    } else {
-      return Arrays.equals(data, v.asBinaryValue().asByteArray());
+    @Override
+    public ValueType getValueType() {
+        return ValueType.BINARY;
     }
-  }
 
-  @Override
-  public int hashCode() {
-    return Arrays.hashCode(data);
-  }
+    @Override
+    public ImmutableBinaryValue immutableValue() {
+        return this;
+    }
+
+    @Override
+    public ImmutableBinaryValue asBinaryValue() {
+        return this;
+    }
+
+    @Override
+    public void writeTo(MessagePacker pk) throws IOException {
+        pk.packBinaryHeader(data.length);
+        pk.writePayload(data);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Value)) {
+            return false;
+        }
+        Value v = (Value) o;
+        if (!v.isBinaryValue()) {
+            return false;
+        }
+
+        if (v instanceof ImmutableBinaryValueImpl) {
+            ImmutableBinaryValueImpl bv = (ImmutableBinaryValueImpl) v;
+            return Arrays.equals(data, bv.data);
+        } else {
+            return Arrays.equals(data, v.asBinaryValue().asByteArray());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(data);
+    }
 }

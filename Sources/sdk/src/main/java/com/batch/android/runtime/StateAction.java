@@ -5,10 +5,10 @@ package com.batch.android.runtime;
  *
  */
 public interface StateAction {
-  /**
-   * Action to run
-   *
-   * @param state current state
-   */
-  void run(State state);
+    /**
+     * Action to run
+     *
+     * @param state current state
+     */
+    void run(State state);
 }

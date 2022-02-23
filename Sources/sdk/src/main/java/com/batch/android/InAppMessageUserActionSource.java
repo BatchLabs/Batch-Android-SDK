@@ -9,6 +9,6 @@ import com.batch.android.json.JSONObject;
  */
 @PublicSDK
 public interface InAppMessageUserActionSource extends UserActionSource {
-  @NonNull
-  JSONObject getCustomPayload();
+    @NonNull
+    JSONObject getCustomPayload();
 }

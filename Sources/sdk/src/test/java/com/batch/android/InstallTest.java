@@ -20,45 +20,45 @@ import org.junit.runner.RunWith;
 @SmallTest
 public class InstallTest {
 
-  private Context appContext;
+    private Context appContext;
 
-  @Before
-  public void setUp() {
-    appContext = ApplicationProvider.getApplicationContext();
-  }
+    @Before
+    public void setUp() {
+        appContext = ApplicationProvider.getApplicationContext();
+    }
 
-  /**
-   * Test data generation
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testInstallIDGenerationTest() throws Exception {
-    Install install = new Install(appContext);
+    /**
+     * Test data generation
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testInstallIDGenerationTest() throws Exception {
+        Install install = new Install(appContext);
 
-    assertNotNull(install.getInstallID());
-    assertNotNull(install.getInstallDate());
-  }
+        assertNotNull(install.getInstallID());
+        assertNotNull(install.getInstallDate());
+    }
 
-  /**
-   * Test data persistance
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testInstallIDStorage() throws Exception {
-    Install install = new Install(appContext);
+    /**
+     * Test data persistance
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testInstallIDStorage() throws Exception {
+        Install install = new Install(appContext);
 
-    assertNotNull(install.getInstallID());
-    assertNotNull(install.getInstallDate());
+        assertNotNull(install.getInstallID());
+        assertNotNull(install.getInstallDate());
 
-    String previousInstallID = install.getInstallID();
-    Date previousDate = install.getInstallDate();
+        String previousInstallID = install.getInstallID();
+        Date previousDate = install.getInstallDate();
 
-    // Create a new install object to check persistance
-    install = new Install(appContext);
+        // Create a new install object to check persistance
+        install = new Install(appContext);
 
-    assertEquals(previousInstallID, install.getInstallID());
-    assertEquals(previousDate, install.getInstallDate());
-  }
+        assertEquals(previousInstallID, install.getInstallID());
+        assertEquals(previousDate, install.getInstallDate());
+    }
 }

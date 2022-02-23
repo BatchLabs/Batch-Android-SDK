@@ -15,50 +15,41 @@ import com.batch.android.processor.Provide;
 @Module
 public class LandingOutput extends LocalCampaign.Output {
 
-  private MessagingModule messagingModule;
+    private MessagingModule messagingModule;
 
-  public LandingOutput(
-    MessagingModule messagingModule,
-    @NonNull JSONObject payload
-  ) {
-    super(payload);
-    this.messagingModule = messagingModule;
-  }
-
-  @Provide
-  public static LandingOutput provide(@NonNull JSONObject payload) {
-    return new LandingOutput(MessagingModuleProvider.get(), payload);
-  }
-
-  @Override
-  public boolean displayMessage(LocalCampaign campaign) {
-    try {
-      // Copy event data before making the BatchInAppMessage
-      JSONObject mergedPayload = new JSONObject(payload);
-      mergedPayload.put("ed", campaign.eventData);
-      JSONObject customPayload = new JSONObject(
-        campaign.customPayload != null
-          ? new JSONObject(campaign.customPayload)
-          : new JSONObject()
-      );
-
-      BatchInAppMessage message = new BatchInAppMessage(
-        campaign.publicToken,
-        campaign.id,
-        campaign.eventData,
-        mergedPayload,
-        customPayload
-      );
-
-      messagingModule.displayInAppMessage(message);
-      return true;
-    } catch (JSONException e) {
-      Logger.internal(
-        LocalCampaignsModule.TAG,
-        "Landing Output: Could not copy custom payload",
-        e
-      );
+    public LandingOutput(MessagingModule messagingModule, @NonNull JSONObject payload) {
+        super(payload);
+        this.messagingModule = messagingModule;
     }
-    return false;
-  }
+
+    @Provide
+    public static LandingOutput provide(@NonNull JSONObject payload) {
+        return new LandingOutput(MessagingModuleProvider.get(), payload);
+    }
+
+    @Override
+    public boolean displayMessage(LocalCampaign campaign) {
+        try {
+            // Copy event data before making the BatchInAppMessage
+            JSONObject mergedPayload = new JSONObject(payload);
+            mergedPayload.put("ed", campaign.eventData);
+            JSONObject customPayload = new JSONObject(
+                campaign.customPayload != null ? new JSONObject(campaign.customPayload) : new JSONObject()
+            );
+
+            BatchInAppMessage message = new BatchInAppMessage(
+                campaign.publicToken,
+                campaign.id,
+                campaign.eventData,
+                mergedPayload,
+                customPayload
+            );
+
+            messagingModule.displayInAppMessage(message);
+            return true;
+        } catch (JSONException e) {
+            Logger.internal(LocalCampaignsModule.TAG, "Landing Output: Could not copy custom payload", e);
+        }
+        return false;
+    }
 }

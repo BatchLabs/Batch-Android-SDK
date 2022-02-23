@@ -26,83 +26,58 @@ import org.robolectric.annotation.Config;
 @SmallTest
 public class DeeplinkTest {
 
-  @Test
-  public void testValidDeeplink() {
-    final String deeplink = "https://batch.com";
+    @Test
+    public void testValidDeeplink() {
+        final String deeplink = "https://batch.com";
 
-    Intent intent = DeeplinkHelper.getIntent(deeplink, false, true);
-    assertNotNull(intent);
-    assertEquals(Intent.ACTION_VIEW, intent.getAction());
+        Intent intent = DeeplinkHelper.getIntent(deeplink, false, true);
+        assertNotNull(intent);
+        assertEquals(Intent.ACTION_VIEW, intent.getAction());
 
-    assertEquals(
-      Intent.FLAG_ACTIVITY_NEW_TASK,
-      (intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK)
-    );
+        assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, (intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK));
 
-    intent = DeeplinkHelper.getIntent(deeplink, false, false);
-    assertNotNull(intent);
+        intent = DeeplinkHelper.getIntent(deeplink, false, false);
+        assertNotNull(intent);
 
-    assertEquals(0, (intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK));
-  }
+        assertEquals(0, (intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK));
+    }
 
-  @Test
-  public void testCustomTabSchemes() {
-    assertTrue(
-      DeeplinkHelper.customTabSupportsURI(Uri.parse("https://batch.com"))
-    );
-    assertTrue(
-      DeeplinkHelper.customTabSupportsURI(Uri.parse("HTTPS://batch.com"))
-    );
-    assertTrue(
-      DeeplinkHelper.customTabSupportsURI(Uri.parse("http://batch.com"))
-    );
-    assertTrue(
-      DeeplinkHelper.customTabSupportsURI(Uri.parse("HTTP://batch.com"))
-    );
+    @Test
+    public void testCustomTabSchemes() {
+        assertTrue(DeeplinkHelper.customTabSupportsURI(Uri.parse("https://batch.com")));
+        assertTrue(DeeplinkHelper.customTabSupportsURI(Uri.parse("HTTPS://batch.com")));
+        assertTrue(DeeplinkHelper.customTabSupportsURI(Uri.parse("http://batch.com")));
+        assertTrue(DeeplinkHelper.customTabSupportsURI(Uri.parse("HTTP://batch.com")));
 
-    assertFalse(DeeplinkHelper.customTabSupportsURI(Uri.parse("batch.com")));
+        assertFalse(DeeplinkHelper.customTabSupportsURI(Uri.parse("batch.com")));
 
-    assertFalse(
-      DeeplinkHelper.customTabSupportsURI(Uri.parse("foobar://batch.com"))
-    );
-  }
+        assertFalse(DeeplinkHelper.customTabSupportsURI(Uri.parse("foobar://batch.com")));
+    }
 
-  @Test
-  @Config(sdk = { JELLY_BEAN_MR2, P })
-  public void testCustomTabIntent() {
-    final String deeplink = "https://batch.com";
+    @Test
+    @Config(sdk = { JELLY_BEAN_MR2, P })
+    public void testCustomTabIntent() {
+        final String deeplink = "https://batch.com";
 
-    final Intent intent = DeeplinkHelper.getIntent(deeplink, true, true);
-    assertNotNull(intent);
-    assertEquals(0, (intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK));
+        final Intent intent = DeeplinkHelper.getIntent(deeplink, true, true);
+        assertNotNull(intent);
+        assertEquals(0, (intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK));
 
-    assertTrue(
-      intent.getBooleanExtra(
-        "android.support.customtabs.extra.SHARE_MENU_ITEM",
-        false
-      )
-    );
-    assertTrue(
-      Objects
-        .requireNonNull(intent.getExtras())
-        .containsKey("android.support.customtabs.extra.SESSION")
-    );
-  }
+        assertTrue(intent.getBooleanExtra("android.support.customtabs.extra.SHARE_MENU_ITEM", false));
+        assertTrue(Objects.requireNonNull(intent.getExtras()).containsKey("android.support.customtabs.extra.SESSION"));
+    }
 
-  @Test
-  @Config(sdk = { JELLY_BEAN, JELLY_BEAN_MR1 })
-  public void testCustomTabOnOlderAPI() {
-    final String deeplink = "https://batch.com";
+    @Test
+    @Config(sdk = { JELLY_BEAN, JELLY_BEAN_MR1 })
+    public void testCustomTabOnOlderAPI() {
+        final String deeplink = "https://batch.com";
 
-    assertNull(DeeplinkHelper.getCustomTabIntent(Uri.parse(deeplink)));
+        assertNull(DeeplinkHelper.getCustomTabIntent(Uri.parse(deeplink)));
 
-    final Intent intent = DeeplinkHelper.getIntent(deeplink, true, true);
-    assertNotNull(intent);
-    assertEquals(
-      Intent.FLAG_ACTIVITY_NEW_TASK,
-      (intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK)
-    );
+        final Intent intent = DeeplinkHelper.getIntent(deeplink, true, true);
+        assertNotNull(intent);
+        assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, (intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK));
 
-    assertNull(intent.getExtras());
-  }
+        assertNull(intent.getExtras());
+    }
 }

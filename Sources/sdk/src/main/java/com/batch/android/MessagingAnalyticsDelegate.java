@@ -36,239 +36,207 @@ import java.util.ArrayList;
 @Module
 public class MessagingAnalyticsDelegate {
 
-  private static final String STATE_KEY_CALLED_METHODS =
-    "analyticsdelegate_called_methods";
+    private static final String STATE_KEY_CALLED_METHODS = "analyticsdelegate_called_methods";
 
-  private MessagingModule messagingModule;
-  private TrackerModule trackerModule;
-  private EventDispatcherModule eventDispatcherModule;
-  private Message message;
-  private BatchMessage sourceMessage;
-  final ArrayList<String> calledMethods = new ArrayList<>(6);
+    private MessagingModule messagingModule;
+    private TrackerModule trackerModule;
+    private EventDispatcherModule eventDispatcherModule;
+    private Message message;
+    private BatchMessage sourceMessage;
+    final ArrayList<String> calledMethods = new ArrayList<>(6);
 
-  MessagingAnalyticsDelegate(
-    MessagingModule messagingModule,
-    TrackerModule trackerModule,
-    EventDispatcherModule eventDispatcherModule,
-    Message message,
-    BatchMessage sourceMessage
-  ) {
-    this.messagingModule = messagingModule;
-    this.trackerModule = trackerModule;
-    this.eventDispatcherModule = eventDispatcherModule;
-    this.message = message;
-    this.sourceMessage = sourceMessage;
-  }
-
-  @Provide
-  public static MessagingAnalyticsDelegate provide(
-    Message message,
-    BatchMessage sourceMessage
-  ) {
-    return new MessagingAnalyticsDelegate(
-      MessagingModuleProvider.get(),
-      TrackerModuleProvider.get(),
-      EventDispatcherModuleProvider.get(),
-      message,
-      sourceMessage
-    );
-  }
-
-  // Returns true if the method has already been ran once
-  private boolean ensureOnce(String method) {
-    synchronized (calledMethods) {
-      if (calledMethods.contains(method)) {
-        return true;
-      } else {
-        calledMethods.add(method);
-        return false;
-      }
-    }
-  }
-
-  //region User interaction
-
-  public void onGlobalTap(@NonNull Action action) {
-    if (ensureOnce("globaltap")) {
-      return;
-    }
-    messagingModule.onMessageGlobalTap(message, action);
-    Batch.EventDispatcher.Type type = MESSAGING_CLICK;
-    if (action.isDismissAction()) {
-      // We trigger a close event when the global tap is a dismiss action
-      type = MESSAGING_CLOSE;
-    }
-    eventDispatcherModule.dispatchEvent(
-      type,
-      new MessagingEventPayload(
-        sourceMessage,
-        sourceMessage.getJSON(),
-        sourceMessage.getCustomPayloadInternal(),
-        action
-      )
-    );
-  }
-
-  public void onCTAClicked(int ctaIndex, @NonNull CTA cta) {
-    if (ensureOnce("ctaclicked")) {
-      return;
-    }
-    messagingModule.onMessageCTAClicked(message, ctaIndex, cta);
-
-    Batch.EventDispatcher.Type type = MESSAGING_CLICK;
-    if (cta.isDismissAction()) {
-      // We trigger a close event when the CTA is a dismiss action
-      type = MESSAGING_CLOSE;
-    }
-    eventDispatcherModule.dispatchEvent(
-      type,
-      new MessagingEventPayload(
-        sourceMessage,
-        sourceMessage.getJSON(),
-        sourceMessage.getCustomPayloadInternal(),
-        cta
-      )
-    );
-  }
-
-  public void onWebViewClickTracked(
-    @NonNull Action action,
-    @Nullable String buttonAnalyticsId
-  ) {
-    // This doesn't ensureOnce by design
-
-    if (TextUtils.isEmpty(buttonAnalyticsId)) {
-      buttonAnalyticsId = null;
-    }
-    if (buttonAnalyticsId != null && buttonAnalyticsId.length() > 30) {
-      Logger.error(
-        MessagingModule.TAG,
-        "Could not track webview event: The analytics ID is invalid: it should be 30 characters or less. " +
-        "The action will be tracked without an analytics ID, but will still be performed."
-      );
-      buttonAnalyticsId = null;
+    MessagingAnalyticsDelegate(
+        MessagingModule messagingModule,
+        TrackerModule trackerModule,
+        EventDispatcherModule eventDispatcherModule,
+        Message message,
+        BatchMessage sourceMessage
+    ) {
+        this.messagingModule = messagingModule;
+        this.trackerModule = trackerModule;
+        this.eventDispatcherModule = eventDispatcherModule;
+        this.message = message;
+        this.sourceMessage = sourceMessage;
     }
 
-    Batch.EventDispatcher.Type type = MESSAGING_WEBVIEW_CLICK;
-    if (action.isDismissAction()) {
-      // We trigger a close event when the CTA is a dismiss action
-      type = MESSAGING_CLOSE;
+    @Provide
+    public static MessagingAnalyticsDelegate provide(Message message, BatchMessage sourceMessage) {
+        return new MessagingAnalyticsDelegate(
+            MessagingModuleProvider.get(),
+            TrackerModuleProvider.get(),
+            EventDispatcherModuleProvider.get(),
+            message,
+            sourceMessage
+        );
     }
 
-    messagingModule.onWebViewMessageClickTracked(
-      message,
-      action,
-      buttonAnalyticsId
-    );
-    eventDispatcherModule.dispatchEvent(
-      type,
-      new MessagingEventPayload(
-        sourceMessage,
-        sourceMessage.getJSON(),
-        sourceMessage.getCustomPayloadInternal(),
-        action,
-        buttonAnalyticsId
-      )
-    );
-  }
-
-  // Closed is when the user explicitly closes the message
-  public void onClosed() {
-    if (ensureOnce("closed")) {
-      return;
-    }
-    messagingModule.onMessageClosed(message);
-    eventDispatcherModule.dispatchEvent(
-      Batch.EventDispatcher.Type.MESSAGING_CLOSE,
-      new MessagingEventPayload(
-        sourceMessage,
-        sourceMessage.getJSON(),
-        sourceMessage.getCustomPayloadInternal()
-      )
-    );
-  }
-
-  public void onClosedError(@NonNull MessagingError cause) {
-    if (ensureOnce("closederror")) {
-      return;
-    }
-    messagingModule.onMessageClosedError(message, cause);
-    eventDispatcherModule.dispatchEvent(
-      Batch.EventDispatcher.Type.MESSAGING_CLOSE_ERROR,
-      new MessagingEventPayload(
-        sourceMessage,
-        sourceMessage.getJSON(),
-        sourceMessage.getCustomPayloadInternal()
-      )
-    );
-  }
-
-  //endregion
-
-  //region View lifecycle
-
-  public void onAutoClosedAfterDelay() {
-    if (ensureOnce("autoclosed")) {
-      return;
-    }
-    messagingModule.onMessageAutoClosed(message);
-    eventDispatcherModule.dispatchEvent(
-      Batch.EventDispatcher.Type.MESSAGING_AUTO_CLOSE,
-      new MessagingEventPayload(
-        sourceMessage,
-        sourceMessage.getJSON(),
-        sourceMessage.getCustomPayloadInternal()
-      )
-    );
-  }
-
-  public void onViewShown() {
-    if (ensureOnce("viewshown")) {
-      return;
-    }
-    messagingModule.onMessageShown(message);
-    if (sourceMessage instanceof BatchInAppMessage) {
-      BatchInAppMessage inAppMessage = (BatchInAppMessage) sourceMessage;
-      trackerModule.trackCampaignView(
-        inAppMessage.getCampaignId(),
-        inAppMessage.getEventData()
-      );
+    // Returns true if the method has already been ran once
+    private boolean ensureOnce(String method) {
+        synchronized (calledMethods) {
+            if (calledMethods.contains(method)) {
+                return true;
+            } else {
+                calledMethods.add(method);
+                return false;
+            }
+        }
     }
 
-    eventDispatcherModule.dispatchEvent(
-      Batch.EventDispatcher.Type.MESSAGING_SHOW,
-      new MessagingEventPayload(
-        sourceMessage,
-        sourceMessage.getJSON(),
-        sourceMessage.getCustomPayloadInternal()
-      )
-    );
-  }
+    //region User interaction
 
-  public void onViewDismissed() {
-    if (ensureOnce("viewdismissed")) {
-      return;
+    public void onGlobalTap(@NonNull Action action) {
+        if (ensureOnce("globaltap")) {
+            return;
+        }
+        messagingModule.onMessageGlobalTap(message, action);
+        Batch.EventDispatcher.Type type = MESSAGING_CLICK;
+        if (action.isDismissAction()) {
+            // We trigger a close event when the global tap is a dismiss action
+            type = MESSAGING_CLOSE;
+        }
+        eventDispatcherModule.dispatchEvent(
+            type,
+            new MessagingEventPayload(
+                sourceMessage,
+                sourceMessage.getJSON(),
+                sourceMessage.getCustomPayloadInternal(),
+                action
+            )
+        );
     }
-    messagingModule.onMessageDismissed(message);
-  }
 
-  //endregion
+    public void onCTAClicked(int ctaIndex, @NonNull CTA cta) {
+        if (ensureOnce("ctaclicked")) {
+            return;
+        }
+        messagingModule.onMessageCTAClicked(message, ctaIndex, cta);
 
-  //region State saving
-
-  public void restoreState(@Nullable Bundle inState) {
-    if (inState != null) {
-      ArrayList<String> stateCalledMethods = inState.getStringArrayList(
-        STATE_KEY_CALLED_METHODS
-      );
-      if (stateCalledMethods != null) {
-        calledMethods.addAll(stateCalledMethods);
-      }
+        Batch.EventDispatcher.Type type = MESSAGING_CLICK;
+        if (cta.isDismissAction()) {
+            // We trigger a close event when the CTA is a dismiss action
+            type = MESSAGING_CLOSE;
+        }
+        eventDispatcherModule.dispatchEvent(
+            type,
+            new MessagingEventPayload(
+                sourceMessage,
+                sourceMessage.getJSON(),
+                sourceMessage.getCustomPayloadInternal(),
+                cta
+            )
+        );
     }
-  }
 
-  public void onSaveInstanceState(@NonNull Bundle outState) {
-    outState.putStringArrayList(STATE_KEY_CALLED_METHODS, calledMethods);
-  }
-  //endregion
+    public void onWebViewClickTracked(@NonNull Action action, @Nullable String buttonAnalyticsId) {
+        // This doesn't ensureOnce by design
+
+        if (TextUtils.isEmpty(buttonAnalyticsId)) {
+            buttonAnalyticsId = null;
+        }
+        if (buttonAnalyticsId != null && buttonAnalyticsId.length() > 30) {
+            Logger.error(
+                MessagingModule.TAG,
+                "Could not track webview event: The analytics ID is invalid: it should be 30 characters or less. " +
+                "The action will be tracked without an analytics ID, but will still be performed."
+            );
+            buttonAnalyticsId = null;
+        }
+
+        Batch.EventDispatcher.Type type = MESSAGING_WEBVIEW_CLICK;
+        if (action.isDismissAction()) {
+            // We trigger a close event when the CTA is a dismiss action
+            type = MESSAGING_CLOSE;
+        }
+
+        messagingModule.onWebViewMessageClickTracked(message, action, buttonAnalyticsId);
+        eventDispatcherModule.dispatchEvent(
+            type,
+            new MessagingEventPayload(
+                sourceMessage,
+                sourceMessage.getJSON(),
+                sourceMessage.getCustomPayloadInternal(),
+                action,
+                buttonAnalyticsId
+            )
+        );
+    }
+
+    // Closed is when the user explicitly closes the message
+    public void onClosed() {
+        if (ensureOnce("closed")) {
+            return;
+        }
+        messagingModule.onMessageClosed(message);
+        eventDispatcherModule.dispatchEvent(
+            Batch.EventDispatcher.Type.MESSAGING_CLOSE,
+            new MessagingEventPayload(sourceMessage, sourceMessage.getJSON(), sourceMessage.getCustomPayloadInternal())
+        );
+    }
+
+    public void onClosedError(@NonNull MessagingError cause) {
+        if (ensureOnce("closederror")) {
+            return;
+        }
+        messagingModule.onMessageClosedError(message, cause);
+        eventDispatcherModule.dispatchEvent(
+            Batch.EventDispatcher.Type.MESSAGING_CLOSE_ERROR,
+            new MessagingEventPayload(sourceMessage, sourceMessage.getJSON(), sourceMessage.getCustomPayloadInternal())
+        );
+    }
+
+    //endregion
+
+    //region View lifecycle
+
+    public void onAutoClosedAfterDelay() {
+        if (ensureOnce("autoclosed")) {
+            return;
+        }
+        messagingModule.onMessageAutoClosed(message);
+        eventDispatcherModule.dispatchEvent(
+            Batch.EventDispatcher.Type.MESSAGING_AUTO_CLOSE,
+            new MessagingEventPayload(sourceMessage, sourceMessage.getJSON(), sourceMessage.getCustomPayloadInternal())
+        );
+    }
+
+    public void onViewShown() {
+        if (ensureOnce("viewshown")) {
+            return;
+        }
+        messagingModule.onMessageShown(message);
+        if (sourceMessage instanceof BatchInAppMessage) {
+            BatchInAppMessage inAppMessage = (BatchInAppMessage) sourceMessage;
+            trackerModule.trackCampaignView(inAppMessage.getCampaignId(), inAppMessage.getEventData());
+        }
+
+        eventDispatcherModule.dispatchEvent(
+            Batch.EventDispatcher.Type.MESSAGING_SHOW,
+            new MessagingEventPayload(sourceMessage, sourceMessage.getJSON(), sourceMessage.getCustomPayloadInternal())
+        );
+    }
+
+    public void onViewDismissed() {
+        if (ensureOnce("viewdismissed")) {
+            return;
+        }
+        messagingModule.onMessageDismissed(message);
+    }
+
+    //endregion
+
+    //region State saving
+
+    public void restoreState(@Nullable Bundle inState) {
+        if (inState != null) {
+            ArrayList<String> stateCalledMethods = inState.getStringArrayList(STATE_KEY_CALLED_METHODS);
+            if (stateCalledMethods != null) {
+                calledMethods.addAll(stateCalledMethods);
+            }
+        }
+    }
+
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putStringArrayList(STATE_KEY_CALLED_METHODS, calledMethods);
+    }
+    //endregion
 }

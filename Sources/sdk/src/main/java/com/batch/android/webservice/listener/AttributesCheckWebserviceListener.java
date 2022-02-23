@@ -8,15 +8,15 @@ import com.batch.android.query.response.AttributesCheckResponse;
  *
  */
 public interface AttributesCheckWebserviceListener {
-  /**
-   * Called on success
-   */
-  void onSuccess(AttributesCheckResponse response);
+    /**
+     * Called on success
+     */
+    void onSuccess(AttributesCheckResponse response);
 
-  /**
-   * Called on error
-   *
-   * @param reason
-   */
-  void onError(FailReason reason);
+    /**
+     * Called on error
+     *
+     * @param reason
+     */
+    void onError(FailReason reason);
 }

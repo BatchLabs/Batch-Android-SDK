@@ -22,19 +22,16 @@ import java.nio.charset.CharacterCodingException;
  */
 public class MessageStringCodingException extends MessagePackException {
 
-  public MessageStringCodingException(
-    String message,
-    CharacterCodingException cause
-  ) {
-    super(message, cause);
-  }
+    public MessageStringCodingException(String message, CharacterCodingException cause) {
+        super(message, cause);
+    }
 
-  public MessageStringCodingException(CharacterCodingException cause) {
-    super(cause);
-  }
+    public MessageStringCodingException(CharacterCodingException cause) {
+        super(cause);
+    }
 
-  @Override
-  public CharacterCodingException getCause() {
-    return (CharacterCodingException) super.getCause();
-  }
+    @Override
+    public CharacterCodingException getCause() {
+        return (CharacterCodingException) super.getCause();
+    }
 }

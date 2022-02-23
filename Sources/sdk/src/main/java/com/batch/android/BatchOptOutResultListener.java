@@ -7,20 +7,20 @@ import com.batch.android.annotation.PublicSDK;
  */
 @PublicSDK
 public interface BatchOptOutResultListener {
-  void onSuccess();
+    void onSuccess();
 
-  ErrorPolicy onError();
+    ErrorPolicy onError();
 
-  @PublicSDK
-  enum ErrorPolicy {
-    /**
-     * Ignore the error and proceed with the opt-out.
-     */
-    IGNORE,
+    @PublicSDK
+    enum ErrorPolicy {
+        /**
+         * Ignore the error and proceed with the opt-out.
+         */
+        IGNORE,
 
-    /**
-     * Cancel the opt-out: please call the opt-out method again to retry.
-     */
-    CANCEL,
-  }
+        /**
+         * Cancel the opt-out: please call the opt-out method again to retry.
+         */
+        CANCEL,
+    }
 }

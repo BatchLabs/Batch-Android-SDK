@@ -5,8 +5,8 @@ import com.batch.android.date.UTCDate;
 
 public class SystemDateProvider implements DateProvider {
 
-  @Override
-  public BatchDate getCurrentDate() {
-    return new UTCDate();
-  }
+    @Override
+    public BatchDate getCurrentDate() {
+        return new UTCDate();
+    }
 }

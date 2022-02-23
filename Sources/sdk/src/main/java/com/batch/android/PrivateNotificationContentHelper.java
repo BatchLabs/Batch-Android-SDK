@@ -9,17 +9,13 @@ import com.batch.android.inbox.InboxNotificationContentInternal;
  */
 public class PrivateNotificationContentHelper {
 
-  private PrivateNotificationContentHelper() {}
+    private PrivateNotificationContentHelper() {}
 
-  public static InboxNotificationContentInternal getInternalContent(
-    BatchInboxNotificationContent publicContent
-  ) {
-    return publicContent.internalContent;
-  }
+    public static InboxNotificationContentInternal getInternalContent(BatchInboxNotificationContent publicContent) {
+        return publicContent.internalContent;
+    }
 
-  public static BatchInboxNotificationContent getPublicContent(
-    InboxNotificationContentInternal internalContent
-  ) {
-    return new BatchInboxNotificationContent(internalContent);
-  }
+    public static BatchInboxNotificationContent getPublicContent(InboxNotificationContentInternal internalContent) {
+        return new BatchInboxNotificationContent(internalContent);
+    }
 }

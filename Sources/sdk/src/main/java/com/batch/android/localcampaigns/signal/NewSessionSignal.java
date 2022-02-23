@@ -10,8 +10,8 @@ import com.batch.android.localcampaigns.trigger.NextSessionTrigger;
  */
 public class NewSessionSignal implements Signal {
 
-  @Override
-  public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
-    return trigger instanceof NextSessionTrigger;
-  }
+    @Override
+    public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
+        return trigger instanceof NextSessionTrigger;
+    }
 }

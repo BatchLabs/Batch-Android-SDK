@@ -17,102 +17,92 @@ import java.util.Set;
 
 public class CollectionAdapter extends BaseAdapter {
 
-  private final LayoutInflater inflater;
-  private final Context context;
+    private final LayoutInflater inflater;
+    private final Context context;
 
-  private List<TagCollection> tagCollections;
+    private List<TagCollection> tagCollections;
 
-  public CollectionAdapter(@NonNull Context context) {
-    super();
-    this.context = context;
-    this.inflater = LayoutInflater.from(context);
-    this.tagCollections = new ArrayList<>();
-  }
+    public CollectionAdapter(@NonNull Context context) {
+        super();
+        this.context = context;
+        this.inflater = LayoutInflater.from(context);
+        this.tagCollections = new ArrayList<>();
+    }
 
-  @Override
-  public int getCount() {
-    return tagCollections.size();
-  }
+    @Override
+    public int getCount() {
+        return tagCollections.size();
+    }
 
-  @Override
-  public TagCollection getItem(int position) {
-    return tagCollections.get(position);
-  }
+    @Override
+    public TagCollection getItem(int position) {
+        return tagCollections.get(position);
+    }
 
-  @Override
-  public long getItemId(int position) {
-    return 0;
-  }
+    @Override
+    public long getItemId(int position) {
+        return 0;
+    }
 
-  @Override
-  public View getView(
-    int position,
-    @Nullable View convertView,
-    @NonNull ViewGroup parent
-  ) {
-    final View view;
-    final TextView collectionName;
-    final ListView tagList;
+    @Override
+    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        final View view;
+        final TextView collectionName;
+        final ListView tagList;
 
-    if (convertView == null) {
-      view =
-        inflater.inflate(
-          R.layout.com_batchsdk_user_data_debug_collection_item,
-          parent,
-          false
+        if (convertView == null) {
+            view = inflater.inflate(R.layout.com_batchsdk_user_data_debug_collection_item, parent, false);
+        } else {
+            view = convertView;
+        }
+
+        collectionName = view.findViewById(R.id.com_batchsdk_user_data_debug_collection_name);
+        tagList = view.findViewById(R.id.com_batchsdk_user_data_debug_tag_list);
+
+        final TagCollection item = getItem(position);
+        collectionName.setText(item.getName());
+        tagList.setAdapter(item.getTagAdapter());
+        return view;
+    }
+
+    public void add(String name, Set<String> tags) {
+        ArrayAdapter<String> tagAdapter = new ArrayAdapter<>(
+            context,
+            android.R.layout.simple_list_item_1,
+            android.R.id.text1
         );
-    } else {
-      view = convertView;
+
+        tagAdapter.setNotifyOnChange(false);
+        for (String tag : tags) {
+            tagAdapter.add(tag);
+        }
+
+        TagCollection newCollection = new TagCollection(name, tagAdapter);
+        tagCollections.add(newCollection);
     }
 
-    collectionName =
-      view.findViewById(R.id.com_batchsdk_user_data_debug_collection_name);
-    tagList = view.findViewById(R.id.com_batchsdk_user_data_debug_tag_list);
-
-    final TagCollection item = getItem(position);
-    collectionName.setText(item.getName());
-    tagList.setAdapter(item.getTagAdapter());
-    return view;
-  }
-
-  public void add(String name, Set<String> tags) {
-    ArrayAdapter<String> tagAdapter = new ArrayAdapter<>(
-      context,
-      android.R.layout.simple_list_item_1,
-      android.R.id.text1
-    );
-
-    tagAdapter.setNotifyOnChange(false);
-    for (String tag : tags) {
-      tagAdapter.add(tag);
+    public void clear() {
+        tagCollections.clear();
+        notifyDataSetChanged();
     }
 
-    TagCollection newCollection = new TagCollection(name, tagAdapter);
-    tagCollections.add(newCollection);
-  }
+    private class TagCollection {
 
-  public void clear() {
-    tagCollections.clear();
-    notifyDataSetChanged();
-  }
+        private final String name;
+        private ArrayAdapter<String> tagAdapter;
 
-  private class TagCollection {
+        TagCollection(String name, ArrayAdapter<String> tagAdapter) {
+            super();
+            this.name = name;
+            this.tagAdapter = tagAdapter;
+        }
 
-    private final String name;
-    private ArrayAdapter<String> tagAdapter;
+        public String getName() {
+            return name;
+        }
 
-    TagCollection(String name, ArrayAdapter<String> tagAdapter) {
-      super();
-      this.name = name;
-      this.tagAdapter = tagAdapter;
+        public ArrayAdapter<String> getTagAdapter() {
+            return tagAdapter;
+        }
     }
-
-    public String getName() {
-      return name;
-    }
-
-    public ArrayAdapter<String> getTagAdapter() {
-      return tagAdapter;
-    }
-  }
 }

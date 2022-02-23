@@ -8,5 +8,5 @@ import com.batch.android.annotation.PublicSDK;
  */
 @PublicSDK
 public interface PushUserActionSource extends UserActionSource {
-  Bundle getPushBundle();
+    Bundle getPushBundle();
 }

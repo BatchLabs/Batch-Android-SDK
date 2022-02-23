@@ -20,19 +20,19 @@ package com.batch.android.msgpack.core;
  */
 public class MessageSizeException extends MessagePackException {
 
-  private final long size;
+    private final long size;
 
-  public MessageSizeException(long size) {
-    super();
-    this.size = size;
-  }
+    public MessageSizeException(long size) {
+        super();
+        this.size = size;
+    }
 
-  public MessageSizeException(String message, long size) {
-    super(message);
-    this.size = size;
-  }
+    public MessageSizeException(String message, long size) {
+        super(message);
+        this.size = size;
+    }
 
-  public long getSize() {
-    return size;
-  }
+    public long getSize() {
+        return size;
+    }
 }

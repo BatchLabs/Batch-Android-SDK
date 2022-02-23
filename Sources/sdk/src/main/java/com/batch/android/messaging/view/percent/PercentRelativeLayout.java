@@ -64,79 +64,65 @@ import android.widget.RelativeLayout;
  */
 public class PercentRelativeLayout extends RelativeLayout {
 
-  private final PercentLayoutHelper mHelper = new PercentLayoutHelper(this);
+    private final PercentLayoutHelper mHelper = new PercentLayoutHelper(this);
 
-  public PercentRelativeLayout(Context context) {
-    super(context);
-  }
-
-  public PercentRelativeLayout(Context context, AttributeSet attrs) {
-    super(context, attrs);
-  }
-
-  public PercentRelativeLayout(
-    Context context,
-    AttributeSet attrs,
-    int defStyle
-  ) {
-    super(context, attrs, defStyle);
-  }
-
-  @Override
-  protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    mHelper.adjustChildren(widthMeasureSpec, heightMeasureSpec);
-    super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    if (mHelper.handleMeasuredStateTooSmall()) {
-      super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    }
-  }
-
-  @Override
-  protected void onLayout(
-    boolean changed,
-    int left,
-    int top,
-    int right,
-    int bottom
-  ) {
-    super.onLayout(changed, left, top, right, bottom);
-    mHelper.restoreOriginalParams();
-  }
-
-  public static class LayoutParams
-    extends RelativeLayout.LayoutParams
-    implements PercentLayoutHelper.PercentLayoutParams {
-
-    private PercentLayoutHelper.PercentLayoutInfo mPercentLayoutInfo;
-
-    public LayoutParams(int width, int height) {
-      super(width, height);
+    public PercentRelativeLayout(Context context) {
+        super(context);
     }
 
-    public LayoutParams(ViewGroup.LayoutParams source) {
-      super(source);
+    public PercentRelativeLayout(Context context, AttributeSet attrs) {
+        super(context, attrs);
     }
 
-    public LayoutParams(MarginLayoutParams source) {
-      super(source);
+    public PercentRelativeLayout(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
     }
 
     @Override
-    public PercentLayoutHelper.PercentLayoutInfo getPercentLayoutInfo() {
-      if (mPercentLayoutInfo == null) {
-        mPercentLayoutInfo = new PercentLayoutHelper.PercentLayoutInfo();
-      }
-
-      return mPercentLayoutInfo;
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        mHelper.adjustChildren(widthMeasureSpec, heightMeasureSpec);
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        if (mHelper.handleMeasuredStateTooSmall()) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
     }
 
     @Override
-    protected void setBaseAttributes(
-      TypedArray a,
-      int widthAttr,
-      int heightAttr
-    ) {
-      PercentLayoutHelper.fetchWidthAndHeight(this, a, widthAttr, heightAttr);
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        mHelper.restoreOriginalParams();
     }
-  }
+
+    public static class LayoutParams
+        extends RelativeLayout.LayoutParams
+        implements PercentLayoutHelper.PercentLayoutParams {
+
+        private PercentLayoutHelper.PercentLayoutInfo mPercentLayoutInfo;
+
+        public LayoutParams(int width, int height) {
+            super(width, height);
+        }
+
+        public LayoutParams(ViewGroup.LayoutParams source) {
+            super(source);
+        }
+
+        public LayoutParams(MarginLayoutParams source) {
+            super(source);
+        }
+
+        @Override
+        public PercentLayoutHelper.PercentLayoutInfo getPercentLayoutInfo() {
+            if (mPercentLayoutInfo == null) {
+                mPercentLayoutInfo = new PercentLayoutHelper.PercentLayoutInfo();
+            }
+
+            return mPercentLayoutInfo;
+        }
+
+        @Override
+        protected void setBaseAttributes(TypedArray a, int widthAttr, int heightAttr) {
+            PercentLayoutHelper.fetchWidthAndHeight(this, a, widthAttr, heightAttr);
+        }
+    }
 }

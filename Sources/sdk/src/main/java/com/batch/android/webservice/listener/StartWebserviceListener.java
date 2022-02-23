@@ -7,15 +7,15 @@ import com.batch.android.FailReason;
  *
  */
 public interface StartWebserviceListener {
-  /**
-   * Called on success
-   */
-  void onSuccess();
+    /**
+     * Called on success
+     */
+    void onSuccess();
 
-  /**
-   * Call on error
-   *
-   * @param reason
-   */
-  void onError(FailReason reason);
+    /**
+     * Call on error
+     *
+     * @param reason
+     */
+    void onError(FailReason reason);
 }

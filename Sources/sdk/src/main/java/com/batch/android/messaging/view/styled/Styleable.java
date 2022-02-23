@@ -8,5 +8,5 @@ import java.util.Map;
  *
  */
 public interface Styleable {
-  void applyStyleRules(Map<String, String> rules);
+    void applyStyleRules(Map<String, String> rules);
 }

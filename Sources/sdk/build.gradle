@@ -26,7 +26,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 31
         versionCode 1
-        versionName "1.18.1"
+        versionName "1.18.2"
         buildConfigField "String", SDK_VERSION, "\"$versionName\""
         buildConfigField "Integer", API_LEVEL, '40'
         buildConfigField "Integer", MESSAGING_API_LEVEL, '11'
@@ -140,7 +140,7 @@ dependencies {
     testImplementation "com.google.android.gms:play-services-location:$playServicesVersion"
     testImplementation "com.google.android.gms:play-services-nearby:$playServicesVersion"
     testImplementation "androidx.appcompat:appcompat:$androidXLibraryVersion"
-    testImplementation 'org.robolectric:robolectric:4.5.1'
+    testImplementation 'org.robolectric:robolectric:4.7.1'
 
     testImplementation "org.powermock:powermock-module-junit4:2.0.7"
     testImplementation "org.powermock:powermock-module-junit4-rule:2.0.7"

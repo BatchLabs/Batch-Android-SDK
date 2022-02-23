@@ -40,172 +40,157 @@ import java.util.concurrent.Executors;
 @Singleton
 public class LocalCampaignsModule extends BatchModule {
 
-  public static final String TAG = "LocalCampaigns";
+    public static final String TAG = "LocalCampaigns";
 
-  private CampaignManager campaignManager;
-  private boolean triedToReadSavedCampaign = false;
+    private CampaignManager campaignManager;
+    private boolean triedToReadSavedCampaign = false;
 
-  /**
-   * Executor responsible for handling the campaign event based trigger
-   */
-  private ExecutorService triggerExecutor = Executors.newSingleThreadExecutor(
-    new NamedThreadFactory()
-  );
+    /**
+     * Executor responsible for handling the campaign event based trigger
+     */
+    private ExecutorService triggerExecutor = Executors.newSingleThreadExecutor(new NamedThreadFactory());
 
-  private BroadcastReceiver localBroadcastReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver localBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            onLocalBroadcast(intent);
+        }
+    };
+
+    private boolean broadcastReceiverRegistered = false;
+
+    private LocalCampaignsModule(CampaignManager campaignManager) {
+        this.campaignManager = campaignManager;
+    }
+
+    @Provide
+    public static LocalCampaignsModule provide() {
+        return new LocalCampaignsModule(CampaignManagerProvider.get());
+    }
+
+    //region: BatchModule methods
+
     @Override
-    public void onReceive(Context context, Intent intent) {
-      onLocalBroadcast(intent);
-    }
-  };
-
-  private boolean broadcastReceiverRegistered = false;
-
-  private LocalCampaignsModule(CampaignManager campaignManager) {
-    this.campaignManager = campaignManager;
-  }
-
-  @Provide
-  public static LocalCampaignsModule provide() {
-    return new LocalCampaignsModule(CampaignManagerProvider.get());
-  }
-
-  //region: BatchModule methods
-
-  @Override
-  public String getId() {
-    return "localcampaigns";
-  }
-
-  @Override
-  public int getState() {
-    return 1;
-  }
-
-  //endregion
-
-  public void sendSignal(@NonNull Signal signal) {
-    if (signal instanceof EventTrackedSignal) {
-      // Skip processing the signal if the event is not watched to avoid useless work
-      // Otherwise, transform the signal in a more specialized one for public events,
-      // if applicable.
-      final EventTrackedSignal castedSignal = (EventTrackedSignal) signal;
-      if (!campaignManager.isEventWatched(castedSignal.name)) {
-        Logger.internal(
-          TAG,
-          "Skipping event signal processing as the event named '" +
-          castedSignal.name +
-          "'is not watched."
-        );
-        return;
-      }
-
-      if (PublicEventTrackedSignal.isPublic(castedSignal)) {
-        signal = new PublicEventTrackedSignal(castedSignal);
-      }
+    public String getId() {
+        return "localcampaigns";
     }
 
-    displayMessage(signal);
-  }
-
-  public void wipeData(@NonNull Context context) {
-    try {
-      campaignManager.deleteAllCampaigns(context, true);
-    } catch (PersistenceException e) {
-      Logger.internal(TAG, "Could not delete persisted campaigns", e);
-    }
-  }
-
-  /**
-   * Displays the campaign for the specified signal and track view using the ViewTracker
-   */
-  private void displayMessage(final @NonNull Signal signal) {
-    triggerExecutor.submit(() -> {
-      LocalCampaign campaign = campaignManager.getCampaignToDisplay(signal);
-      if (campaign != null) {
-        campaign.generateOccurrenceID();
-        campaign.displayMessage();
-      }
-    });
-  }
-
-  private void onLocalBroadcast(Intent intent) {
-    if (SessionManager.INTENT_NEW_SESSION.equals(intent.getAction())) {
-      sendSignal(new NewSessionSignal());
-
-      WebserviceLauncher.launchLocalCampaignsWebservice(
-        RuntimeManagerProvider.get()
-      );
-    }
-  }
-
-  @Override
-  public void batchDidStart() {
-    campaignManager.openViewTracker();
-
-    if (!broadcastReceiverRegistered) {
-      LocalBroadcastManager lbm = LocalBroadcastManagerProvider.getSingleton();
-      if (lbm != null) {
-        broadcastReceiverRegistered = true;
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(SessionManager.INTENT_NEW_SESSION);
-        lbm.registerReceiver(localBroadcastReceiver, filter);
-      }
+    @Override
+    public int getState() {
+        return 1;
     }
 
-    // Load saved campaigns and call webservice
-    final Context context = RuntimeManagerProvider.get().getContext();
-    SessionManager sessionManager = RuntimeManagerProvider
-      .get()
-      .getSessionManager();
+    //endregion
 
-    if (
-      context != null &&
-      sessionManager != null &&
-      sessionManager.isSessionActive() &&
-      !triedToReadSavedCampaign
-    ) {
-      TaskExecutorProvider
-        .get(context)
-        .submit(() -> {
-          // Try loading via local file
-          if (campaignManager.hasSavedCampaigns(context)) {
-            if (campaignManager.loadSavedCampaignResponse(context)) {
-              sendSignal(new CampaignsLoadedSignal());
+    public void sendSignal(@NonNull Signal signal) {
+        if (signal instanceof EventTrackedSignal) {
+            // Skip processing the signal if the event is not watched to avoid useless work
+            // Otherwise, transform the signal in a more specialized one for public events,
+            // if applicable.
+            final EventTrackedSignal castedSignal = (EventTrackedSignal) signal;
+            if (!campaignManager.isEventWatched(castedSignal.name)) {
+                Logger.internal(
+                    TAG,
+                    "Skipping event signal processing as the event named '" + castedSignal.name + "'is not watched."
+                );
+                return;
             }
-            triedToReadSavedCampaign = true;
-          }
 
-          int delay = 0;
+            if (PublicEventTrackedSignal.isPublic(castedSignal)) {
+                signal = new PublicEventTrackedSignal(castedSignal);
+            }
+        }
 
-          try {
-            delay =
-              Integer.valueOf(
-                ParametersProvider
-                  .get(context)
-                  .get(ParameterKeys.LOCAL_CAMPAIGNS_WS_INITIAL_DELAY)
-              );
-          } catch (NumberFormatException ignored) {}
+        displayMessage(signal);
+    }
 
-          // Try loading via webservice
-          new Timer()
-            .schedule(
-              new TimerTask() {
-                @Override
-                public void run() {
-                  WebserviceLauncher.launchLocalCampaignsWebservice(
-                    RuntimeManagerProvider.get()
-                  );
-                }
-              },
-              delay * 1000
-            );
+    public void wipeData(@NonNull Context context) {
+        try {
+            campaignManager.deleteAllCampaigns(context, true);
+        } catch (PersistenceException e) {
+            Logger.internal(TAG, "Could not delete persisted campaigns", e);
+        }
+    }
+
+    /**
+     * Displays the campaign for the specified signal and track view using the ViewTracker
+     */
+    private void displayMessage(final @NonNull Signal signal) {
+        triggerExecutor.submit(() -> {
+            LocalCampaign campaign = campaignManager.getCampaignToDisplay(signal);
+            if (campaign != null) {
+                campaign.generateOccurrenceID();
+                campaign.displayMessage();
+            }
         });
     }
-  }
 
-  @Override
-  public void batchDidStop() {
-    campaignManager.closeViewTracker();
-  }
+    private void onLocalBroadcast(Intent intent) {
+        if (SessionManager.INTENT_NEW_SESSION.equals(intent.getAction())) {
+            sendSignal(new NewSessionSignal());
+
+            WebserviceLauncher.launchLocalCampaignsWebservice(RuntimeManagerProvider.get());
+        }
+    }
+
+    @Override
+    public void batchDidStart() {
+        campaignManager.openViewTracker();
+
+        if (!broadcastReceiverRegistered) {
+            LocalBroadcastManager lbm = LocalBroadcastManagerProvider.getSingleton();
+            if (lbm != null) {
+                broadcastReceiverRegistered = true;
+                IntentFilter filter = new IntentFilter();
+                filter.addAction(SessionManager.INTENT_NEW_SESSION);
+                lbm.registerReceiver(localBroadcastReceiver, filter);
+            }
+        }
+
+        // Load saved campaigns and call webservice
+        final Context context = RuntimeManagerProvider.get().getContext();
+        SessionManager sessionManager = RuntimeManagerProvider.get().getSessionManager();
+
+        if (
+            context != null && sessionManager != null && sessionManager.isSessionActive() && !triedToReadSavedCampaign
+        ) {
+            TaskExecutorProvider
+                .get(context)
+                .submit(() -> {
+                    // Try loading via local file
+                    if (campaignManager.hasSavedCampaigns(context)) {
+                        if (campaignManager.loadSavedCampaignResponse(context)) {
+                            sendSignal(new CampaignsLoadedSignal());
+                        }
+                        triedToReadSavedCampaign = true;
+                    }
+
+                    int delay = 0;
+
+                    try {
+                        delay =
+                            Integer.valueOf(
+                                ParametersProvider.get(context).get(ParameterKeys.LOCAL_CAMPAIGNS_WS_INITIAL_DELAY)
+                            );
+                    } catch (NumberFormatException ignored) {}
+
+                    // Try loading via webservice
+                    new Timer()
+                        .schedule(
+                            new TimerTask() {
+                                @Override
+                                public void run() {
+                                    WebserviceLauncher.launchLocalCampaignsWebservice(RuntimeManagerProvider.get());
+                                }
+                            },
+                            delay * 1000
+                        );
+                });
+        }
+    }
+
+    @Override
+    public void batchDidStop() {
+        campaignManager.closeViewTracker();
+    }
 }

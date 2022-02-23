@@ -16,22 +16,20 @@ import org.junit.runner.RunWith;
 @SmallTest
 public class EASCryptorTest {
 
-  /**
-   * Test encrypt & decrypt a string
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testEncryptDecrypt() throws Exception {
-    Cryptor cryptor = CryptorFactory.getCryptorForType(
-      CryptorFactory.CryptorType.EAS
-    );
+    /**
+     * Test encrypt & decrypt a string
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testEncryptDecrypt() throws Exception {
+        Cryptor cryptor = CryptorFactory.getCryptorForType(CryptorFactory.CryptorType.EAS);
 
-    String string =
-      "!&é\"'(§è!çà)-12567890°_%^$mù`=*/.,?,;:=‘{«ÇøÇø}—ë‘¶Ç¡@#|¿¡ïŒ€£µ~©®†™≈<>≤≥êÊ•π‡∂ƒÌ¬◊ß∞÷≠+∫√¢‰∆∑Ω¥∏ªŸ[]å”„ック金型илджفيحةحديد";
-    byte[] encrypted = cryptor.encrypt(string.getBytes(StandardCharsets.UTF_8));
-    byte[] decrypted = cryptor.decrypt(encrypted);
+        String string =
+            "!&é\"'(§è!çà)-12567890°_%^$mù`=*/.,?,;:=‘{«ÇøÇø}—ë‘¶Ç¡@#|¿¡ïŒ€£µ~©®†™≈<>≤≥êÊ•π‡∂ƒÌ¬◊ß∞÷≠+∫√¢‰∆∑Ω¥∏ªŸ[]å”„ック金型илджفيحةحديد";
+        byte[] encrypted = cryptor.encrypt(string.getBytes(StandardCharsets.UTF_8));
+        byte[] decrypted = cryptor.decrypt(encrypted);
 
-    assertEquals(string, new String(decrypted, StandardCharsets.UTF_8));
-  }
+        assertEquals(string, new String(decrypted, StandardCharsets.UTF_8));
+    }
 }

@@ -10,12 +10,12 @@ import java.util.Map;
  */
 public class SeparatorView extends View implements Styleable {
 
-  public SeparatorView(Context context) {
-    super(context);
-  }
+    public SeparatorView(Context context) {
+        super(context);
+    }
 
-  @Override
-  public void applyStyleRules(Map<String, String> rules) {
-    StyleHelper.applyCommonRules(this, rules);
-  }
+    @Override
+    public void applyStyleRules(Map<String, String> rules) {
+        StyleHelper.applyCommonRules(this, rules);
+    }
 }

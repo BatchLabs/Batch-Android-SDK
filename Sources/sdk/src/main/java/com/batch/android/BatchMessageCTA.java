@@ -9,20 +9,20 @@ import com.batch.android.annotation.PublicSDK;
 @PublicSDK
 public class BatchMessageCTA extends BatchMessageAction {
 
-  private String label;
+    private String label;
 
-  /**
-   * This is a private constructor
-   *
-   * @hide
-   */
-  public BatchMessageCTA(@NonNull com.batch.android.messaging.model.CTA from) {
-    super(from);
-    label = from.label;
-  }
+    /**
+     * This is a private constructor
+     *
+     * @hide
+     */
+    public BatchMessageCTA(@NonNull com.batch.android.messaging.model.CTA from) {
+        super(from);
+        label = from.label;
+    }
 
-  @NonNull
-  public String getLabel() {
-    return label;
-  }
+    @NonNull
+    public String getLabel() {
+        return label;
+    }
 }

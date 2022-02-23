@@ -17,35 +17,29 @@ import com.batch.android.module.ActionModule;
  */
 public class ClipboardActionRunnable implements UserActionRunnable {
 
-  private static final String TAG = "ClipboardBuiltinAction";
-  public static final String IDENTIFIER =
-    ActionModule.RESERVED_ACTION_IDENTIFIER_PREFIX + "clipboard";
+    private static final String TAG = "ClipboardBuiltinAction";
+    public static final String IDENTIFIER = ActionModule.RESERVED_ACTION_IDENTIFIER_PREFIX + "clipboard";
 
-  @Override
-  public void performAction(
-    @Nullable Context context,
-    @NonNull String identifier,
-    @NonNull JSONObject args,
-    @Nullable UserActionSource source
-  ) {
-    try {
-      String text = args.getString("t");
-      if (text == null) {
-        Logger.internal(
-          TAG,
-          "Could not perform clipboard action : text's null"
-        );
-        return;
-      }
-      String description = args.optString("d", "text");
+    @Override
+    public void performAction(
+        @Nullable Context context,
+        @NonNull String identifier,
+        @NonNull JSONObject args,
+        @Nullable UserActionSource source
+    ) {
+        try {
+            String text = args.getString("t");
+            if (text == null) {
+                Logger.internal(TAG, "Could not perform clipboard action : text's null");
+                return;
+            }
+            String description = args.optString("d", "text");
 
-      ClipboardManager clipboard = (ClipboardManager) context.getSystemService(
-        Context.CLIPBOARD_SERVICE
-      );
-      ClipData clip = ClipData.newPlainText(description, text);
-      clipboard.setPrimaryClip(clip);
-    } catch (JSONException e) {
-      Logger.internal(TAG, "Json object failure : " + e.getLocalizedMessage());
+            ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText(description, text);
+            clipboard.setPrimaryClip(clip);
+        } catch (JSONException e) {
+            Logger.internal(TAG, "Json object failure : " + e.getLocalizedMessage());
+        }
     }
-  }
 }

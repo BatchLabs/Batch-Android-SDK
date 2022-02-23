@@ -24,39 +24,39 @@ import java.nio.ByteBuffer;
  */
 public class ByteBufferInput implements MessageBufferInput {
 
-  private ByteBuffer input;
-  private boolean isRead = false;
+    private ByteBuffer input;
+    private boolean isRead = false;
 
-  public ByteBufferInput(ByteBuffer input) {
-    this.input = checkNotNull(input, "input ByteBuffer is null").slice();
-  }
-
-  /**
-   * Reset buffer.
-   *
-   * @param input new buffer
-   * @return the old buffer
-   */
-  public ByteBuffer reset(ByteBuffer input) {
-    ByteBuffer old = this.input;
-    this.input = checkNotNull(input, "input ByteBuffer is null").slice();
-    isRead = false;
-    return old;
-  }
-
-  @Override
-  public MessageBuffer next() {
-    if (isRead) {
-      return null;
+    public ByteBufferInput(ByteBuffer input) {
+        this.input = checkNotNull(input, "input ByteBuffer is null").slice();
     }
 
-    MessageBuffer b = MessageBuffer.wrap(input);
-    isRead = true;
-    return b;
-  }
+    /**
+     * Reset buffer.
+     *
+     * @param input new buffer
+     * @return the old buffer
+     */
+    public ByteBuffer reset(ByteBuffer input) {
+        ByteBuffer old = this.input;
+        this.input = checkNotNull(input, "input ByteBuffer is null").slice();
+        isRead = false;
+        return old;
+    }
 
-  @Override
-  public void close() {
-    // Nothing to do
-  }
+    @Override
+    public MessageBuffer next() {
+        if (isRead) {
+            return null;
+        }
+
+        MessageBuffer b = MessageBuffer.wrap(input);
+        isRead = true;
+        return b;
+    }
+
+    @Override
+    public void close() {
+        // Nothing to do
+    }
 }

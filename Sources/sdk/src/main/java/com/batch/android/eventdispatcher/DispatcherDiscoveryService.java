@@ -10,9 +10,9 @@ import androidx.annotation.Nullable;
  */
 public class DispatcherDiscoveryService extends Service {
 
-  @Nullable
-  @Override
-  public IBinder onBind(Intent intent) {
-    return null;
-  }
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 }

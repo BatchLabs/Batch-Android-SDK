@@ -5,11 +5,11 @@ package com.batch.android.runtime;
  *
  */
 public interface ChangeStateAction {
-  /**
-   * Action to run
-   *
-   * @param state current state
-   * @return the new state to set, if null will do nothing
-   */
-  State run(State state);
+    /**
+     * Action to run
+     *
+     * @param state current state
+     * @return the new state to set, if null will do nothing
+     */
+    State run(State state);
 }

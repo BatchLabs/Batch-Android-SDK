@@ -6,5 +6,5 @@ import androidx.fragment.app.DialogFragment;
  * Dialog event listener
  */
 public interface DialogEventListener {
-  void onDialogDismiss(DialogFragment dialog);
+    void onDialogDismiss(DialogFragment dialog);
 }

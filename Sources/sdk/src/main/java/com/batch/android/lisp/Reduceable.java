@@ -6,5 +6,5 @@ package com.batch.android.lisp;
  * A reduceable value can be reduced to another Value (usually a Primitive or Error)
  */
 public interface Reduceable {
-  Value reduce(EvaluationContext context);
+    Value reduce(EvaluationContext context);
 }

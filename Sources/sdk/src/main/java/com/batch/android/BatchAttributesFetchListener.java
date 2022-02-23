@@ -10,11 +10,11 @@ import java.util.Map;
  */
 @PublicSDK
 public interface BatchAttributesFetchListener {
-  /**
-   * @param attributes A map of attributes. The keys are the ones used when setting the attributes.
-   *                   The values are of type {@link BatchUserAttribute}.
-   */
-  void onSuccess(@NonNull Map<String, BatchUserAttribute> attributes);
+    /**
+     * @param attributes A map of attributes. The keys are the ones used when setting the attributes.
+     *                   The values are of type {@link BatchUserAttribute}.
+     */
+    void onSuccess(@NonNull Map<String, BatchUserAttribute> attributes);
 
-  void onError();
+    void onError();
 }

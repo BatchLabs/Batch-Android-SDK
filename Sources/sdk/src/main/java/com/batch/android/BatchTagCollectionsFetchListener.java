@@ -11,10 +11,10 @@ import java.util.Set;
  */
 @PublicSDK
 public interface BatchTagCollectionsFetchListener {
-  /**
-   * @param tagCollections A map of set of tag collections. The keys are the ones used when setting the tag collections.
-   */
-  void onSuccess(@NonNull Map<String, Set<String>> tagCollections);
+    /**
+     * @param tagCollections A map of set of tag collections. The keys are the ones used when setting the tag collections.
+     */
+    void onSuccess(@NonNull Map<String, Set<String>> tagCollections);
 
-  void onError();
+    void onError();
 }

@@ -23,35 +23,35 @@ import java.util.Set;
  */
 public class Value {
 
-  static final String escapedString(String string) {
-    String value = string.replaceAll("\n", "\\n");
-    value = value.replaceAll("\r", "\\r");
-    value = value.replaceAll("\t", "\\t");
-    value = value.replaceAll("\'", "\\'");
-    value = value.replaceAll("\"", "\\\"");
-    return value;
-  }
-
-  static final String setToString(Set<String> set) {
-    if (!set.getClass().isInstance(Set.class)) {
-      return "[error]";
+    static final String escapedString(String string) {
+        String value = string.replaceAll("\n", "\\n");
+        value = value.replaceAll("\r", "\\r");
+        value = value.replaceAll("\t", "\\t");
+        value = value.replaceAll("\'", "\\'");
+        value = value.replaceAll("\"", "\\\"");
+        return value;
     }
 
-    StringBuilder toString = new StringBuilder();
+    static final String setToString(Set<String> set) {
+        if (!set.getClass().isInstance(Set.class)) {
+            return "[error]";
+        }
 
-    toString.append("[");
+        StringBuilder toString = new StringBuilder();
 
-    int idx = 0;
-    for (String value : set) {
-      if (idx > 0) {
-        toString.append(" ");
-      }
-      toString.append("\"" + escapedString(value) + "\"");
-      idx += 1;
+        toString.append("[");
+
+        int idx = 0;
+        for (String value : set) {
+            if (idx > 0) {
+                toString.append(" ");
+            }
+            toString.append("\"" + escapedString(value) + "\"");
+            idx += 1;
+        }
+
+        toString.append("]");
+
+        return toString.toString();
     }
-
-    toString.append("]");
-
-    return toString.toString();
-  }
 }

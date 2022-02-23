@@ -6,17 +6,17 @@ package com.batch.android.messaging;
  */
 public class PayloadParsingException extends Exception {
 
-  public PayloadParsingException() {}
+    public PayloadParsingException() {}
 
-  public PayloadParsingException(String detailMessage) {
-    super(detailMessage);
-  }
+    public PayloadParsingException(String detailMessage) {
+        super(detailMessage);
+    }
 
-  public PayloadParsingException(String detailMessage, Throwable throwable) {
-    super(detailMessage, throwable);
-  }
+    public PayloadParsingException(String detailMessage, Throwable throwable) {
+        super(detailMessage, throwable);
+    }
 
-  public PayloadParsingException(Throwable throwable) {
-    super(throwable);
-  }
+    public PayloadParsingException(Throwable throwable) {
+        super(throwable);
+    }
 }

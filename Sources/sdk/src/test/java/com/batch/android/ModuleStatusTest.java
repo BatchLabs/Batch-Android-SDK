@@ -17,16 +17,16 @@ import org.junit.runner.RunWith;
 @SmallTest
 public class ModuleStatusTest extends DITest {
 
-  @Test
-  public void testPushModuleStatus() throws Exception {
-    assertEquals(2, PushModuleProvider.get().getState());
+    @Test
+    public void testPushModuleStatus() throws Exception {
+        assertEquals(2, PushModuleProvider.get().getState());
 
-    Batch.Push.setGCMSenderId("test");
+        Batch.Push.setGCMSenderId("test");
 
-    assertEquals(1, PushModuleProvider.get().getState());
+        assertEquals(1, PushModuleProvider.get().getState());
 
-    Batch.Push.setGCMSenderId(null);
+        Batch.Push.setGCMSenderId(null);
 
-    assertEquals(2, PushModuleProvider.get().getState());
-  }
+        assertEquals(2, PushModuleProvider.get().getState());
+    }
 }

@@ -14,11 +14,11 @@ import com.batch.android.localcampaigns.trigger.NowTrigger;
 
 public class CampaignsLoadedSignal implements Signal {
 
-  public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
-    return (
-      trigger instanceof NowTrigger ||
-      trigger instanceof CampaignsLoadedTrigger ||
-      trigger instanceof NextSessionTrigger
-    );
-  }
+    public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
+        return (
+            trigger instanceof NowTrigger ||
+            trigger instanceof CampaignsLoadedTrigger ||
+            trigger instanceof NextSessionTrigger
+        );
+    }
 }

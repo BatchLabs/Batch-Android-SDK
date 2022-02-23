@@ -31,114 +31,100 @@ import org.junit.runner.RunWith;
 @SmallTest
 public class LifeCycleTest extends DITest {
 
-  private Activity activity;
+    private Activity activity;
 
-  @Rule
-  public ActivityTestRule<TestActivity> activityRule = new ActivityTestRule<>(
-    TestActivity.class,
-    false,
-    true
-  );
+    @Rule
+    public ActivityTestRule<TestActivity> activityRule = new ActivityTestRule<>(TestActivity.class, false, true);
 
-  @Before
-  public void setUp() {
-    super.setUp();
-    activity = activityRule.getActivity();
-  }
-
-  @Override
-  public void tearDown() {
-    super.tearDown();
-  }
-
-  /**
-   * Test that Batch start with all parameters set
-   */
-  @Test
-  public void testCompletestart() {
-    Batch.onStart(activity);
-  }
-
-  /**
-   * Test batch start & stop
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testBatchStartStop() throws Exception {
-    int total = 100;
-    int i = 0;
-    while (i < total) {
-      Batch.onStart(activity);
-
-      Thread.sleep(50);
-
-      Batch.onStop(activity);
-
-      Thread.sleep(25);
-
-      Batch.onDestroy(activity);
-
-      Thread.sleep(25);
-
-      i++;
+    @Before
+    public void setUp() {
+        super.setUp();
+        activity = activityRule.getActivity();
     }
 
-    Batch.onStart(activity);
-  }
+    @Override
+    public void tearDown() {
+        super.tearDown();
+    }
 
-  /**
-   * Test sessionID
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testSessionID() throws Exception {
-    Field createCountField =
-      SessionManager.class.getDeclaredField("createCount");
-    createCountField.setAccessible(true);
+    /**
+     * Test that Batch start with all parameters set
+     */
+    @Test
+    public void testCompletestart() {
+        Batch.onStart(activity);
+    }
 
-    RuntimeManagerProvider.get().setActivity(activityRule.getActivity());
-    RuntimeManagerProvider
-      .get()
-      .registerSessionManagerIfNeeded(
-        ApplicationProvider.getApplicationContext(),
-        true
-      );
+    /**
+     * Test batch start & stop
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testBatchStartStop() throws Exception {
+        int total = 100;
+        int i = 0;
+        while (i < total) {
+            Batch.onStart(activity);
 
-    String sessionID = RuntimeManagerProvider.get().getSessionIdentifier();
-    assertNotNull(sessionID);
+            Thread.sleep(50);
 
-    SessionManager sessionManager = RuntimeManagerProvider
-      .get()
-      .getSessionManager();
-    AtomicInteger createCount = (AtomicInteger) createCountField.get(
-      sessionManager
-    );
+            Batch.onStop(activity);
 
-    LocalBroadcastManager
-      .getInstance(activity)
-      .sendBroadcast(new Intent(MessagingModule.ACTION_DISMISS_INTERSTITIAL));
-    Thread.sleep(2000);
+            Thread.sleep(25);
 
-    Assert.assertEquals(1, createCount.get());
+            Batch.onDestroy(activity);
 
-    // Simulate activity destroy in sessionManager
-    sessionManager.onActivityPaused(activity);
-    sessionManager.onActivityDestroyed(activity);
+            Thread.sleep(25);
 
-    Assert.assertEquals(0, createCount.get());
+            i++;
+        }
 
-    // Simulate activity start in sessionManager
-    sessionManager.onActivityCreated(activity, new Bundle());
-    sessionManager.onActivityResumed(activity);
+        Batch.onStart(activity);
+    }
 
-    Assert.assertEquals(1, createCount.get());
+    /**
+     * Test sessionID
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testSessionID() throws Exception {
+        Field createCountField = SessionManager.class.getDeclaredField("createCount");
+        createCountField.setAccessible(true);
 
-    String newSession = RuntimeManagerProvider.get().getSessionIdentifier();
-    assertNotNull(newSession);
-    assertNotEquals(newSession, sessionID);
+        RuntimeManagerProvider.get().setActivity(activityRule.getActivity());
+        RuntimeManagerProvider.get().registerSessionManagerIfNeeded(ApplicationProvider.getApplicationContext(), true);
 
-    RuntimeManagerProvider.get().setActivity(null);
-  }
+        String sessionID = RuntimeManagerProvider.get().getSessionIdentifier();
+        assertNotNull(sessionID);
+
+        SessionManager sessionManager = RuntimeManagerProvider.get().getSessionManager();
+        AtomicInteger createCount = (AtomicInteger) createCountField.get(sessionManager);
+
+        LocalBroadcastManager
+            .getInstance(activity)
+            .sendBroadcast(new Intent(MessagingModule.ACTION_DISMISS_INTERSTITIAL));
+        Thread.sleep(2000);
+
+        Assert.assertEquals(1, createCount.get());
+
+        // Simulate activity destroy in sessionManager
+        sessionManager.onActivityPaused(activity);
+        sessionManager.onActivityDestroyed(activity);
+
+        Assert.assertEquals(0, createCount.get());
+
+        // Simulate activity start in sessionManager
+        sessionManager.onActivityCreated(activity, new Bundle());
+        sessionManager.onActivityResumed(activity);
+
+        Assert.assertEquals(1, createCount.get());
+
+        String newSession = RuntimeManagerProvider.get().getSessionIdentifier();
+        assertNotNull(newSession);
+        assertNotEquals(newSession, sessionID);
+
+        RuntimeManagerProvider.get().setActivity(null);
+    }
 }

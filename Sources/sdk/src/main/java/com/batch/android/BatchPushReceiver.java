@@ -16,32 +16,25 @@ import com.batch.android.module.PushModule;
 @PublicSDK
 public class BatchPushReceiver extends WakefulBroadcastReceiver {
 
-  @Override
-  public void onReceive(Context context, Intent intent) {
-    Logger.internal(
-      PushModule.TAG,
-      "BatchPushReceiver called. Disabling the broadcast receiver from the PackageManager."
-    );
-    // Ask the package manager to disable ourselves
-    try {
-      final ComponentName selfComponent = new ComponentName(
-        context,
-        BatchPushReceiver.class
-      );
-      context
-        .getPackageManager()
-        .setComponentEnabledSetting(
-          selfComponent,
-          PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-          PackageManager.DONT_KILL_APP
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        Logger.internal(
+            PushModule.TAG,
+            "BatchPushReceiver called. Disabling the broadcast receiver from the PackageManager."
         );
-    } catch (Exception e) {
-      Logger.error(PushModule.TAG, "Could not disable BatchPushReceiver.");
-      Logger.internal(
-        PushModule.TAG,
-        "Could not disable BatchPushReceiver.",
-        e
-      );
+        // Ask the package manager to disable ourselves
+        try {
+            final ComponentName selfComponent = new ComponentName(context, BatchPushReceiver.class);
+            context
+                .getPackageManager()
+                .setComponentEnabledSetting(
+                    selfComponent,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP
+                );
+        } catch (Exception e) {
+            Logger.error(PushModule.TAG, "Could not disable BatchPushReceiver.");
+            Logger.internal(PushModule.TAG, "Could not disable BatchPushReceiver.", e);
+        }
     }
-  }
 }

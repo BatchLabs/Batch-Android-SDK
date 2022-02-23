@@ -12,30 +12,27 @@ import java.util.Map;
 
 public class NotificationIdentifiers {
 
-  @NonNull
-  public String identifier;
+    @NonNull
+    public String identifier;
 
-  @NonNull
-  public String sendID;
+    @NonNull
+    public String sendID;
 
-  @Nullable
-  public String installID;
+    @Nullable
+    public String installID;
 
-  @Nullable
-  public String customID;
+    @Nullable
+    public String customID;
 
-  @Nullable
-  public Map<String, Object> additionalData;
+    @Nullable
+    public Map<String, Object> additionalData;
 
-  public NotificationIdentifiers(
-    @NonNull String identifier,
-    @NonNull String sendID
-  ) {
-    this.identifier = identifier;
-    this.sendID = sendID;
-  }
+    public NotificationIdentifiers(@NonNull String identifier, @NonNull String sendID) {
+        this.identifier = identifier;
+        this.sendID = sendID;
+    }
 
-  public boolean isValid() {
-    return !TextUtils.isEmpty(identifier) && !TextUtils.isEmpty(sendID);
-  }
+    public boolean isValid() {
+        return !TextUtils.isEmpty(identifier) && !TextUtils.isEmpty(sendID);
+    }
 }

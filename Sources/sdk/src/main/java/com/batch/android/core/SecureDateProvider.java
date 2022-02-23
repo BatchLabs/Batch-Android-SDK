@@ -1,6 +1,9 @@
 package com.batch.android.core;
 
+import android.os.Build;
 import android.os.SystemClock;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import com.batch.android.date.BatchDate;
 import com.batch.android.date.UTCDate;
 import com.batch.android.processor.Module;
@@ -15,59 +18,86 @@ import java.util.Date;
 @Singleton
 public class SecureDateProvider implements DateProvider {
 
-  /**
-   * Date sync with server
-   */
-  private Date mServerDate;
+    /**
+     * Is the secure date enabled on this device
+     */
+    private final boolean mSecureDateEnabled;
 
-  /**
-   * Number of millisecond since boot
-   */
-  private long mElapsedRealtime;
+    /**
+     * Last known server timestamp
+     */
+    private Date mServerDate;
 
-  // ------------------------------------------>
+    /**
+     * Number of millisecond since boot when mServerDate was set
+     */
+    private long mElapsedRealtime;
 
-  /**
-   * Method used to obtain the real date based on the server date
-   * if the server date was sync
-   *
-   * @return the actual secure time
-   */
-  public Date getDate() {
-    Date current = mServerDate;
+    // ------------------------------------------>
 
-    if (current == null) {
-      current = new Date();
-    } else {
-      current.setTime(
-        current.getTime() + (SystemClock.elapsedRealtime() - mElapsedRealtime)
-      );
+    public SecureDateProvider() {
+        mSecureDateEnabled = canEnableSecureDate();
     }
 
-    return current;
-  }
+    /**
+     * Method used to obtain the real date based on the server date
+     * if the server date was sync
+     *
+     * @return the actual secure time
+     */
+    public Date getDate() {
+        Date current = mServerDate;
 
-  /**
-   * Method used to know if the date is sync with the server
-   *
-   * @return true if the serverDate is sync false otherwise
-   */
-  public boolean isSyncDate() {
-    return mServerDate != null;
-  }
+        if (!mSecureDateEnabled || current == null) {
+            current = new Date();
+        } else {
+            current.setTime(current.getTime() + (SystemClock.elapsedRealtime() - mElapsedRealtime));
+        }
 
-  /**
-   * Method used to init the server date
-   *
-   * @param pServerDate the sync server date
-   */
-  public void initServerDate(final Date pServerDate) {
-    mElapsedRealtime = SystemClock.elapsedRealtime();
-    mServerDate = pServerDate;
-  }
+        return current;
+    }
 
-  @Override
-  public BatchDate getCurrentDate() {
-    return new UTCDate(getDate().getTime());
-  }
+    /**
+     * Method used to know if the date is sync with the server
+     *
+     * @return true if the secure date is available false otherwise (in which case the system date
+     *         will be returned)
+     */
+    public boolean isSecureDateAvailable() {
+        return mSecureDateEnabled && mServerDate != null;
+    }
+
+    /**
+     * Method used to init the server date
+     *
+     * @param pServerDate the sync server date
+     */
+    public void initServerDate(final Date pServerDate) {
+        if (!mSecureDateEnabled) {
+            return;
+        }
+        mElapsedRealtime = SystemClock.elapsedRealtime();
+        mServerDate = pServerDate;
+    }
+
+    /**
+     * Returns whether secure date can be enabled on this device
+     */
+    @VisibleForTesting
+    protected boolean canEnableSecureDate() {
+        // Disable secure date on Samsung devices as their uptime isn't monotonic:
+        // When coming out of sleep, the uptime it way greater than it should be (as in, days ahead)
+        // and slowly comes back to its expected value. Unfortunately this breaks important features
+        // such as In-App start/end dates.
+        if ("samsung".equalsIgnoreCase(Build.BRAND)) {
+            return false;
+        }
+        return true;
+    }
+
+    @NonNull
+    @Override
+    public BatchDate getCurrentDate() {
+        return new UTCDate(getDate().getTime());
+    }
 }

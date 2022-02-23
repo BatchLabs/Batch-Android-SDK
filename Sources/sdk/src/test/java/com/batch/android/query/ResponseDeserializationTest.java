@@ -17,63 +17,54 @@ import org.junit.Test;
 
 public class ResponseDeserializationTest {
 
-  private ResponseFactory factory;
+    private ResponseFactory factory;
 
-  @Before
-  public void setUp() {
-    factory = new ResponseFactory();
-  }
+    @Before
+    public void setUp() {
+        factory = new ResponseFactory();
+    }
 
-  @Test
-  public void testAttributesCheckResponseDeserializer() throws JSONException {
-    AttributesCheckResponseDeserializer deserializer = new AttributesCheckResponseDeserializer(
-      factory.createJsonAttributesCheckResponse()
-    );
-    AttributesCheckResponse response = deserializer.deserialize();
-    Assert.assertEquals("dummy_id", response.getQueryID());
-    Assert.assertEquals(
-      AttributesCheckResponse.Action.RECHECK,
-      response.getAction()
-    );
-    Assert.assertEquals(Long.valueOf(1499960145L), response.getTime());
-    Assert.assertEquals(1L, response.getVersion());
-  }
+    @Test
+    public void testAttributesCheckResponseDeserializer() throws JSONException {
+        AttributesCheckResponseDeserializer deserializer = new AttributesCheckResponseDeserializer(
+            factory.createJsonAttributesCheckResponse()
+        );
+        AttributesCheckResponse response = deserializer.deserialize();
+        Assert.assertEquals("dummy_id", response.getQueryID());
+        Assert.assertEquals(AttributesCheckResponse.Action.RECHECK, response.getAction());
+        Assert.assertEquals(Long.valueOf(1499960145L), response.getTime());
+        Assert.assertEquals(1L, response.getVersion());
+    }
 
-  @Test
-  public void testAttributesSendResponseDeserializer() throws JSONException {
-    AttributesSendResponseDeserializer deserializer = new AttributesSendResponseDeserializer(
-      factory.createJsonAttributesSendResponse()
-    );
-    AttributesSendResponse response = deserializer.deserialize();
-    Assert.assertEquals("dummy_id", response.getQueryID());
-    Assert.assertEquals("1234-1234-1234", response.transactionID);
-    Assert.assertEquals(1L, response.version);
-  }
+    @Test
+    public void testAttributesSendResponseDeserializer() throws JSONException {
+        AttributesSendResponseDeserializer deserializer = new AttributesSendResponseDeserializer(
+            factory.createJsonAttributesSendResponse()
+        );
+        AttributesSendResponse response = deserializer.deserialize();
+        Assert.assertEquals("dummy_id", response.getQueryID());
+        Assert.assertEquals("1234-1234-1234", response.transactionID);
+        Assert.assertEquals(1L, response.version);
+    }
 
-  @Test
-  public void testPushResponseDeserializer() throws JSONException {
-    PushResponseDeserializer deserializer = new PushResponseDeserializer(
-      factory.createJsonPushResponse()
-    );
-    PushResponse response = deserializer.deserialize();
-    Assert.assertEquals("dummy_id", response.getQueryID());
-  }
+    @Test
+    public void testPushResponseDeserializer() throws JSONException {
+        PushResponseDeserializer deserializer = new PushResponseDeserializer(factory.createJsonPushResponse());
+        PushResponse response = deserializer.deserialize();
+        Assert.assertEquals("dummy_id", response.getQueryID());
+    }
 
-  @Test
-  public void testStartResponseDeserializer() throws JSONException {
-    StartResponseDeserializer deserializer = new StartResponseDeserializer(
-      factory.createJsonStartResponse()
-    );
-    StartResponse response = deserializer.deserialize();
-    Assert.assertEquals("dummy_id", response.getQueryID());
-  }
+    @Test
+    public void testStartResponseDeserializer() throws JSONException {
+        StartResponseDeserializer deserializer = new StartResponseDeserializer(factory.createJsonStartResponse());
+        StartResponse response = deserializer.deserialize();
+        Assert.assertEquals("dummy_id", response.getQueryID());
+    }
 
-  @Test
-  public void testTrackingResponseDeserializer() throws JSONException {
-    TrackingResponseDeserializer deserializer = new TrackingResponseDeserializer(
-      factory.createJsonTrackResponse()
-    );
-    TrackingResponse response = deserializer.deserialize();
-    Assert.assertEquals("dummy_id", response.getQueryID());
-  }
+    @Test
+    public void testTrackingResponseDeserializer() throws JSONException {
+        TrackingResponseDeserializer deserializer = new TrackingResponseDeserializer(factory.createJsonTrackResponse());
+        TrackingResponse response = deserializer.deserialize();
+        Assert.assertEquals("dummy_id", response.getQueryID());
+    }
 }

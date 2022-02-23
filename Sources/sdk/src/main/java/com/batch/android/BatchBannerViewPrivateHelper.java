@@ -9,11 +9,11 @@ import com.batch.android.messaging.model.BannerMessage;
  */
 public class BatchBannerViewPrivateHelper {
 
-  public static BatchBannerView newInstance(
-    BatchMessage rawMsg,
-    BannerMessage msg,
-    MessagingAnalyticsDelegate analyticsDelegate
-  ) {
-    return new BatchBannerView(rawMsg, msg, analyticsDelegate);
-  }
+    public static BatchBannerView newInstance(
+        BatchMessage rawMsg,
+        BannerMessage msg,
+        MessagingAnalyticsDelegate analyticsDelegate
+    ) {
+        return new BatchBannerView(rawMsg, msg, analyticsDelegate);
+    }
 }

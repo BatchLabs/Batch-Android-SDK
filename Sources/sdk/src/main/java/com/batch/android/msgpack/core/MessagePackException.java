@@ -20,29 +20,25 @@ package com.batch.android.msgpack.core;
  */
 public class MessagePackException extends RuntimeException {
 
-  public MessagePackException() {
-    super();
-  }
+    public MessagePackException() {
+        super();
+    }
 
-  public MessagePackException(String message) {
-    super(message);
-  }
+    public MessagePackException(String message) {
+        super(message);
+    }
 
-  public MessagePackException(String message, Throwable cause) {
-    super(message, cause);
-  }
+    public MessagePackException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-  public MessagePackException(Throwable cause) {
-    super(cause);
-  }
+    public MessagePackException(Throwable cause) {
+        super(cause);
+    }
 
-  public static UnsupportedOperationException UNSUPPORTED(
-    String operationName
-  ) {
-    return new UnsupportedOperationException(operationName);
-  }
+    public static UnsupportedOperationException UNSUPPORTED(String operationName) {
+        return new UnsupportedOperationException(operationName);
+    }
 
-  public static final IllegalStateException UNREACHABLE = new IllegalStateException(
-    "Cannot reach here"
-  );
+    public static final IllegalStateException UNREACHABLE = new IllegalStateException("Cannot reach here");
 }

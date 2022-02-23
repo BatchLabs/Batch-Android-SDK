@@ -8,10 +8,10 @@ import com.batch.android.query.QueryType;
  */
 public class PushResponse extends Response {
 
-  /**
-   * @param queryID
-   */
-  public PushResponse(String queryID) {
-    super(QueryType.PUSH, queryID);
-  }
+    /**
+     * @param queryID
+     */
+    public PushResponse(String queryID) {
+        super(QueryType.PUSH, queryID);
+    }
 }

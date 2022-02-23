@@ -9,23 +9,23 @@ import java.util.List;
  *
  */
 public interface TrackerWebserviceListener {
-  /**
-   * Called when a request succeed
-   *
-   * @param events event successfully sent
-   */
-  void onSuccess(List<Event> events);
+    /**
+     * Called when a request succeed
+     *
+     * @param events event successfully sent
+     */
+    void onSuccess(List<Event> events);
 
-  /**
-   * Called when a request fail
-   *
-   * @param reason reason of the failure
-   * @param events event not sent
-   */
-  void onFailure(FailReason reason, List<Event> events);
+    /**
+     * Called when a request fail
+     *
+     * @param reason reason of the failure
+     * @param events event not sent
+     */
+    void onFailure(FailReason reason, List<Event> events);
 
-  /**
-   * Called when the webservice finish, on failure or on success
-   */
-  void onFinish();
+    /**
+     * Called when the webservice finish, on failure or on success
+     */
+    void onFinish();
 }

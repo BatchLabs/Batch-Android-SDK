@@ -17,19 +17,19 @@ package com.batch.android.msgpack.core;
 
 public class MessageTypeCastException extends MessageTypeException {
 
-  public MessageTypeCastException() {
-    super();
-  }
+    public MessageTypeCastException() {
+        super();
+    }
 
-  public MessageTypeCastException(String message) {
-    super(message);
-  }
+    public MessageTypeCastException(String message) {
+        super(message);
+    }
 
-  public MessageTypeCastException(String message, Throwable cause) {
-    super(message, cause);
-  }
+    public MessageTypeCastException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-  public MessageTypeCastException(Throwable cause) {
-    super(cause);
-  }
+    public MessageTypeCastException(Throwable cause) {
+        super(cause);
+    }
 }

@@ -11,47 +11,41 @@ import java.util.Locale;
 
 public class EventLocalCampaignTrigger implements LocalCampaign.Trigger {
 
-  /**
-   * Watched event name
-   */
-  @NonNull
-  public String name;
+    /**
+     * Watched event name
+     */
+    @NonNull
+    public String name;
 
-  /**
-   * Watched event label
-   * Optional
-   */
-  @Nullable
-  public String label;
+    /**
+     * Watched event label
+     * Optional
+     */
+    @Nullable
+    public String label;
 
-  public EventLocalCampaignTrigger(
-    @NonNull String name,
-    @Nullable String label
-  ) {
-    this.name = name.toUpperCase(Locale.US);
-    this.label = label;
-  }
-
-  /**
-   * Checks if this triggers is satisfied for a given event
-   */
-  public boolean isSatisfied(
-    @Nullable String eventName,
-    @Nullable String eventLabel
-  ) {
-    if (!this.name.equalsIgnoreCase(eventName)) {
-      return false;
+    public EventLocalCampaignTrigger(@NonNull String name, @Nullable String label) {
+        this.name = name.toUpperCase(Locale.US);
+        this.label = label;
     }
 
-    if (this.label != null && !this.label.equalsIgnoreCase(eventLabel)) {
-      return false;
+    /**
+     * Checks if this triggers is satisfied for a given event
+     */
+    public boolean isSatisfied(@Nullable String eventName, @Nullable String eventLabel) {
+        if (!this.name.equalsIgnoreCase(eventName)) {
+            return false;
+        }
+
+        if (this.label != null && !this.label.equalsIgnoreCase(eventLabel)) {
+            return false;
+        }
+
+        return true;
     }
 
-    return true;
-  }
-
-  @Override
-  public String getType() {
-    return "EVENT";
-  }
+    @Override
+    public String getType() {
+        return "EVENT";
+    }
 }

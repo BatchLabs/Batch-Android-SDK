@@ -24,7 +24,7 @@ package com.batch.android.msgpack.value;
  * As the type information, applications can use 0 to 127 as the application-specific types. -1 to -128 is reserved for MessagePack's future extension.
  */
 public interface ExtensionValue extends Value {
-  byte getType();
+    byte getType();
 
-  byte[] getData();
+    byte[] getData();
 }

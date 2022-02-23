@@ -7,12 +7,12 @@ import java.util.Map;
 
 public class WebView extends android.webkit.WebView implements Styleable {
 
-  public WebView(Context context) {
-    super(context);
-  }
+    public WebView(Context context) {
+        super(context);
+    }
 
-  @Override
-  public void applyStyleRules(Map<String, String> rules) {
-    StyleHelper.applyCommonRules(this, rules);
-  }
+    @Override
+    public void applyStyleRules(Map<String, String> rules) {
+        StyleHelper.applyCommonRules(this, rules);
+    }
 }

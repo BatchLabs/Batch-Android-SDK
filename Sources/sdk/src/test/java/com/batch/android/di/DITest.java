@@ -13,20 +13,20 @@ import org.junit.Before;
  */
 public class DITest {
 
-  @Before
-  public void setUp() {
-    DI.reset();
-  }
+    @Before
+    public void setUp() {
+        DI.reset();
+    }
 
-  @After
-  public void tearDown() {
-    DI.reset();
-  }
+    @After
+    public void tearDown() {
+        DI.reset();
+    }
 
-  protected void simulateBatchStart(Context context) {
-    Batch.setConfig(new Config("FAKE_API_KEY"));
+    protected void simulateBatchStart(Context context) {
+        Batch.setConfig(new Config("FAKE_API_KEY"));
 
-    RuntimeManagerProvider.get().changeState(state -> State.READY);
-    RuntimeManagerProvider.get().setContext(context);
-  }
+        RuntimeManagerProvider.get().changeState(state -> State.READY);
+        RuntimeManagerProvider.get().setContext(context);
+    }
 }

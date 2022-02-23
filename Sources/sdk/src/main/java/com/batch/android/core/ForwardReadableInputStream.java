@@ -16,45 +16,44 @@ import java.io.InputStream;
  */
 public class ForwardReadableInputStream extends InputStream {
 
-  private int[] firstBytes;
+    private int[] firstBytes;
 
-  private InputStream wrappedInputStream;
+    private InputStream wrappedInputStream;
 
-  private int readPosition = 0;
-  private int maxReadPosition;
+    private int readPosition = 0;
+    private int maxReadPosition;
 
-  public ForwardReadableInputStream(@NonNull InputStream is, int bytesToRead)
-    throws IOException {
-    firstBytes = new int[bytesToRead];
-    maxReadPosition = bytesToRead - 1;
-    wrappedInputStream = is;
-    readFirstBytes(bytesToRead);
-  }
-
-  private void readFirstBytes(int count) throws IOException {
-    for (int i = 0; i < count; i++) {
-      int b = wrappedInputStream.read();
-      if (b == -1) {
-        throw new IOException("Stream terminated abruptly");
-      }
-      firstBytes[i] = b;
+    public ForwardReadableInputStream(@NonNull InputStream is, int bytesToRead) throws IOException {
+        firstBytes = new int[bytesToRead];
+        maxReadPosition = bytesToRead - 1;
+        wrappedInputStream = is;
+        readFirstBytes(bytesToRead);
     }
-  }
 
-  @Override
-  public int read() throws IOException {
-    if (readPosition <= maxReadPosition) {
-      int b = firstBytes[readPosition];
-      readPosition++;
-      return b;
+    private void readFirstBytes(int count) throws IOException {
+        for (int i = 0; i < count; i++) {
+            int b = wrappedInputStream.read();
+            if (b == -1) {
+                throw new IOException("Stream terminated abruptly");
+            }
+            firstBytes[i] = b;
+        }
     }
-    return wrappedInputStream.read();
-  }
 
-  /**
-   * Get the first bytes that have already been read
-   */
-  public int[] getFirstBytes() {
-    return firstBytes.clone();
-  }
+    @Override
+    public int read() throws IOException {
+        if (readPosition <= maxReadPosition) {
+            int b = firstBytes[readPosition];
+            readPosition++;
+            return b;
+        }
+        return wrappedInputStream.read();
+    }
+
+    /**
+     * Get the first bytes that have already been read
+     */
+    public int[] getFirstBytes() {
+        return firstBytes.clone();
+    }
 }

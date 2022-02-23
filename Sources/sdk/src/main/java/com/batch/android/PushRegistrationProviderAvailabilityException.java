@@ -5,7 +5,7 @@ import com.batch.android.annotation.PublicSDK;
 @PublicSDK
 public class PushRegistrationProviderAvailabilityException extends Exception {
 
-  public PushRegistrationProviderAvailabilityException(String message) {
-    super(message);
-  }
+    public PushRegistrationProviderAvailabilityException(String message) {
+        super(message);
+    }
 }

@@ -11,24 +11,21 @@ import com.batch.android.localcampaigns.trigger.EventLocalCampaignTrigger;
  */
 public class EventTrackedSignal implements Signal {
 
-  @NonNull
-  public String name;
+    @NonNull
+    public String name;
 
-  @Nullable
-  public JSONObject parameters;
+    @Nullable
+    public JSONObject parameters;
 
-  public EventTrackedSignal(
-    @NonNull String eventName,
-    @Nullable JSONObject parameters
-  ) {
-    this.name = eventName;
-    this.parameters = parameters;
-  }
+    public EventTrackedSignal(@NonNull String eventName, @Nullable JSONObject parameters) {
+        this.name = eventName;
+        this.parameters = parameters;
+    }
 
-  public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
-    return (
-      trigger instanceof EventLocalCampaignTrigger &&
-      ((EventLocalCampaignTrigger) trigger).isSatisfied(name, null)
-    );
-  }
+    public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
+        return (
+            trigger instanceof EventLocalCampaignTrigger &&
+            ((EventLocalCampaignTrigger) trigger).isSatisfied(name, null)
+        );
+    }
 }

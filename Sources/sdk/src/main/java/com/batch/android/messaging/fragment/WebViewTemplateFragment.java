@@ -50,404 +50,367 @@ import java.util.Map;
  *
  */
 public class WebViewTemplateFragment
-  extends BaseDialogFragment<WebViewMessage>
-  implements WebViewActionListener, MenuItem.OnMenuItemClickListener {
+    extends BaseDialogFragment<WebViewMessage>
+    implements WebViewActionListener, MenuItem.OnMenuItemClickListener {
 
-  private static final String TAG = "HtmlTemplateFragment";
-  private WebFormatView webView = null;
-  private Document style = null;
+    private static final String TAG = "HtmlTemplateFragment";
+    private WebFormatView webView = null;
+    private Document style = null;
 
-  private boolean darkStatusbar = false;
-  private boolean showStatusbar = true;
-  private boolean statusbarBackgroundTranslucent = false;
-  private Integer statusbarBackgroundColor = null;
+    private boolean darkStatusbar = false;
+    private boolean showStatusbar = true;
+    private boolean statusbarBackgroundTranslucent = false;
+    private Integer statusbarBackgroundColor = null;
 
-  private boolean dismissed = false;
+    private boolean dismissed = false;
 
-  private int developmentMenuReloadItemID = ViewCompat.generateViewId();
+    private int developmentMenuReloadItemID = ViewCompat.generateViewId();
 
-  public static WebViewTemplateFragment newInstance(
-    BatchMessage payloadMessage,
-    WebViewMessage messageModel
-  ) {
-    final WebViewTemplateFragment f = new WebViewTemplateFragment();
-    f.setMessageArguments(payloadMessage, messageModel);
-    return f;
-  }
-
-  public WebViewTemplateFragment() {
-    automaticallyBeginAutoClose = false;
-  }
-
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    refreshStatusbarStyle();
-    setStyle(STYLE_NO_FRAME, R.style.com_batchsdk_WebViewDialogTheme);
-  }
-
-  @Nullable
-  @Override
-  public View onCreateView(
-    LayoutInflater inflater,
-    @Nullable ViewGroup container,
-    @Nullable Bundle savedInstanceState
-  ) {
-    // We try to use the activity so the webview can display JS Alert etc
-    Context context = getActivity();
-    if (context == null) {
-      context = inflater.getContext();
+    public static WebViewTemplateFragment newInstance(BatchMessage payloadMessage, WebViewMessage messageModel) {
+        final WebViewTemplateFragment f = new WebViewTemplateFragment();
+        f.setMessageArguments(payloadMessage, messageModel);
+        return f;
     }
 
-    View v = getWebFormatView(context);
-    if (savedInstanceState != null) {
-      this.webView.restoreState(savedInstanceState);
-    } else {
-      this.webView.startLoading();
+    public WebViewTemplateFragment() {
+        automaticallyBeginAutoClose = false;
     }
 
-    if (getMessageModel().devMode) {
-      registerForContextMenu(webView.getCloseButton());
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        refreshStatusbarStyle();
+        setStyle(STYLE_NO_FRAME, R.style.com_batchsdk_WebViewDialogTheme);
     }
 
-    return v;
-  }
-
-  @Override
-  public void onSaveInstanceState(@NonNull Bundle outState) {
-    super.onSaveInstanceState(outState);
-    this.webView.saveState(outState);
-  }
-
-  @Override
-  public Dialog onCreateDialog(Bundle savedInstanceState) {
-    final Dialog dialog = super.onCreateDialog(savedInstanceState);
-    final Window window = dialog.getWindow();
-    if (showStatusbar) {
-      if (
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
-        statusbarBackgroundTranslucent
-      ) {
-        window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-      }
-      if (
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
-        statusbarBackgroundColor != null &&
-        statusbarBackgroundColor != Color.TRANSPARENT
-      ) {
-        window.setStatusBarColor(statusbarBackgroundColor);
-      }
-    }
-    return dialog;
-  }
-
-  @Override
-  public void onDestroyView() {
-    final Dialog dialog = getDialog();
-    if (dialog != null && getRetainInstance()) {
-      dialog.setDismissMessage(null);
-    }
-
-    super.onDestroyView();
-  }
-
-  @Override
-  public void onCreateContextMenu(
-    ContextMenu menu,
-    View v,
-    ContextMenu.ContextMenuInfo menuInfo
-  ) {
-    super.onCreateContextMenu(menu, v, menuInfo);
-
-    if (getMessageModel().devMode && v == webView.getCloseButton()) {
-      menu.setHeaderTitle("Development menu");
-      menu.add(0, developmentMenuReloadItemID, 0, "Reload");
-      // onContextItemSelected doesn't work for some reason
-      menu.getItem(0).setOnMenuItemClickListener(this);
-    }
-  }
-
-  @Override
-  public boolean onMenuItemClick(MenuItem item) {
-    // onContextItemSelected doesn't work for some reason
-    if (item.getItemId() == developmentMenuReloadItemID) {
-      webView.startLoading();
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Dismiss.
-   *
-   * @deprecated Use dismissSafely() to prevent crashes
-   */
-  @Override
-  @Deprecated
-  public void dismiss() {
-    super.dismiss();
-    dismissed = true;
-  }
-
-  /**
-   * Dismiss.
-   *
-   * @deprecated Use dismissSafely() to prevent crashes
-   */
-  @Override
-  @Deprecated
-  public void dismissAllowingStateLoss() {
-    super.dismissAllowingStateLoss();
-    dismissed = true;
-  }
-
-  @Override
-  protected void dismissSafely() {
-    super.dismissSafely();
-    dismissed = true;
-  }
-
-  private View getWebFormatView(Context context) {
-    // Wrap the theme to force the one we want
-    final WebViewMessage model = getMessageModel();
-    final Context c = new ContextThemeWrapper(
-      context,
-      ThemeHelper.getDefaultLightTheme(context)
-    );
-    final BatchMessagingWebViewJavascriptBridge jsInterface = new BatchMessagingWebViewJavascriptBridge(
-      context,
-      getPayloadMessage(),
-      this
-    );
-    final WebFormatView webView = new WebFormatView(
-      c,
-      model,
-      getStyle(),
-      jsInterface
-    );
-    webView.setActionListener(this);
-
-    final FrameLayout view = new FrameLayout(context);
-    view.addView(
-      webView,
-      new FrameLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.MATCH_PARENT
-      )
-    );
-    StyleHelper.applyCommonRules(
-      view,
-      getStyle()
-        .getFlatRules(new DOMNode("root"), ViewCompat.getScreenSize(context))
-    );
-
-    this.webView = webView;
-    return view;
-  }
-
-  private void refreshStatusbarStyle() {
-    Map<String, String> rootRules = getStyle()
-      .getFlatRules(new DOMNode("root"), null);
-    for (Map.Entry<String, String> rule : rootRules.entrySet()) {
-      final String ruleName = rule.getKey();
-      final String ruleValue = rule.getValue();
-      if ("statusbar".equalsIgnoreCase(ruleName)) {
-        switch (ruleValue.toLowerCase(Locale.US)) {
-          case "light":
-            darkStatusbar = false;
-            showStatusbar = true;
-            break;
-          case "dark":
-            darkStatusbar = true;
-            showStatusbar = true;
-            break;
-          case "hidden":
-            showStatusbar = false;
-            break;
+    @Nullable
+    @Override
+    public View onCreateView(
+        LayoutInflater inflater,
+        @Nullable ViewGroup container,
+        @Nullable Bundle savedInstanceState
+    ) {
+        // We try to use the activity so the webview can display JS Alert etc
+        Context context = getActivity();
+        if (context == null) {
+            context = inflater.getContext();
         }
-      } else if ("statusbar-bg".equalsIgnoreCase(ruleName)) {
-        if ("translucent".equalsIgnoreCase(ruleValue)) {
-          statusbarBackgroundColor = null;
-          statusbarBackgroundTranslucent = true;
+
+        View v = getWebFormatView(context);
+        if (savedInstanceState != null) {
+            this.webView.restoreState(savedInstanceState);
         } else {
-          statusbarBackgroundColor = StyleHelper.parseColor(ruleValue);
-          statusbarBackgroundTranslucent = false;
+            this.webView.startLoading();
         }
-      }
+
+        if (getMessageModel().devMode) {
+            registerForContextMenu(webView.getCloseButton());
+        }
+
+        return v;
     }
-  }
 
-  private Document getStyle() {
-    if (style == null) {
-      try {
-        style =
-          new Parser(new BuiltinStyleProvider(), getMessageModel().css).parse();
-      } catch (CSSParsingException e) {
-        throw new IllegalArgumentException("Unparsable style", e);
-      }
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        this.webView.saveState(outState);
+    }
 
-      if (style == null) {
-        throw new IllegalArgumentException(
-          "An error occurred while parsing message style"
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        final Dialog dialog = super.onCreateDialog(savedInstanceState);
+        final Window window = dialog.getWindow();
+        if (showStatusbar) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && statusbarBackgroundTranslucent) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            }
+            if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
+                statusbarBackgroundColor != null &&
+                statusbarBackgroundColor != Color.TRANSPARENT
+            ) {
+                window.setStatusBarColor(statusbarBackgroundColor);
+            }
+        }
+        return dialog;
+    }
+
+    @Override
+    public void onDestroyView() {
+        final Dialog dialog = getDialog();
+        if (dialog != null && getRetainInstance()) {
+            dialog.setDismissMessage(null);
+        }
+
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+
+        if (getMessageModel().devMode && v == webView.getCloseButton()) {
+            menu.setHeaderTitle("Development menu");
+            menu.add(0, developmentMenuReloadItemID, 0, "Reload");
+            // onContextItemSelected doesn't work for some reason
+            menu.getItem(0).setOnMenuItemClickListener(this);
+        }
+    }
+
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        // onContextItemSelected doesn't work for some reason
+        if (item.getItemId() == developmentMenuReloadItemID) {
+            webView.startLoading();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Dismiss.
+     *
+     * @deprecated Use dismissSafely() to prevent crashes
+     */
+    @Override
+    @Deprecated
+    public void dismiss() {
+        super.dismiss();
+        dismissed = true;
+    }
+
+    /**
+     * Dismiss.
+     *
+     * @deprecated Use dismissSafely() to prevent crashes
+     */
+    @Override
+    @Deprecated
+    public void dismissAllowingStateLoss() {
+        super.dismissAllowingStateLoss();
+        dismissed = true;
+    }
+
+    @Override
+    protected void dismissSafely() {
+        super.dismissSafely();
+        dismissed = true;
+    }
+
+    private View getWebFormatView(Context context) {
+        // Wrap the theme to force the one we want
+        final WebViewMessage model = getMessageModel();
+        final Context c = new ContextThemeWrapper(context, ThemeHelper.getDefaultLightTheme(context));
+        final BatchMessagingWebViewJavascriptBridge jsInterface = new BatchMessagingWebViewJavascriptBridge(
+            context,
+            getPayloadMessage(),
+            this
         );
-      }
-    }
-    return style;
-  }
+        final WebFormatView webView = new WebFormatView(c, model, getStyle(), jsInterface);
+        webView.setActionListener(this);
 
-  private void dismissForError(@NonNull MessagingError cause) {
-    if (!dismissed) {
-      dismissSafely();
-      analyticsDelegate.onClosedError(cause);
-    }
-  }
+        final FrameLayout view = new FrameLayout(context);
+        view.addView(
+            webView,
+            new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        );
+        StyleHelper.applyCommonRules(
+            view,
+            getStyle().getFlatRules(new DOMNode("root"), ViewCompat.getScreenSize(context))
+        );
 
-  // Show a development error
-  // Dismisses the format when closed
-  // Returns whether the error alert has been shown
-  private boolean showDevelopmentError(
-    @NonNull DevelopmentErrorCause cause,
-    @NonNull MessagingError messagingCause,
-    @Nullable String description
-  ) {
-    switch (cause) {
-      case SSL:
-        description = "SSL Error. Is your certificate valid?";
-        break;
-      case TIMEOUT:
-        description = "Request timed out.";
-        break;
-      case BAD_HTTP_STATUSCODE:
-        description = "HTTP Error Code " + description + ".";
-        break;
-      case UNKNOWN:
-        final String originalErrorMessage = description;
-        description = "Unknown error";
-        if (originalErrorMessage != null) {
-          description += ":\n" + originalErrorMessage;
-        } else {
-          description += ".";
+        this.webView = webView;
+        return view;
+    }
+
+    private void refreshStatusbarStyle() {
+        Map<String, String> rootRules = getStyle().getFlatRules(new DOMNode("root"), null);
+        for (Map.Entry<String, String> rule : rootRules.entrySet()) {
+            final String ruleName = rule.getKey();
+            final String ruleValue = rule.getValue();
+            if ("statusbar".equalsIgnoreCase(ruleName)) {
+                switch (ruleValue.toLowerCase(Locale.US)) {
+                    case "light":
+                        darkStatusbar = false;
+                        showStatusbar = true;
+                        break;
+                    case "dark":
+                        darkStatusbar = true;
+                        showStatusbar = true;
+                        break;
+                    case "hidden":
+                        showStatusbar = false;
+                        break;
+                }
+            } else if ("statusbar-bg".equalsIgnoreCase(ruleName)) {
+                if ("translucent".equalsIgnoreCase(ruleValue)) {
+                    statusbarBackgroundColor = null;
+                    statusbarBackgroundTranslucent = true;
+                } else {
+                    statusbarBackgroundColor = StyleHelper.parseColor(ruleValue);
+                    statusbarBackgroundTranslucent = false;
+                }
+            }
         }
-        break;
     }
 
-    // Always log errors
-    Logger.error(MessagingModule.TAG, "WebView was closed because of an error");
-    Logger.internal(
-      MessagingModule.TAG,
-      "WebView error: " + cause + " (" + description + ")"
-    );
+    private Document getStyle() {
+        if (style == null) {
+            try {
+                style = new Parser(new BuiltinStyleProvider(), getMessageModel().css).parse();
+            } catch (CSSParsingException e) {
+                throw new IllegalArgumentException("Unparsable style", e);
+            }
 
-    if (!getMessageModel().devMode) {
-      return false;
+            if (style == null) {
+                throw new IllegalArgumentException("An error occurred while parsing message style");
+            }
+        }
+        return style;
     }
 
-    Context c = getContext();
-    if (c == null) {
-      return false;
+    private void dismissForError(@NonNull MessagingError cause) {
+        if (!dismissed) {
+            dismissSafely();
+            analyticsDelegate.onClosedError(cause);
+        }
     }
 
-    AlertDialog.Builder builder = new AlertDialog.Builder(
-      new ContextThemeWrapper(c, ThemeHelper.getDefaultTheme(c))
-    );
-    builder.setTitle("WebView Error");
-    builder.setMessage(
-      "The WebView encountered an error and will be closed.\nThis error will only be shown during development.\n\nCause: " +
-      description
-    );
-    builder.setNegativeButton(android.R.string.ok, (dialog, which) -> {});
-    builder.setOnDismissListener(dialog -> dismissForError(messagingCause));
+    // Show a development error
+    // Dismisses the format when closed
+    // Returns whether the error alert has been shown
+    private boolean showDevelopmentError(
+        @NonNull DevelopmentErrorCause cause,
+        @NonNull MessagingError messagingCause,
+        @Nullable String description
+    ) {
+        switch (cause) {
+            case SSL:
+                description = "SSL Error. Is your certificate valid?";
+                break;
+            case TIMEOUT:
+                description = "Request timed out.";
+                break;
+            case BAD_HTTP_STATUSCODE:
+                description = "HTTP Error Code " + description + ".";
+                break;
+            case UNKNOWN:
+                final String originalErrorMessage = description;
+                description = "Unknown error";
+                if (originalErrorMessage != null) {
+                    description += ":\n" + originalErrorMessage;
+                } else {
+                    description += ".";
+                }
+                break;
+        }
 
-    builder.show();
+        // Always log errors
+        Logger.error(MessagingModule.TAG, "WebView was closed because of an error");
+        Logger.internal(MessagingModule.TAG, "WebView error: " + cause + " (" + description + ")");
 
-    return true;
-  }
+        if (!getMessageModel().devMode) {
+            return false;
+        }
 
-  @Override
-  public void onCloseAction() {
-    if (!dismissed) {
-      dismissSafely();
-      analyticsDelegate.onClosed();
+        Context c = getContext();
+        if (c == null) {
+            return false;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(
+            new ContextThemeWrapper(c, ThemeHelper.getDefaultTheme(c))
+        );
+        builder.setTitle("WebView Error");
+        builder.setMessage(
+            "The WebView encountered an error and will be closed.\nThis error will only be shown during development.\n\nCause: " +
+            description
+        );
+        builder.setNegativeButton(android.R.string.ok, (dialog, which) -> {});
+        builder.setOnDismissListener(dialog -> dismissForError(messagingCause));
+
+        builder.show();
+
+        return true;
     }
-  }
 
-  @Override
-  public void onDismissAction(@Nullable String analyticsID) {
-    onPerformAction("batch.dismiss", new JSONObject(), analyticsID);
-  }
-
-  @Override
-  public void onErrorAction(
-    @NonNull DevelopmentErrorCause developmentCause,
-    @NonNull MessagingError messagingCause,
-    @Nullable String description
-  ) {
-    if (!showDevelopmentError(developmentCause, messagingCause, description)) {
-      // Dismiss instantly. If a development error has been shown,
-      // the dialog will take care of dismissing the format
-      dismissForError(messagingCause);
-    }
-  }
-
-  @Override
-  public void onOpenDeeplinkAction(
-    @NonNull String url,
-    @Nullable Boolean openInAppOverride,
-    @Nullable String analyticsID
-  ) {
-    if (TextUtils.isEmpty(analyticsID)) {
-      analyticsID = WebViewHelper.getAnalyticsIDFromURL(url);
+    @Override
+    public void onCloseAction() {
+        if (!dismissed) {
+            dismissSafely();
+            analyticsDelegate.onClosed();
+        }
     }
 
-    boolean openInApp = getMessageModel().openDeeplinksInApp;
-    if (openInAppOverride != null) {
-      openInApp = openInAppOverride;
+    @Override
+    public void onDismissAction(@Nullable String analyticsID) {
+        onPerformAction("batch.dismiss", new JSONObject(), analyticsID);
     }
-    JSONObject args = new JSONObject();
-    try {
-      args.put(DeeplinkActionRunnable.ARGUMENT_DEEPLINK_URL, url);
-      args.put(DeeplinkActionRunnable.ARGUMENT_SHOW_LINK_INAPP, openInApp);
-      onPerformAction(DeeplinkActionRunnable.IDENTIFIER, args, analyticsID);
-    } catch (JSONException ignored) {
-      // This can only happen for invalid keys. We control them, so throw the exception away
+
+    @Override
+    public void onErrorAction(
+        @NonNull DevelopmentErrorCause developmentCause,
+        @NonNull MessagingError messagingCause,
+        @Nullable String description
+    ) {
+        if (!showDevelopmentError(developmentCause, messagingCause, description)) {
+            // Dismiss instantly. If a development error has been shown,
+            // the dialog will take care of dismissing the format
+            dismissForError(messagingCause);
+        }
     }
-  }
 
-  @Override
-  public void onPerformAction(
-    @NonNull String action,
-    @NonNull JSONObject args,
-    @Nullable String analyticsID
-  ) {
-    if (!dismissed) {
-      dismissSafely();
+    @Override
+    public void onOpenDeeplinkAction(
+        @NonNull String url,
+        @Nullable Boolean openInAppOverride,
+        @Nullable String analyticsID
+    ) {
+        if (TextUtils.isEmpty(analyticsID)) {
+            analyticsID = WebViewHelper.getAnalyticsIDFromURL(url);
+        }
 
-      Action actionObj = new Action(action, args);
-      messagingModule.performAction(
-        getContext(),
-        getPayloadMessage(),
-        actionObj
-      );
-      if (analyticsDelegate != null) {
-        analyticsDelegate.onWebViewClickTracked(actionObj, analyticsID);
-      }
+        boolean openInApp = getMessageModel().openDeeplinksInApp;
+        if (openInAppOverride != null) {
+            openInApp = openInAppOverride;
+        }
+        JSONObject args = new JSONObject();
+        try {
+            args.put(DeeplinkActionRunnable.ARGUMENT_DEEPLINK_URL, url);
+            args.put(DeeplinkActionRunnable.ARGUMENT_SHOW_LINK_INAPP, openInApp);
+            onPerformAction(DeeplinkActionRunnable.IDENTIFIER, args, analyticsID);
+        } catch (JSONException ignored) {
+            // This can only happen for invalid keys. We control them, so throw the exception away
+        }
     }
-  }
 
-  //region: Auto close handling
-  @Override
-  protected void onAutoCloseCountdownStarted() {}
+    @Override
+    public void onPerformAction(@NonNull String action, @NonNull JSONObject args, @Nullable String analyticsID) {
+        if (!dismissed) {
+            dismissSafely();
 
-  @Override
-  protected boolean canAutoClose() {
-    return false;
-  }
+            Action actionObj = new Action(action, args);
+            messagingModule.performAction(getContext(), getPayloadMessage(), actionObj);
+            if (analyticsDelegate != null) {
+                analyticsDelegate.onWebViewClickTracked(actionObj, analyticsID);
+            }
+        }
+    }
 
-  @Override
-  protected int getAutoCloseDelayMillis() {
-    return 0;
-  }
+    //region: Auto close handling
+    @Override
+    protected void onAutoCloseCountdownStarted() {}
 
-  @Override
-  protected void performAutoClose() {}
+    @Override
+    protected boolean canAutoClose() {
+        return false;
+    }
+
+    @Override
+    protected int getAutoCloseDelayMillis() {
+        return 0;
+    }
+
+    @Override
+    protected void performAutoClose() {}
 }

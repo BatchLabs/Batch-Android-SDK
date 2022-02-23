@@ -4,6 +4,9 @@
 -dontwarn javax.annotation.**
 -dontusemixedcaseclassnames
 
+# Removing this will have R8 repackage classes at root "a"/"b"/etc packages, potentially causing
+# conflicts. An alternative would be "-keeppackagenames" but it makes an heavier AAR
+-flattenpackagehierarchy 'com.batch.android'
 -keepparameternames
 -renamesourcefileattribute SourceFile
 -keepattributes Exceptions,InnerClasses,Signature,Deprecated,

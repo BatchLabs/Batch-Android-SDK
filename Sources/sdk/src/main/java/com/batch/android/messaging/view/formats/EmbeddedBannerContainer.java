@@ -50,426 +50,366 @@ import com.google.android.material.appbar.AppBarLayout;
  */
 @Module
 public class EmbeddedBannerContainer
-  implements
-    BannerView.OnActionListener,
-    PannableBannerFrameLayout.OnDismissListener,
-    ImageHelper.Cache {
+    implements BannerView.OnActionListener, PannableBannerFrameLayout.OnDismissListener, ImageHelper.Cache {
 
-  private static final int IN_OUT_ANIMATION_DURATION_MS = 300;
+    private static final int IN_OUT_ANIMATION_DURATION_MS = 300;
 
-  private Context context;
+    private Context context;
 
-  private ViewGroup parentView;
+    private ViewGroup parentView;
 
-  private BatchMessage payloadMessage;
+    private BatchMessage payloadMessage;
 
-  private BannerMessage message;
+    private BannerMessage message;
 
-  private BaseView rootView;
+    private BaseView rootView;
 
-  private BannerView bannerView;
+    private BannerView bannerView;
 
-  private VerticalEdge pinnedVerticalEdge;
+    private VerticalEdge pinnedVerticalEdge;
 
-  private boolean alreadyShown = false;
+    private boolean alreadyShown = false;
 
-  private boolean alreadyDismissed = false;
+    private boolean alreadyDismissed = false;
 
-  private final MessagingModule messagingModule;
-  private final MessagingAnalyticsDelegate analyticsDelegate;
+    private final MessagingModule messagingModule;
+    private final MessagingAnalyticsDelegate analyticsDelegate;
 
-  private LruCache<String, AsyncImageDownloadTask.Result> imageCache;
+    private LruCache<String, AsyncImageDownloadTask.Result> imageCache;
 
-  private BroadcastReceiver dismissReceiver = new BroadcastReceiver() {
-    @Override
-    public void onReceive(Context context, Intent intent) {
-      if (
-        !alreadyDismissed &&
-        intent != null &&
-        ACTION_DISMISS_BANNER.equalsIgnoreCase(intent.getAction())
-      ) {
-        dismissOnMainThread(true);
-      }
-    }
-  };
+    private BroadcastReceiver dismissReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (!alreadyDismissed && intent != null && ACTION_DISMISS_BANNER.equalsIgnoreCase(intent.getAction())) {
+                dismissOnMainThread(true);
+            }
+        }
+    };
 
-  private Handler mainThreadHandler = new Handler(Looper.getMainLooper());
+    private Handler mainThreadHandler = new Handler(Looper.getMainLooper());
 
-  private Object autoCloseHandlerToken = new Object();
+    private Object autoCloseHandlerToken = new Object();
 
-  @Provide
-  public static EmbeddedBannerContainer provide(
-    @NonNull View attachTo,
-    @NonNull BatchMessage payloadMessage,
-    @NonNull BannerMessage message,
-    @NonNull MessagingAnalyticsDelegate analyticsDelegate,
-    boolean embed
-  ) {
-    return new EmbeddedBannerContainer(
-      MessagingModuleProvider.get(),
-      attachTo,
-      payloadMessage,
-      message,
-      analyticsDelegate,
-      embed
-    );
-  }
-
-  private EmbeddedBannerContainer(
-    @NonNull MessagingModule messagingModule,
-    @NonNull View attachTo,
-    @NonNull BatchMessage payloadMessage,
-    @NonNull BannerMessage message,
-    @NonNull MessagingAnalyticsDelegate analyticsDelegate,
-    boolean embed
-  ) {
-    super();
-    this.messagingModule = messagingModule;
-    this.analyticsDelegate = analyticsDelegate;
-
-    if (embed) {
-      if (!(attachTo instanceof FrameLayout)) {
-        throw new IllegalArgumentException(
-          "Banners cannot be embedded in views that are not FrameLayouts"
-        );
-      }
-      this.parentView = (FrameLayout) attachTo;
-    } else {
-      this.parentView = findBestParentView(attachTo);
-    }
-
-    if (this.parentView == null) {
-      throw new IllegalArgumentException(
-        "Could not find any suitable view to attach the banner to"
-      );
-    }
-
-    this.context = parentView.getContext();
-    this.payloadMessage = payloadMessage;
-    this.message = message;
-    // We have max 1 image on a banner
-    this.imageCache = new LruCache<>(1);
-
-    pinnedVerticalEdge =
-      message.ctaDirection == CTADirection.VERTICAL
-        ? VerticalEdge.BOTTOM
-        : VerticalEdge.TOP;
-
-    rootView = new BaseView(context);
-
-    // Allows swipe to dismiss translation to works correctly
-    rootView.setClipChildren(false);
-    rootView.setClipToPadding(false);
-    ReflectionHelper.optOutOfDarkMode(rootView);
-
-    ViewCompat.setAccessibilityLiveRegion(
-      rootView,
-      ViewCompat.ACCESSIBILITY_LIVE_REGION_POLITE
-    );
-    ViewCompat.setImportantForAccessibility(
-      rootView,
-      ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES
-    );
-
-    rootView.setFitsSystemWindows(true);
-
-    bannerView = makeBannerView();
-    pinnedVerticalEdge = bannerView.getPinnedVerticalEdge();
-
-    rootView.setPannable(message.allowSwipeToDismiss);
-    rootView.setDismissDirection(
-      pinnedVerticalEdge == VerticalEdge.TOP
-        ? PannableBannerFrameLayout.DismissDirection.TOP
-        : PannableBannerFrameLayout.DismissDirection.BOTTOM
-    );
-    rootView.setDismissListener(this);
-
-    LayoutParams bannerLP = bannerView.getLayoutParams();
-    // BannerView should already come with FrameLayout Params
-    // It's tight coupling, but we avoid parsing the rules twice or communicating them
-    if (!(bannerLP instanceof FrameLayout.LayoutParams)) {
-      bannerLP =
-        new FrameLayout.LayoutParams(
-          LayoutParams.MATCH_PARENT,
-          LayoutParams.WRAP_CONTENT
+    @Provide
+    public static EmbeddedBannerContainer provide(
+        @NonNull View attachTo,
+        @NonNull BatchMessage payloadMessage,
+        @NonNull BannerMessage message,
+        @NonNull MessagingAnalyticsDelegate analyticsDelegate,
+        boolean embed
+    ) {
+        return new EmbeddedBannerContainer(
+            MessagingModuleProvider.get(),
+            attachTo,
+            payloadMessage,
+            message,
+            analyticsDelegate,
+            embed
         );
     }
-    ((FrameLayout.LayoutParams) bannerLP).gravity =
-      layoutGravityForPinnedEdge();
-    rootView.addView(bannerView, bannerLP);
-  }
 
-  @Nullable
-  private ViewGroup findBestParentView(View view) {
-    // Kinda looks like Snackbar's implementation but heh, we're doing the same thing :)
-    // Fallback is used if we can't find a coordinatorlayout, or android.R.id.content
-    FrameLayout fallback = null;
+    private EmbeddedBannerContainer(
+        @NonNull MessagingModule messagingModule,
+        @NonNull View attachTo,
+        @NonNull BatchMessage payloadMessage,
+        @NonNull BannerMessage message,
+        @NonNull MessagingAnalyticsDelegate analyticsDelegate,
+        boolean embed
+    ) {
+        super();
+        this.messagingModule = messagingModule;
+        this.analyticsDelegate = analyticsDelegate;
 
-    while (view != null) {
-      if (ReflectionHelper.isInstanceOfCoordinatorLayout(view)) {
-        return (ViewGroup) view;
-      } else if (view instanceof FrameLayout) {
-        if (view.getId() == android.R.id.content) {
-          return (FrameLayout) view;
+        if (embed) {
+            if (!(attachTo instanceof FrameLayout)) {
+                throw new IllegalArgumentException("Banners cannot be embedded in views that are not FrameLayouts");
+            }
+            this.parentView = (FrameLayout) attachTo;
         } else {
-          // Keep it just in case we really can't find anything better
-          // Highly unlikely that we can't get back to android.R.id.content though
-          fallback = (FrameLayout) view;
-        }
-      }
-
-      final ViewParent parent = view.getParent();
-      view = (parent instanceof View) ? (View) parent : null;
-    }
-
-    return fallback;
-  }
-
-  @NonNull
-  private BannerView makeBannerView() {
-    BannerView v = new BannerView(
-      this.context,
-      this.message,
-      null,
-      new DOMNode("root"),
-      this
-    );
-    v.setActionListener(this);
-    return v;
-  }
-
-  public void show() {
-    if (alreadyShown) {
-      return;
-    }
-
-    alreadyShown = true;
-
-    int edgeGravity = layoutGravityForPinnedEdge();
-
-    // Make the root frame layout fill the whole container if not in a corrdinatorlayout
-    // Otherwise swipe to dismiss will clip incorrectly due to the translation Y
-    LayoutParams lp = new LayoutParams(
-      LayoutParams.MATCH_PARENT,
-      LayoutParams.WRAP_CONTENT
-    );
-
-    if (parentView instanceof FrameLayout) {
-      lp = new FrameLayout.LayoutParams(lp);
-
-      ((FrameLayout.LayoutParams) lp).gravity = edgeGravity;
-    } else if (ReflectionHelper.isInstanceOfCoordinatorLayout(parentView)) {
-      try {
-        final CoordinatorLayout.LayoutParams clp = new CoordinatorLayout.LayoutParams(
-          lp
-        );
-
-        if (pinnedVerticalEdge == VerticalEdge.TOP) {
-          clp.setBehavior(new AppBarLayout.ScrollingViewBehavior());
+            this.parentView = findBestParentView(attachTo);
         }
 
-        clp.gravity = edgeGravity;
-        clp.insetEdge = edgeGravity;
-        lp = clp;
-      } catch (NoClassDefFoundError ignored) {
-        Log.e(
-          "Messaging",
-          "Could not show banner: CoordinatorLayout.LayoutParams or AppBarLayout.ScrollingViewBehavior are not available."
+        if (this.parentView == null) {
+            throw new IllegalArgumentException("Could not find any suitable view to attach the banner to");
+        }
+
+        this.context = parentView.getContext();
+        this.payloadMessage = payloadMessage;
+        this.message = message;
+        // We have max 1 image on a banner
+        this.imageCache = new LruCache<>(1);
+
+        pinnedVerticalEdge = message.ctaDirection == CTADirection.VERTICAL ? VerticalEdge.BOTTOM : VerticalEdge.TOP;
+
+        rootView = new BaseView(context);
+
+        // Allows swipe to dismiss translation to works correctly
+        rootView.setClipChildren(false);
+        rootView.setClipToPadding(false);
+
+        ViewCompat.setAccessibilityLiveRegion(rootView, ViewCompat.ACCESSIBILITY_LIVE_REGION_POLITE);
+        ViewCompat.setImportantForAccessibility(rootView, ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES);
+
+        rootView.setFitsSystemWindows(true);
+
+        bannerView = makeBannerView();
+        pinnedVerticalEdge = bannerView.getPinnedVerticalEdge();
+
+        rootView.setPannable(message.allowSwipeToDismiss);
+        rootView.setDismissDirection(
+            pinnedVerticalEdge == VerticalEdge.TOP
+                ? PannableBannerFrameLayout.DismissDirection.TOP
+                : PannableBannerFrameLayout.DismissDirection.BOTTOM
         );
-        return;
-      }
+        rootView.setDismissListener(this);
+
+        LayoutParams bannerLP = bannerView.getLayoutParams();
+        // BannerView should already come with FrameLayout Params
+        // It's tight coupling, but we avoid parsing the rules twice or communicating them
+        if (!(bannerLP instanceof FrameLayout.LayoutParams)) {
+            bannerLP = new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        }
+        ((FrameLayout.LayoutParams) bannerLP).gravity = layoutGravityForPinnedEdge();
+        rootView.addView(bannerView, bannerLP);
+
+        ReflectionHelper.optOutOfDarkModeRecursively(rootView);
     }
 
-    rootView.setAlpha(0);
+    @Nullable
+    private ViewGroup findBestParentView(View view) {
+        // Kinda looks like Snackbar's implementation but heh, we're doing the same thing :)
+        // Fallback is used if we can't find a coordinatorlayout, or android.R.id.content
+        FrameLayout fallback = null;
 
-    parentView.addView(rootView, lp);
-    bannerView.onShown();
+        while (view != null) {
+            if (ReflectionHelper.isInstanceOfCoordinatorLayout(view)) {
+                return (ViewGroup) view;
+            } else if (view instanceof FrameLayout) {
+                if (view.getId() == android.R.id.content) {
+                    return (FrameLayout) view;
+                } else {
+                    // Keep it just in case we really can't find anything better
+                    // Highly unlikely that we can't get back to android.R.id.content though
+                    fallback = (FrameLayout) view;
+                }
+            }
 
-    analyticsDelegate.onViewShown();
+            final ViewParent parent = view.getParent();
+            view = (parent instanceof View) ? (View) parent : null;
+        }
 
-    final ObjectAnimator anim = ObjectAnimator.ofFloat(rootView, "alpha", 0, 1);
-    anim.setDuration(IN_OUT_ANIMATION_DURATION_MS);
-    anim.start();
+        return fallback;
+    }
 
-    LocalBroadcastManager
-      .getInstance(context)
-      .registerReceiver(
-        dismissReceiver,
-        new IntentFilter(ACTION_DISMISS_BANNER)
-      );
+    @NonNull
+    private BannerView makeBannerView() {
+        BannerView v = new BannerView(this.context, this.message, null, new DOMNode("root"), this);
+        v.setActionListener(this);
+        return v;
+    }
 
-    // Make sure we unregister the broadcast receiver at some point, or we will leak memory
-    bannerView.addOnAttachStateChangeListener(
-      new View.OnAttachStateChangeListener() {
-        @Override
-        public void onViewAttachedToWindow(View v) {}
+    public void show() {
+        if (alreadyShown) {
+            return;
+        }
 
-        @Override
-        public void onViewDetachedFromWindow(View v) {
-          LocalBroadcastManager
+        alreadyShown = true;
+
+        int edgeGravity = layoutGravityForPinnedEdge();
+
+        // Make the root frame layout fill the whole container if not in a corrdinatorlayout
+        // Otherwise swipe to dismiss will clip incorrectly due to the translation Y
+        LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+
+        if (parentView instanceof FrameLayout) {
+            lp = new FrameLayout.LayoutParams(lp);
+
+            ((FrameLayout.LayoutParams) lp).gravity = edgeGravity;
+        } else if (ReflectionHelper.isInstanceOfCoordinatorLayout(parentView)) {
+            try {
+                final CoordinatorLayout.LayoutParams clp = new CoordinatorLayout.LayoutParams(lp);
+
+                if (pinnedVerticalEdge == VerticalEdge.TOP) {
+                    clp.setBehavior(new AppBarLayout.ScrollingViewBehavior());
+                }
+
+                clp.gravity = edgeGravity;
+                clp.insetEdge = edgeGravity;
+                lp = clp;
+            } catch (NoClassDefFoundError ignored) {
+                Log.e(
+                    "Messaging",
+                    "Could not show banner: CoordinatorLayout.LayoutParams or AppBarLayout.ScrollingViewBehavior are not available."
+                );
+                return;
+            }
+        }
+
+        rootView.setAlpha(0);
+
+        parentView.addView(rootView, lp);
+        bannerView.onShown();
+
+        analyticsDelegate.onViewShown();
+
+        final ObjectAnimator anim = ObjectAnimator.ofFloat(rootView, "alpha", 0, 1);
+        anim.setDuration(IN_OUT_ANIMATION_DURATION_MS);
+        anim.start();
+
+        LocalBroadcastManager
             .getInstance(context)
-            .unregisterReceiver(dismissReceiver);
-          unscheduleAutoClose();
-        }
-      }
-    );
+            .registerReceiver(dismissReceiver, new IntentFilter(ACTION_DISMISS_BANNER));
 
-    scheduleAutoClose();
-  }
+        // Make sure we unregister the broadcast receiver at some point, or we will leak memory
+        bannerView.addOnAttachStateChangeListener(
+            new View.OnAttachStateChangeListener() {
+                @Override
+                public void onViewAttachedToWindow(View v) {}
 
-  private void scheduleAutoClose() {
-    if (bannerView != null) {
-      if (message.autoCloseDelay > 0 && bannerView.canAutoClose()) {
-        bannerView.startAutoCloseCountdown();
-        long when = SystemClock.uptimeMillis() + message.autoCloseDelay;
-        mainThreadHandler.postAtTime(
-          this::performAutoClose,
-          autoCloseHandlerToken,
-          when
+                @Override
+                public void onViewDetachedFromWindow(View v) {
+                    LocalBroadcastManager.getInstance(context).unregisterReceiver(dismissReceiver);
+                    unscheduleAutoClose();
+                }
+            }
         );
-      }
+
+        scheduleAutoClose();
     }
-  }
 
-  private void unscheduleAutoClose() {
-    mainThreadHandler.removeCallbacksAndMessages(autoCloseHandlerToken);
-  }
-
-  private void performAutoClose() {
-    if (!alreadyDismissed) {
-      dismiss(true);
-      analyticsDelegate.onAutoClosedAfterDelay();
-    }
-  }
-
-  public void dismissOnMainThread(final boolean animated) {
-    mainThreadHandler.post(() -> dismiss(animated));
-  }
-
-  public void dismiss(boolean animated) {
-    if (alreadyDismissed) {
-      return;
-    }
-    alreadyDismissed = true;
-
-    unscheduleAutoClose();
-
-    if (animated) {
-      final ObjectAnimator anim = ObjectAnimator.ofFloat(
-        rootView,
-        "alpha",
-        1,
-        0
-      );
-      anim.setDuration(IN_OUT_ANIMATION_DURATION_MS);
-      anim.addListener(
-        new Animator.AnimatorListener() {
-          @Override
-          public void onAnimationStart(Animator animation) {}
-
-          @Override
-          public void onAnimationEnd(Animator animation) {
-            removeFromParent();
-          }
-
-          @Override
-          public void onAnimationCancel(Animator animation) {
-            removeFromParent();
-          }
-
-          @Override
-          public void onAnimationRepeat(Animator animation) {}
+    private void scheduleAutoClose() {
+        if (bannerView != null) {
+            if (message.autoCloseDelay > 0 && bannerView.canAutoClose()) {
+                bannerView.startAutoCloseCountdown();
+                long when = SystemClock.uptimeMillis() + message.autoCloseDelay;
+                mainThreadHandler.postAtTime(this::performAutoClose, autoCloseHandlerToken, when);
+            }
         }
-      );
-      anim.start();
-    } else {
-      removeFromParent();
     }
 
-    // We also unregister this in onViewDetachedFromWindow, but we might leak if the view is dismissed
-    // without having ever been attached to a window
-    LocalBroadcastManager
-      .getInstance(context)
-      .unregisterReceiver(dismissReceiver);
-  }
-
-  private void removeFromParent() {
-    final ViewParent parent = rootView.getParent();
-    if (parent instanceof ViewGroup) {
-      ((ViewGroup) parent).removeView(rootView);
-      analyticsDelegate.onViewDismissed();
+    private void unscheduleAutoClose() {
+        mainThreadHandler.removeCallbacksAndMessages(autoCloseHandlerToken);
     }
-  }
 
-  private int layoutGravityForPinnedEdge() {
-    return pinnedVerticalEdge == VerticalEdge.TOP
-      ? Gravity.TOP
-      : Gravity.BOTTOM;
-  }
-
-  @Override
-  public void onCloseAction() {
-    dismiss(true);
-    analyticsDelegate.onClosed();
-  }
-
-  @Override
-  public void onCTAAction(int index, @NonNull CTA cta) {
-    dismiss(true);
-    analyticsDelegate.onCTAClicked(index, cta);
-    messagingModule.performAction(context, payloadMessage, cta);
-  }
-
-  @Override
-  public void onGlobalAction() {
-    dismiss(true);
-    analyticsDelegate.onGlobalTap(message.globalTapAction);
-    if (message.globalTapAction != null) {
-      messagingModule.performAction(
-        context,
-        payloadMessage,
-        message.globalTapAction
-      );
-    } else {
-      Logger.internal(
-        MessagingModule.TAG,
-        "Could not perform global tap action. Internal error."
-      );
+    private void performAutoClose() {
+        if (!alreadyDismissed) {
+            dismiss(true);
+            analyticsDelegate.onAutoClosedAfterDelay();
+        }
     }
-  }
 
-  @Override
-  public void onDismiss(PannableBannerFrameLayout layout) {
-    if (!alreadyDismissed) {
-      dismiss(false);
-      analyticsDelegate.onClosed();
+    public void dismissOnMainThread(final boolean animated) {
+        mainThreadHandler.post(() -> dismiss(animated));
     }
-  }
 
-  @Override
-  public void put(@NonNull AsyncImageDownloadTask.Result result) {
-    imageCache.put(result.getKey(), result);
-  }
+    public void dismiss(boolean animated) {
+        if (alreadyDismissed) {
+            return;
+        }
+        alreadyDismissed = true;
 
-  @Nullable
-  @Override
-  public AsyncImageDownloadTask.Result get(@NonNull String key) {
-    return imageCache.get(key);
-  }
+        unscheduleAutoClose();
 
-  /**
-   * Root view for Banners. Handles fitting to system windows, so that it can dodge the statusbar and navigation bar
-   */
-  static class BaseView extends PannableBannerFrameLayout {
+        if (animated) {
+            final ObjectAnimator anim = ObjectAnimator.ofFloat(rootView, "alpha", 1, 0);
+            anim.setDuration(IN_OUT_ANIMATION_DURATION_MS);
+            anim.addListener(
+                new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {}
 
-    public BaseView(Context context) {
-      super(context);
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        removeFromParent();
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        removeFromParent();
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {}
+                }
+            );
+            anim.start();
+        } else {
+            removeFromParent();
+        }
+
+        // We also unregister this in onViewDetachedFromWindow, but we might leak if the view is dismissed
+        // without having ever been attached to a window
+        LocalBroadcastManager.getInstance(context).unregisterReceiver(dismissReceiver);
+    }
+
+    private void removeFromParent() {
+        final ViewParent parent = rootView.getParent();
+        if (parent instanceof ViewGroup) {
+            ((ViewGroup) parent).removeView(rootView);
+            analyticsDelegate.onViewDismissed();
+        }
+    }
+
+    private int layoutGravityForPinnedEdge() {
+        return pinnedVerticalEdge == VerticalEdge.TOP ? Gravity.TOP : Gravity.BOTTOM;
     }
 
     @Override
-    protected void onAttachedToWindow() {
-      super.onAttachedToWindow();
-      ViewCompat.requestApplyInsets(this);
+    public void onCloseAction() {
+        dismiss(true);
+        analyticsDelegate.onClosed();
     }
-  }
+
+    @Override
+    public void onCTAAction(int index, @NonNull CTA cta) {
+        dismiss(true);
+        analyticsDelegate.onCTAClicked(index, cta);
+        messagingModule.performAction(context, payloadMessage, cta);
+    }
+
+    @Override
+    public void onGlobalAction() {
+        dismiss(true);
+        analyticsDelegate.onGlobalTap(message.globalTapAction);
+        if (message.globalTapAction != null) {
+            messagingModule.performAction(context, payloadMessage, message.globalTapAction);
+        } else {
+            Logger.internal(MessagingModule.TAG, "Could not perform global tap action. Internal error.");
+        }
+    }
+
+    @Override
+    public void onDismiss(PannableBannerFrameLayout layout) {
+        if (!alreadyDismissed) {
+            dismiss(false);
+            analyticsDelegate.onClosed();
+        }
+    }
+
+    @Override
+    public void put(@NonNull AsyncImageDownloadTask.Result result) {
+        imageCache.put(result.getKey(), result);
+    }
+
+    @Nullable
+    @Override
+    public AsyncImageDownloadTask.Result get(@NonNull String key) {
+        return imageCache.get(key);
+    }
+
+    /**
+     * Root view for Banners. Handles fitting to system windows, so that it can dodge the statusbar and navigation bar
+     */
+    static class BaseView extends PannableBannerFrameLayout {
+
+        public BaseView(Context context) {
+            super(context);
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            ViewCompat.requestApplyInsets(this);
+        }
+    }
 }

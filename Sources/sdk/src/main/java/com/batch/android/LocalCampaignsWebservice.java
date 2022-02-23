@@ -22,177 +22,165 @@ import java.util.stream.Collectors;
  *
  * @hide
  */
-public class LocalCampaignsWebservice
-  extends BatchQueryWebservice
-  implements TaskRunnable {
+public class LocalCampaignsWebservice extends BatchQueryWebservice implements TaskRunnable {
 
-  private static final String TAG = "LocalCampaignsWebservice";
+    private static final String TAG = "LocalCampaignsWebservice";
 
-  /**
-   * Listener of this WS
-   */
-  private LocalCampaignsWebserviceListener listener;
+    /**
+     * Listener of this WS
+     */
+    private LocalCampaignsWebserviceListener listener;
 
-  // ------------------------------------------>
+    // ------------------------------------------>
 
-  public LocalCampaignsWebservice(
-    Context context,
-    LocalCampaignsWebserviceListener listener
-  ) throws MalformedURLException {
-    super(context, RequestType.POST, Parameters.LOCAL_CAMPAIGNS_WS_URL);
-    this.listener = listener;
-  }
-
-  // ------------------------------------------>
-
-  @Override
-  protected List<Query> getQueries() {
-    List<Query> queries = new ArrayList<>(1);
-
-    queries.add(
-      new LocalCampaignsQuery(CampaignManagerProvider.get(), applicationContext)
-    );
-
-    return queries;
-  }
-
-  @Override
-  public void run() {
-    try {
-      Logger.internal(TAG, "local campaigns webservice started");
-      webserviceMetrics.onWebserviceStarted(this);
-
-      /*
-       * Read response
-       */
-      JSONObject response = null;
-      try {
-        response = getStandardResponseBodyIfValid();
-        webserviceMetrics.onWebserviceFinished(this, true);
-      } catch (WebserviceError error) {
-        Logger.internal(
-          TAG,
-          "Error while getting local campaigns list : " +
-          error.getReason().toString(),
-          error.getCause()
-        );
-        webserviceMetrics.onWebserviceFinished(this, false);
-
-        switch (error.getReason()) {
-          case NETWORK_ERROR:
-            listener.onError(FailReason.NETWORK_ERROR);
-            break;
-          case INVALID_API_KEY:
-            listener.onError(FailReason.INVALID_API_KEY);
-            break;
-          case DEACTIVATED_API_KEY:
-            listener.onError(FailReason.DEACTIVATED_API_KEY);
-            break;
-          default:
-            listener.onError(FailReason.UNEXPECTED_ERROR);
-            break;
-        }
-
-        return;
-      }
-
-      /*
-       * Parse response to retrieve responses for queries, parameters and other stuffs
-       */
-      parseResponse(response);
-
-      /*
-       * Read responses
-       * As opposed to other webservices, this one does not fail if one query is missing, as we want the others to work
-       */
-      List<LocalCampaignsResponse> responses = new ArrayList<>();
-
-      LocalCampaignsResponse localCampaignsResponse = getResponseFor(
-        LocalCampaignsResponse.class,
-        QueryType.LOCAL_CAMPAIGNS
-      );
-      if (localCampaignsResponse != null) {
-        // If there's an error, we delete the local campaigns on the disk
-        if (localCampaignsResponse.hasError()) {
-          Logger.internal(
-            TAG,
-            "Local campaigns response contains an error : ".concat(
-                localCampaignsResponse.getError().toString()
-              )
-          );
-          CampaignManagerProvider
-            .get()
-            .deleteSavedCampaignsAsync(applicationContext);
-        } else {
-          // else we save them
-          CampaignManagerProvider
-            .get()
-            .saveCampaignsAsync(
-              applicationContext,
-              localCampaignsResponse.getCampaignsToSave()
-            );
-          responses.add(localCampaignsResponse);
-        }
-      } else {
-        Logger.internal(TAG, "Missing In-App Campaigns response");
-      }
-      Logger.internal(TAG, "local campaigns webservice ended");
-      listener.onSuccess(responses);
-    } catch (Exception e) {
-      Logger.internal(TAG, "Error while reading LocalCampaigns response", e);
-      listener.onError(FailReason.UNEXPECTED_ERROR);
+    public LocalCampaignsWebservice(Context context, LocalCampaignsWebserviceListener listener)
+        throws MalformedURLException {
+        super(context, RequestType.POST, Parameters.LOCAL_CAMPAIGNS_WS_URL);
+        this.listener = listener;
     }
-  }
 
-  @Override
-  public String getTaskIdentifier() {
-    return "Batch/localcampaignsws";
-  }
+    // ------------------------------------------>
 
-  // ------------------------------------------>
+    @Override
+    protected List<Query> getQueries() {
+        List<Query> queries = new ArrayList<>(1);
 
-  @Override
-  protected String getPropertyParameterKey() {
-    return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_PROPERTY_KEY;
-  }
+        queries.add(new LocalCampaignsQuery(CampaignManagerProvider.get(), applicationContext));
 
-  @Override
-  protected String getURLSorterPatternParameterKey() {
-    return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_URLSORTER_PATTERN_KEY;
-  }
+        return queries;
+    }
 
-  @Override
-  protected String getCryptorTypeParameterKey() {
-    return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_CRYPTORTYPE_KEY;
-  }
+    @Override
+    public void run() {
+        try {
+            Logger.internal(TAG, "local campaigns webservice started");
+            webserviceMetrics.onWebserviceStarted(this);
 
-  @Override
-  protected String getCryptorModeParameterKey() {
-    return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_CRYPTORMODE_KEY;
-  }
+            /*
+             * Read response
+             */
+            JSONObject response = null;
+            try {
+                response = getStandardResponseBodyIfValid();
+                webserviceMetrics.onWebserviceFinished(this, true);
+            } catch (WebserviceError error) {
+                Logger.internal(
+                    TAG,
+                    "Error while getting local campaigns list : " + error.getReason().toString(),
+                    error.getCause()
+                );
+                webserviceMetrics.onWebserviceFinished(this, false);
 
-  @Override
-  protected String getPostCryptorTypeParameterKey() {
-    return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_POST_CRYPTORTYPE_KEY;
-  }
+                switch (error.getReason()) {
+                    case NETWORK_ERROR:
+                        listener.onError(FailReason.NETWORK_ERROR);
+                        break;
+                    case INVALID_API_KEY:
+                        listener.onError(FailReason.INVALID_API_KEY);
+                        break;
+                    case DEACTIVATED_API_KEY:
+                        listener.onError(FailReason.DEACTIVATED_API_KEY);
+                        break;
+                    default:
+                        listener.onError(FailReason.UNEXPECTED_ERROR);
+                        break;
+                }
 
-  @Override
-  protected String getReadCryptorTypeParameterKey() {
-    return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_READ_CRYPTORTYPE_KEY;
-  }
+                return;
+            }
 
-  @Override
-  protected String getSpecificConnectTimeoutKey() {
-    return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_CONNECT_TIMEOUT_KEY;
-  }
+            /*
+             * Parse response to retrieve responses for queries, parameters and other stuffs
+             */
+            parseResponse(response);
 
-  @Override
-  protected String getSpecificReadTimeoutKey() {
-    return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_READ_TIMEOUT_KEY;
-  }
+            /*
+             * Read responses
+             * As opposed to other webservices, this one does not fail if one query is missing, as we want the others to work
+             */
+            List<LocalCampaignsResponse> responses = new ArrayList<>();
 
-  @Override
-  protected String getSpecificRetryCountKey() {
-    return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_RETRYCOUNT_KEY;
-  }
+            LocalCampaignsResponse localCampaignsResponse = getResponseFor(
+                LocalCampaignsResponse.class,
+                QueryType.LOCAL_CAMPAIGNS
+            );
+            if (localCampaignsResponse != null) {
+                // If there's an error, we delete the local campaigns on the disk
+                if (localCampaignsResponse.hasError()) {
+                    Logger.internal(
+                        TAG,
+                        "Local campaigns response contains an error : ".concat(
+                                localCampaignsResponse.getError().toString()
+                            )
+                    );
+                    CampaignManagerProvider.get().deleteSavedCampaignsAsync(applicationContext);
+                } else {
+                    // else we save them
+                    CampaignManagerProvider
+                        .get()
+                        .saveCampaignsAsync(applicationContext, localCampaignsResponse.getCampaignsToSave());
+                    responses.add(localCampaignsResponse);
+                }
+            } else {
+                Logger.internal(TAG, "Missing In-App Campaigns response");
+            }
+            Logger.internal(TAG, "local campaigns webservice ended");
+            listener.onSuccess(responses);
+        } catch (Exception e) {
+            Logger.internal(TAG, "Error while reading LocalCampaigns response", e);
+            listener.onError(FailReason.UNEXPECTED_ERROR);
+        }
+    }
+
+    @Override
+    public String getTaskIdentifier() {
+        return "Batch/localcampaignsws";
+    }
+
+    // ------------------------------------------>
+
+    @Override
+    protected String getPropertyParameterKey() {
+        return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_PROPERTY_KEY;
+    }
+
+    @Override
+    protected String getURLSorterPatternParameterKey() {
+        return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_URLSORTER_PATTERN_KEY;
+    }
+
+    @Override
+    protected String getCryptorTypeParameterKey() {
+        return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_CRYPTORTYPE_KEY;
+    }
+
+    @Override
+    protected String getCryptorModeParameterKey() {
+        return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_CRYPTORMODE_KEY;
+    }
+
+    @Override
+    protected String getPostCryptorTypeParameterKey() {
+        return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_POST_CRYPTORTYPE_KEY;
+    }
+
+    @Override
+    protected String getReadCryptorTypeParameterKey() {
+        return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_READ_CRYPTORTYPE_KEY;
+    }
+
+    @Override
+    protected String getSpecificConnectTimeoutKey() {
+        return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_CONNECT_TIMEOUT_KEY;
+    }
+
+    @Override
+    protected String getSpecificReadTimeoutKey() {
+        return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_READ_TIMEOUT_KEY;
+    }
+
+    @Override
+    protected String getSpecificRetryCountKey() {
+        return ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_RETRYCOUNT_KEY;
+    }
 }

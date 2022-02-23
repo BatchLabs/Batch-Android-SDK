@@ -8,6 +8,6 @@ import com.batch.android.date.BatchDate;
  */
 
 public interface DateProvider {
-  @NonNull
-  BatchDate getCurrentDate();
+    @NonNull
+    BatchDate getCurrentDate();
 }

@@ -9,11 +9,11 @@ import com.batch.android.BatchEventDispatcher;
  */
 @Keep
 public interface DispatcherRegistrar {
-  /**
-   * Instantiate the dispatcher
-   *
-   * @param context
-   * @return
-   */
-  BatchEventDispatcher getDispatcher(Context context);
+    /**
+     * Instantiate the dispatcher
+     *
+     * @param context
+     * @return
+     */
+    BatchEventDispatcher getDispatcher(Context context);
 }

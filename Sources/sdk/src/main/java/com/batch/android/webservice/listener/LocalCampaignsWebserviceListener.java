@@ -9,15 +9,15 @@ import java.util.List;
  */
 
 public interface LocalCampaignsWebserviceListener {
-  /**
-   * Called on success
-   */
-  void onSuccess(List<LocalCampaignsResponse> response);
+    /**
+     * Called on success
+     */
+    void onSuccess(List<LocalCampaignsResponse> response);
 
-  /**
-   * Called on error
-   *
-   * @param reason
-   */
-  void onError(FailReason reason);
+    /**
+     * Called on error
+     *
+     * @param reason
+     */
+    void onError(FailReason reason);
 }

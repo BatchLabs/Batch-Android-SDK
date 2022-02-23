@@ -22,111 +22,111 @@ import org.junit.runner.RunWith;
 @SmallTest
 public class ParametersTest {
 
-  /**
-   * Key used for tests
-   */
-  private static final String key = "key";
-  /**
-   * Value used for tests
-   */
-  private static final String value = "value";
+    /**
+     * Key used for tests
+     */
+    private static final String key = "key";
+    /**
+     * Value used for tests
+     */
+    private static final String value = "value";
 
-  private Context appContext;
+    private Context appContext;
 
-  @Before
-  public void setUp() {
-    appContext = ApplicationProvider.getApplicationContext();
-  }
+    @Before
+    public void setUp() {
+        appContext = ApplicationProvider.getApplicationContext();
+    }
 
-  // ---------------------------------------------->
+    // ---------------------------------------------->
 
-  @After
-  public void tearDown() throws Exception {
-    DI.reset();
-  }
+    @After
+    public void tearDown() throws Exception {
+        DI.reset();
+    }
 
-  // ---------------------------------------------->
+    // ---------------------------------------------->
 
-  /**
-   * Test basic add of a parameter without save
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testAddParameter() throws Exception {
-    Parameters params = ParametersProvider.get(appContext);
+    /**
+     * Test basic add of a parameter without save
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testAddParameter() throws Exception {
+        Parameters params = ParametersProvider.get(appContext);
 
-    // Insert and check that it's available
-    assertNull(params.get(key));
-    params.set(key, value, false);
-    assertEquals(value, params.get(key));
+        // Insert and check that it's available
+        assertNull(params.get(key));
+        params.set(key, value, false);
+        assertEquals(value, params.get(key));
 
-    // Clean instance
-    DI.reset();
+        // Clean instance
+        DI.reset();
 
-    // Check that it's erase at rebuild (no save)
-    params = ParametersProvider.get(appContext);
-    assertNull(params.get(key));
-  }
+        // Check that it's erase at rebuild (no save)
+        params = ParametersProvider.get(appContext);
+        assertNull(params.get(key));
+    }
 
-  /**
-   * Test add of a parameter with save
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testAddSavedParameter() throws Exception {
-    Parameters params = ParametersProvider.get(appContext);
+    /**
+     * Test add of a parameter with save
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testAddSavedParameter() throws Exception {
+        Parameters params = ParametersProvider.get(appContext);
 
-    // Insert and check that it's available
-    assertNull(params.get(key));
-    params.set(key, value, true);
-    assertEquals(value, params.get(key));
+        // Insert and check that it's available
+        assertNull(params.get(key));
+        params.set(key, value, true);
+        assertEquals(value, params.get(key));
 
-    // Clean instance
-    DI.reset();
+        // Clean instance
+        DI.reset();
 
-    // Check that it's still available at rebuild
-    params = ParametersProvider.get(appContext);
-    assertEquals(value, params.get(key));
-  }
+        // Check that it's still available at rebuild
+        params = ParametersProvider.get(appContext);
+        assertEquals(value, params.get(key));
+    }
 
-  /**
-   * Test remove of a parameter
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testRemoveParameter() throws Exception {
-    Parameters params = ParametersProvider.get(appContext);
+    /**
+     * Test remove of a parameter
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testRemoveParameter() throws Exception {
+        Parameters params = ParametersProvider.get(appContext);
 
-    // Insert and check that it's available
-    assertNull(params.get(key));
-    params.set(key, value, true);
-    assertEquals(value, params.get(key));
+        // Insert and check that it's available
+        assertNull(params.get(key));
+        params.set(key, value, true);
+        assertEquals(value, params.get(key));
 
-    // Remove it and test result
-    params.remove(key);
-    assertNull(params.get(key));
+        // Remove it and test result
+        params.remove(key);
+        assertNull(params.get(key));
 
-    // Clean instance
-    DI.reset();
+        // Clean instance
+        DI.reset();
 
-    // Check that it's still removed
-    params = ParametersProvider.get(appContext);
-    assertNull(params.get(key));
-  }
+        // Check that it's still removed
+        params = ParametersProvider.get(appContext);
+        assertNull(params.get(key));
+    }
 
-  /**
-   * Test get with default value
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testDefaultValue() throws Exception {
-    Parameters params = ParametersProvider.get(appContext);
+    /**
+     * Test get with default value
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testDefaultValue() throws Exception {
+        Parameters params = ParametersProvider.get(appContext);
 
-    assertNull(params.get(key));
-    assertEquals(value, params.get(key, value));
-  }
+        assertNull(params.get(key));
+        assertEquals(value, params.get(key, value));
+    }
 }

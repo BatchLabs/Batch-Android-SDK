@@ -17,99 +17,89 @@ import com.batch.android.messaging.view.helper.ThemeHelper;
  */
 public class AlertTemplateFragment extends BaseDialogFragment<AlertMessage> {
 
-  private static final String TAG = "AlertTemplateFragment";
+    private static final String TAG = "AlertTemplateFragment";
 
-  public static AlertTemplateFragment newInstance(
-    BatchMessage payloadMessage,
-    AlertMessage messageModel
-  ) {
-    final AlertTemplateFragment f = new AlertTemplateFragment();
-    f.setMessageArguments(payloadMessage, messageModel);
-    return f;
-  }
-
-  public AlertTemplateFragment() {
-    super();
-  }
-
-  @NonNull
-  @Override
-  public Dialog onCreateDialog(Bundle savedInstanceState) {
-    final AlertMessage message = getMessageModel();
-    if (message == null) {
-      Logger.error(
-        TAG,
-        "Unknown error while creating alert fragment. Please report this to Batch's support. (code -3)"
-      );
-      return super.onCreateDialog(savedInstanceState);
+    public static AlertTemplateFragment newInstance(BatchMessage payloadMessage, AlertMessage messageModel) {
+        final AlertTemplateFragment f = new AlertTemplateFragment();
+        f.setMessageArguments(payloadMessage, messageModel);
+        return f;
     }
 
-    final Context context = getContext();
-    if (context == null) {
-      Logger.error(
-        TAG,
-        "Unknown error while creating alert fragment. Please report this to Batch's support. (code -5)"
-      );
-      return super.onCreateDialog(savedInstanceState);
+    public AlertTemplateFragment() {
+        super();
     }
 
-    final AlertDialog.Builder builder = new AlertDialog.Builder(
-      new ContextThemeWrapper(context, ThemeHelper.getDefaultTheme(context))
-    );
-    builder.setCancelable(true);
-
-    if (message.titleText != null) {
-      builder.setTitle(message.titleText);
-    }
-    builder.setMessage(message.bodyText);
-    // I don't think we need a cancel button listener, OnCancelListener should do it
-    builder.setNegativeButton(
-      message.cancelButtonText,
-      (dialog, which) -> analyticsDelegate.onClosed()
-    );
-
-    if (message.acceptCTA != null) {
-      builder.setPositiveButton(
-        message.acceptCTA.label,
-        (dialog, which) -> {
-          analyticsDelegate.onCTAClicked(0, message.acceptCTA);
-          messagingModule.performAction(
-            getContext(),
-            getPayloadMessage(),
-            message.acceptCTA
-          );
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        final AlertMessage message = getMessageModel();
+        if (message == null) {
+            Logger.error(
+                TAG,
+                "Unknown error while creating alert fragment. Please report this to Batch's support. (code -3)"
+            );
+            return super.onCreateDialog(savedInstanceState);
         }
-      );
+
+        final Context context = getContext();
+        if (context == null) {
+            Logger.error(
+                TAG,
+                "Unknown error while creating alert fragment. Please report this to Batch's support. (code -5)"
+            );
+            return super.onCreateDialog(savedInstanceState);
+        }
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(
+            new ContextThemeWrapper(context, ThemeHelper.getDefaultTheme(context))
+        );
+        builder.setCancelable(true);
+
+        if (message.titleText != null) {
+            builder.setTitle(message.titleText);
+        }
+        builder.setMessage(message.bodyText);
+        // I don't think we need a cancel button listener, OnCancelListener should do it
+        builder.setNegativeButton(message.cancelButtonText, (dialog, which) -> analyticsDelegate.onClosed());
+
+        if (message.acceptCTA != null) {
+            builder.setPositiveButton(
+                message.acceptCTA.label,
+                (dialog, which) -> {
+                    analyticsDelegate.onCTAClicked(0, message.acceptCTA);
+                    messagingModule.performAction(getContext(), getPayloadMessage(), message.acceptCTA);
+                }
+            );
+        }
+
+        builder.setOnDismissListener(this);
+        builder.setOnCancelListener(this);
+
+        return builder.create();
     }
 
-    builder.setOnDismissListener(this);
-    builder.setOnCancelListener(this);
+    //region: Auto close handling
 
-    return builder.create();
-  }
+    @Override
+    protected void onAutoCloseCountdownStarted() {
+        // This fragment doesn't handle auto closure
+    }
 
-  //region: Auto close handling
+    @Override
+    protected boolean canAutoClose() {
+        // This fragment doesn't handle auto closure
+        return false;
+    }
 
-  @Override
-  protected void onAutoCloseCountdownStarted() {
-    // This fragment doesn't handle auto closure
-  }
+    @Override
+    protected int getAutoCloseDelayMillis() {
+        // This fragment doesn't handle auto closure
+        return 0;
+    }
 
-  @Override
-  protected boolean canAutoClose() {
-    // This fragment doesn't handle auto closure
-    return false;
-  }
-
-  @Override
-  protected int getAutoCloseDelayMillis() {
-    // This fragment doesn't handle auto closure
-    return 0;
-  }
-
-  @Override
-  protected void performAutoClose() {
-    // This fragment doesn't handle auto closure
-  }
-  //endregion
+    @Override
+    protected void performAutoClose() {
+        // This fragment doesn't handle auto closure
+    }
+    //endregion
 }

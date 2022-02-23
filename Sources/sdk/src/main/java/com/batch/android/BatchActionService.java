@@ -18,84 +18,65 @@ import java.util.Locale;
 @PublicSDK
 public final class BatchActionService extends IntentService {
 
-  private static final String TAG = "BatchActionService";
-  static final String INTENT_ACTION = "com.batch.android.action.exec";
-  static final String ACTION_EXTRA_IDENTIFIER = "actionID";
-  static final String ACTION_EXTRA_ARGS = "args";
-  static final String ACTION_EXTRA_DISMISS_NOTIFICATION_ID =
-    "dismissNotificationID";
+    private static final String TAG = "BatchActionService";
+    static final String INTENT_ACTION = "com.batch.android.action.exec";
+    static final String ACTION_EXTRA_IDENTIFIER = "actionID";
+    static final String ACTION_EXTRA_ARGS = "args";
+    static final String ACTION_EXTRA_DISMISS_NOTIFICATION_ID = "dismissNotificationID";
 
-  public BatchActionService() {
-    super("BatchActionService");
-  }
-
-  @Override
-  protected void onHandleIntent(Intent intent) {
-    Logger.internal(TAG, "Handling intent " + intent);
-    final Bundle extras = intent.getExtras();
-    if (extras == null) {
-      return;
+    public BatchActionService() {
+        super("BatchActionService");
     }
 
-    // Dismiss the origin notification
-    int notificationId = intent.getIntExtra(
-      ACTION_EXTRA_DISMISS_NOTIFICATION_ID,
-      0
-    );
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        Logger.internal(TAG, "Handling intent " + intent);
+        final Bundle extras = intent.getExtras();
+        if (extras == null) {
+            return;
+        }
 
-    if (notificationId != 0) {
-      NotificationManagerCompat notificationManager = NotificationManagerCompat.from(
-        this
-      );
-      notificationManager.cancel(Batch.NOTIFICATION_TAG, notificationId);
+        // Dismiss the origin notification
+        int notificationId = intent.getIntExtra(ACTION_EXTRA_DISMISS_NOTIFICATION_ID, 0);
+
+        if (notificationId != 0) {
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+            notificationManager.cancel(Batch.NOTIFICATION_TAG, notificationId);
+        }
+
+        final String actionIdentifier = intent.getStringExtra(ACTION_EXTRA_IDENTIFIER);
+
+        if (TextUtils.isEmpty(actionIdentifier)) {
+            Logger.error(TAG, "Empty or null action identifier, aborting");
+            return;
+        }
+
+        JSONObject actionArgs = null;
+        final String actionArgsString = intent.getStringExtra(ACTION_EXTRA_ARGS);
+        if (actionArgsString != null) {
+            try {
+                actionArgs = new JSONObject(actionArgsString);
+            } catch (JSONException e) {
+                Logger.error(TAG, "Unexpected error while decoding json action arguments", e);
+            }
+        }
+
+        if (actionArgs == null) {
+            actionArgs = new JSONObject();
+        }
+
+        BatchPushPayload payload = null;
+
+        try {
+            payload = BatchPushPayload.payloadFromBundle(extras);
+        } catch (BatchPushPayload.ParsingException e) {
+            Logger.error(TAG, "Unexpected error while decoding BatchPushPayload", e);
+        }
+
+        if (
+            ActionModuleProvider.get().performAction(this, actionIdentifier.toLowerCase(Locale.US), actionArgs, payload)
+        ) {
+            Logger.internal(TAG, "Action executed");
+        }
     }
-
-    final String actionIdentifier = intent.getStringExtra(
-      ACTION_EXTRA_IDENTIFIER
-    );
-
-    if (TextUtils.isEmpty(actionIdentifier)) {
-      Logger.error(TAG, "Empty or null action identifier, aborting");
-      return;
-    }
-
-    JSONObject actionArgs = null;
-    final String actionArgsString = intent.getStringExtra(ACTION_EXTRA_ARGS);
-    if (actionArgsString != null) {
-      try {
-        actionArgs = new JSONObject(actionArgsString);
-      } catch (JSONException e) {
-        Logger.error(
-          TAG,
-          "Unexpected error while decoding json action arguments",
-          e
-        );
-      }
-    }
-
-    if (actionArgs == null) {
-      actionArgs = new JSONObject();
-    }
-
-    BatchPushPayload payload = null;
-
-    try {
-      payload = BatchPushPayload.payloadFromBundle(extras);
-    } catch (BatchPushPayload.ParsingException e) {
-      Logger.error(TAG, "Unexpected error while decoding BatchPushPayload", e);
-    }
-
-    if (
-      ActionModuleProvider
-        .get()
-        .performAction(
-          this,
-          actionIdentifier.toLowerCase(Locale.US),
-          actionArgs,
-          payload
-        )
-    ) {
-      Logger.internal(TAG, "Action executed");
-    }
-  }
 }

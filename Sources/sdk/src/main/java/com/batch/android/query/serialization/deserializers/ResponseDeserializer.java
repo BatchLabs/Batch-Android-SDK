@@ -9,35 +9,35 @@ import com.batch.android.query.response.Response;
  */
 public abstract class ResponseDeserializer {
 
-  /**
-   * Initial json response
-   */
-  protected final JSONObject json;
+    /**
+     * Initial json response
+     */
+    protected final JSONObject json;
 
-  /**
-   * Constructor
-   *
-   * @param json json response
-   */
-  protected ResponseDeserializer(JSONObject json) {
-    this.json = json;
-  }
+    /**
+     * Constructor
+     *
+     * @param json json response
+     */
+    protected ResponseDeserializer(JSONObject json) {
+        this.json = json;
+    }
 
-  /**
-   * Get the response id
-   *
-   * @return Response identifier
-   * @throws JSONException parsing exception
-   */
-  protected String getId() throws JSONException {
-    return json.getString("id");
-  }
+    /**
+     * Get the response id
+     *
+     * @return Response identifier
+     * @throws JSONException parsing exception
+     */
+    protected String getId() throws JSONException {
+        return json.getString("id");
+    }
 
-  /**
-   * Deserialize method to implement in the child class
-   *
-   * @return The child response class deserialized
-   * @throws JSONException parsing exception
-   */
-  public abstract Response deserialize() throws JSONException;
+    /**
+     * Deserialize method to implement in the child class
+     *
+     * @return The child response class deserialized
+     * @throws JSONException parsing exception
+     */
+    public abstract Response deserialize() throws JSONException;
 }

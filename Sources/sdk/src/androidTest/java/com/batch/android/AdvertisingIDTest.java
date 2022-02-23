@@ -20,18 +20,18 @@ import org.junit.runner.RunWith;
 @SmallTest
 public class AdvertisingIDTest {
 
-  /**
-   * Test advertising ID value
-   *
-   * @throws Exception
-   */
-  @Test
-  public void testAdvertisingID() throws Exception {
-    AdvertisingID device = AdvertisingIDProvider.get();
+    /**
+     * Test advertising ID value
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testAdvertisingID() throws Exception {
+        AdvertisingID device = AdvertisingIDProvider.get();
 
-    Thread.sleep(2000);
+        Thread.sleep(2000);
 
-    assertTrue(device.isReady());
-    assertNotNull(device.get());
-  }
+        assertTrue(device.isReady());
+        assertNotNull(device.get());
+    }
 }

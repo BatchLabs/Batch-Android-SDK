@@ -13,10 +13,7 @@ import com.batch.android.localcampaigns.trigger.NowTrigger;
 
 public class CampaignsRefreshedSignal implements Signal {
 
-  public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
-    return (
-      trigger instanceof NowTrigger ||
-      trigger instanceof CampaignsRefreshedTrigger
-    );
-  }
+    public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
+        return trigger instanceof NowTrigger || trigger instanceof CampaignsRefreshedTrigger;
+    }
 }

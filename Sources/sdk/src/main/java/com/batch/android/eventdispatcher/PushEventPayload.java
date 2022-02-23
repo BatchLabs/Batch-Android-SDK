@@ -13,61 +13,61 @@ import com.batch.android.BatchPushPayload;
  */
 public class PushEventPayload implements Batch.EventDispatcher.Payload {
 
-  private BatchPushPayload payload;
-  private boolean isOpening;
+    private BatchPushPayload payload;
+    private boolean isOpening;
 
-  public PushEventPayload(BatchPushPayload payload) {
-    this(payload, false);
-  }
-
-  public PushEventPayload(BatchPushPayload payload, boolean isOpening) {
-    this.payload = payload;
-    this.isOpening = isOpening;
-  }
-
-  @Nullable
-  @Override
-  public String getTrackingId() {
-    // No tracking ID in push campaign
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getWebViewAnalyticsID() {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getDeeplink() {
-    return payload.getDeeplink();
-  }
-
-  @Override
-  public boolean isPositiveAction() {
-    return isOpening;
-  }
-
-  @Nullable
-  @Override
-  public String getCustomValue(@NonNull String key) {
-    if (BATCH_BUNDLE_KEY.equals(key)) {
-      // Hide batch payload
-      return null;
+    public PushEventPayload(BatchPushPayload payload) {
+        this(payload, false);
     }
-    return payload.getPushBundle().getString(key);
-  }
 
-  @Nullable
-  @Override
-  public BatchMessage getMessagingPayload() {
-    return null;
-  }
+    public PushEventPayload(BatchPushPayload payload, boolean isOpening) {
+        this.payload = payload;
+        this.isOpening = isOpening;
+    }
 
-  @Nullable
-  @Override
-  public BatchPushPayload getPushPayload() {
-    return payload;
-  }
+    @Nullable
+    @Override
+    public String getTrackingId() {
+        // No tracking ID in push campaign
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public String getWebViewAnalyticsID() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public String getDeeplink() {
+        return payload.getDeeplink();
+    }
+
+    @Override
+    public boolean isPositiveAction() {
+        return isOpening;
+    }
+
+    @Nullable
+    @Override
+    public String getCustomValue(@NonNull String key) {
+        if (BATCH_BUNDLE_KEY.equals(key)) {
+            // Hide batch payload
+            return null;
+        }
+        return payload.getPushBundle().getString(key);
+    }
+
+    @Nullable
+    @Override
+    public BatchMessage getMessagingPayload() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public BatchPushPayload getPushPayload() {
+        return payload;
+    }
 }

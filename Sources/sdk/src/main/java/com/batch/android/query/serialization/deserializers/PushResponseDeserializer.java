@@ -9,23 +9,23 @@ import com.batch.android.query.response.PushResponse;
  */
 public class PushResponseDeserializer extends ResponseDeserializer {
 
-  /**
-   * Constructor
-   *
-   * @param json json response
-   */
-  public PushResponseDeserializer(JSONObject json) {
-    super(json);
-  }
+    /**
+     * Constructor
+     *
+     * @param json json response
+     */
+    public PushResponseDeserializer(JSONObject json) {
+        super(json);
+    }
 
-  /**
-   * Deserialize method
-   *
-   * @return PushResponse deserialized
-   * @throws JSONException parsing exception
-   */
-  @Override
-  public PushResponse deserialize() throws JSONException {
-    return new PushResponse(getId());
-  }
+    /**
+     * Deserialize method
+     *
+     * @return PushResponse deserialized
+     * @throws JSONException parsing exception
+     */
+    @Override
+    public PushResponse deserialize() throws JSONException {
+        return new PushResponse(getId());
+    }
 }

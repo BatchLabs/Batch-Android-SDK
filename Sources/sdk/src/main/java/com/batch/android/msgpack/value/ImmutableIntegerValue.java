@@ -20,5 +20,4 @@ package com.batch.android.msgpack.value;
  * <p>
  * MessagePack's Integer type can represent from -2<sup>63</sup> to 2<sup>64</sup>-1.
  */
-public interface ImmutableIntegerValue
-  extends IntegerValue, ImmutableNumberValue {}
+public interface ImmutableIntegerValue extends IntegerValue, ImmutableNumberValue {}

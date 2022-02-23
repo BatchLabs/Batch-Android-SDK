@@ -11,14 +11,14 @@ package com.batch.android;
  */
 public class DeeplinkInterceptorRuntimeException extends Exception {
 
-  private RuntimeException wrappedRuntimeException;
+    private RuntimeException wrappedRuntimeException;
 
-  public DeeplinkInterceptorRuntimeException(RuntimeException cause) {
-    super(cause);
-    this.wrappedRuntimeException = cause;
-  }
+    public DeeplinkInterceptorRuntimeException(RuntimeException cause) {
+        super(cause);
+        this.wrappedRuntimeException = cause;
+    }
 
-  public RuntimeException getWrappedRuntimeException() {
-    return wrappedRuntimeException;
-  }
+    public RuntimeException getWrappedRuntimeException() {
+        return wrappedRuntimeException;
+    }
 }

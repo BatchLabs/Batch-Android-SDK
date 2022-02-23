@@ -8,8 +8,8 @@ import com.batch.android.annotation.PublicSDK;
  */
 @PublicSDK
 public enum BatchNotificationSource {
-  UNKNOWN,
-  CAMPAIGN,
-  TRANSACTIONAL,
-  TRIGGER,
+    UNKNOWN,
+    CAMPAIGN,
+    TRANSACTIONAL,
+    TRIGGER,
 }

@@ -10,38 +10,38 @@ import java.util.Map;
  */
 public final class CachingContext implements EvaluationContext {
 
-  private EvaluationContext context;
+    private EvaluationContext context;
 
-  private Map<String, Value> cache;
+    private Map<String, Value> cache;
 
-  private static Value NULL_VALUE = new PrimitiveValue("");
+    private static Value NULL_VALUE = new PrimitiveValue("");
 
-  public CachingContext(EvaluationContext context) {
-    this.context = context;
-    this.cache = new HashMap<>();
-  }
-
-  @Override
-  public Value resolveVariableNamed(String name) {
-    Value cachedValue = cache.get(name);
-
-    if (cachedValue == null) { // First pass for given `name`.
-      Value resolved = context.resolveVariableNamed(name);
-
-      if (resolved != null) {
-        cache.put(name, resolved);
-      } else {
-        cache.put(name, NULL_VALUE);
-      }
-
-      return resolved;
+    public CachingContext(EvaluationContext context) {
+        this.context = context;
+        this.cache = new HashMap<>();
     }
 
-    if (cachedValue == CachingContext.NULL_VALUE) {
-      // Cache hit, but it was null
-      return null;
-    }
+    @Override
+    public Value resolveVariableNamed(String name) {
+        Value cachedValue = cache.get(name);
 
-    return cachedValue;
-  }
+        if (cachedValue == null) { // First pass for given `name`.
+            Value resolved = context.resolveVariableNamed(name);
+
+            if (resolved != null) {
+                cache.put(name, resolved);
+            } else {
+                cache.put(name, NULL_VALUE);
+            }
+
+            return resolved;
+        }
+
+        if (cachedValue == CachingContext.NULL_VALUE) {
+            // Cache hit, but it was null
+            return null;
+        }
+
+        return cachedValue;
+    }
 }

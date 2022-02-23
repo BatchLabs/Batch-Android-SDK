@@ -15,68 +15,66 @@ import java.util.List;
  */
 public class LocalCampaignsResponseDeserializer extends ResponseDeserializer {
 
-  private static final String TAG = "LocalCampaignsResponseDeserializer";
+    private static final String TAG = "LocalCampaignsResponseDeserializer";
 
-  /**
-   * Local campaign deserializer
-   */
-  private final LocalCampaignDeserializer localCampaignDeserializer = new LocalCampaignDeserializer();
+    /**
+     * Local campaign deserializer
+     */
+    private final LocalCampaignDeserializer localCampaignDeserializer = new LocalCampaignDeserializer();
 
-  /**
-   * Constructor
-   *
-   * @param json json response
-   */
-  public LocalCampaignsResponseDeserializer(JSONObject json) {
-    super(json);
-  }
-
-  /**
-   * Deserialize method
-   *
-   * @return LocalCampaignsResponse deserialized
-   * @throws JSONException parsing exception
-   */
-  @Override
-  public LocalCampaignsResponse deserialize() throws JSONException {
-    if (json == null) {
-      throw new JSONException("Cannot deserialize a null json object");
+    /**
+     * Constructor
+     *
+     * @param json json response
+     */
+    public LocalCampaignsResponseDeserializer(JSONObject json) {
+        super(json);
     }
 
-    LocalCampaignsResponse response = new LocalCampaignsResponse(getId());
+    /**
+     * Deserialize method
+     *
+     * @return LocalCampaignsResponse deserialized
+     * @throws JSONException parsing exception
+     */
+    @Override
+    public LocalCampaignsResponse deserialize() throws JSONException {
+        if (json == null) {
+            throw new JSONException("Cannot deserialize a null json object");
+        }
 
-    LocalCampaignsResponse.Error error = parseError();
-    response.setError(error);
+        LocalCampaignsResponse response = new LocalCampaignsResponse(getId());
 
-    Long minDisplayInterval = json.reallyOptLong("minDisplayInterval", null);
+        LocalCampaignsResponse.Error error = parseError();
+        response.setError(error);
 
-    JSONArray jsonCampaigns = json.optJSONArray("campaigns");
-    List<LocalCampaign> campaigns = localCampaignDeserializer.deserializeList(
-      jsonCampaigns
-    );
-    response.setCampaigns(campaigns);
-    response.setMinDisplayInterval(minDisplayInterval);
-    return response;
-  }
+        Long minDisplayInterval = json.reallyOptLong("minDisplayInterval", null);
 
-  /**
-   * Parse error response if there's one
-   *
-   * @return LocalCampaignsResponse.Error || null
-   * @throws JSONException parsing exception
-   */
-  private LocalCampaignsResponse.Error parseError() throws JSONException {
-    LocalCampaignsResponse.Error error = null;
-    if (json != null && json.hasNonNull("error")) {
-      error = new LocalCampaignsResponse.Error();
-      JSONObject errorJson = json.getJSONObject("error");
-      if (errorJson.hasNonNull("code")) {
-        error.setCode(errorJson.getInt("code"));
-      }
-      if (errorJson.has("message")) {
-        error.setMessage(errorJson.getString("message"));
-      }
+        JSONArray jsonCampaigns = json.optJSONArray("campaigns");
+        List<LocalCampaign> campaigns = localCampaignDeserializer.deserializeList(jsonCampaigns);
+        response.setCampaigns(campaigns);
+        response.setMinDisplayInterval(minDisplayInterval);
+        return response;
     }
-    return error;
-  }
+
+    /**
+     * Parse error response if there's one
+     *
+     * @return LocalCampaignsResponse.Error || null
+     * @throws JSONException parsing exception
+     */
+    private LocalCampaignsResponse.Error parseError() throws JSONException {
+        LocalCampaignsResponse.Error error = null;
+        if (json != null && json.hasNonNull("error")) {
+            error = new LocalCampaignsResponse.Error();
+            JSONObject errorJson = json.getJSONObject("error");
+            if (errorJson.hasNonNull("code")) {
+                error.setCode(errorJson.getInt("code"));
+            }
+            if (errorJson.has("message")) {
+                error.setMessage(errorJson.getString("message"));
+            }
+        }
+        return error;
+    }
 }

@@ -10,45 +10,41 @@ import com.batch.android.json.JSONObject;
  */
 public class AttributesCheckQuery extends Query {
 
-  /**
-   * Attributes version
-   */
-  private long version;
+    /**
+     * Attributes version
+     */
+    private long version;
 
-  /**
-   * Saved transaciton ID for that version
-   */
-  private String transactionID;
+    /**
+     * Saved transaciton ID for that version
+     */
+    private String transactionID;
 
-  // -------------------------------------------->
+    // -------------------------------------------->
 
-  public AttributesCheckQuery(
-    Context context,
-    long version,
-    String transactionID
-  ) {
-    super(context, QueryType.ATTRIBUTES_CHECK);
-    if (version <= 0) {
-      throw new IllegalArgumentException("version <= 0");
+    public AttributesCheckQuery(Context context, long version, String transactionID) {
+        super(context, QueryType.ATTRIBUTES_CHECK);
+        if (version <= 0) {
+            throw new IllegalArgumentException("version <= 0");
+        }
+
+        if (transactionID == null) {
+            throw new IllegalArgumentException("transactionID==null");
+        }
+
+        this.version = version;
+        this.transactionID = transactionID;
     }
 
-    if (transactionID == null) {
-      throw new IllegalArgumentException("transactionID==null");
+    // -------------------------------------------->
+
+    @Override
+    public JSONObject toJSON() throws JSONException {
+        JSONObject obj = super.toJSON();
+
+        obj.put("ver", version);
+        obj.put("trid", transactionID);
+
+        return obj;
     }
-
-    this.version = version;
-    this.transactionID = transactionID;
-  }
-
-  // -------------------------------------------->
-
-  @Override
-  public JSONObject toJSON() throws JSONException {
-    JSONObject obj = super.toJSON();
-
-    obj.put("ver", version);
-    obj.put("trid", transactionID);
-
-    return obj;
-  }
 }

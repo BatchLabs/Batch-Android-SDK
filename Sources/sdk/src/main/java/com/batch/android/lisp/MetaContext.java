@@ -11,22 +11,22 @@ import java.util.ArrayList;
  */
 public final class MetaContext implements EvaluationContext {
 
-  private final ArrayList<EvaluationContext> contexts;
+    private final ArrayList<EvaluationContext> contexts;
 
-  public MetaContext(ArrayList<EvaluationContext> contexts) {
-    this.contexts = contexts;
-  }
-
-  @Override
-  public Value resolveVariableNamed(String name) {
-    Value val;
-    for (EvaluationContext ctx : contexts) {
-      val = ctx.resolveVariableNamed(name);
-      if (val != null) {
-        return val;
-      }
+    public MetaContext(ArrayList<EvaluationContext> contexts) {
+        this.contexts = contexts;
     }
 
-    return null;
-  }
+    @Override
+    public Value resolveVariableNamed(String name) {
+        Value val;
+        for (EvaluationContext ctx : contexts) {
+            val = ctx.resolveVariableNamed(name);
+            if (val != null) {
+                return val;
+            }
+        }
+
+        return null;
+    }
 }

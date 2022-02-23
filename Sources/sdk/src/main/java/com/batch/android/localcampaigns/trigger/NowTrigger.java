@@ -8,8 +8,8 @@ import com.batch.android.localcampaigns.model.LocalCampaign;
 
 public class NowTrigger implements LocalCampaign.Trigger {
 
-  @Override
-  public String getType() {
-    return "NOW";
-  }
+    @Override
+    public String getType() {
+        return "NOW";
+    }
 }

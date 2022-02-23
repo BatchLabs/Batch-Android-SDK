@@ -20,15 +20,15 @@ package com.batch.android.msgpack.core;
  */
 public class MessageFormatException extends MessagePackException {
 
-  public MessageFormatException(Throwable e) {
-    super(e);
-  }
+    public MessageFormatException(Throwable e) {
+        super(e);
+    }
 
-  public MessageFormatException(String message) {
-    super(message);
-  }
+    public MessageFormatException(String message) {
+        super(message);
+    }
 
-  public MessageFormatException(String message, Throwable cause) {
-    super(message, cause);
-  }
+    public MessageFormatException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
