@@ -2,6 +2,7 @@ package com.batch.android.localcampaigns;
 
 import static org.mockito.ArgumentMatchers.argThat;
 
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 import androidx.test.rule.ActivityTestRule;
@@ -43,7 +44,7 @@ public class EventTriggerTest extends DITest {
 
         LocalCampaignsModule module = DITestUtils.mockSingletonDependency(LocalCampaignsModule.class, null);
         simulateBatchStart(activityRule.getActivity());
-        module.batchDidStart();
+        module.batchContextBecameAvailable(ApplicationProvider.getApplicationContext());
     }
 
     @After
@@ -89,6 +90,9 @@ public class EventTriggerTest extends DITest {
         campaign.triggers.add(new EventLocalCampaignTrigger("E." + EVENT_NAME_TEST, null));
 
         CampaignManagerProvider.get().updateCampaignList(Collections.singletonList(campaign));
+
+        // Simulate synchro is finished
+        LocalCampaignsModuleProvider.get().onLocalCampaignsWebserviceFinished();
 
         // Track the event which is linked to the Local Campaign
         Batch.User.trackEvent(EVENT_NAME_TEST);

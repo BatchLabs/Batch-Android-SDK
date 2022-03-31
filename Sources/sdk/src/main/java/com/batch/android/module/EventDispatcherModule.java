@@ -2,6 +2,7 @@ package com.batch.android.module;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.batch.android.Batch;
 import com.batch.android.BatchEventDispatcher;
 import com.batch.android.core.DiscoveryServiceHelper;
@@ -9,6 +10,8 @@ import com.batch.android.core.Logger;
 import com.batch.android.di.providers.OptOutModuleProvider;
 import com.batch.android.eventdispatcher.DispatcherDiscoveryService;
 import com.batch.android.eventdispatcher.DispatcherRegistrar;
+import com.batch.android.eventdispatcher.DispatcherSerializer;
+import com.batch.android.json.JSONObject;
 import com.batch.android.processor.Module;
 import com.batch.android.processor.Provide;
 import com.batch.android.processor.Singleton;
@@ -114,11 +117,34 @@ public class EventDispatcherModule extends BatchModule {
                 BatchEventDispatcher dispatcher = registrar.getDispatcher(context);
                 if (dispatcher != null) {
                     addEventDispatcher(dispatcher);
-                    printLoadedDispatcher(dispatcher.getClass().getName());
+                    String dispatcherName = dispatcher.getClass().getName();
+                    if (dispatcher.getName() != null) {
+                        dispatcherName = dispatcher.getName();
+                    } else {
+                        Logger.warning(
+                            TAG,
+                            "The version of your event dispatcher: " +
+                            dispatcherName +
+                            " is outdated, please update it."
+                        );
+                    }
+                    printLoadedDispatcher(dispatcherName);
                 }
             } catch (Throwable e) {
                 Logger.error(String.format("Could not instantiate %s", name), e);
             }
+        }
+    }
+
+    /**
+     * Get dispatchers as json object used for the analytics
+     * @return A JSONObject of dispatcher Name:Version
+     */
+    @Nullable
+    public JSONObject getDispatchersAnalyticRepresentation() {
+        synchronized (eventDispatchers) {
+            JSONObject json = DispatcherSerializer.serialize(eventDispatchers);
+            return json.length() > 0 ? json : null;
         }
     }
 }

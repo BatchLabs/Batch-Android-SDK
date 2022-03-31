@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import com.batch.android.core.Logger;
 import com.batch.android.debug.FindMyInstallationHelper;
@@ -365,6 +366,7 @@ public class RuntimeManager {
      *
      * @return context or null
      */
+    @Nullable
     public Context getContext() {
         return context;
     }

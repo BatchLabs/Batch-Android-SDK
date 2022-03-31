@@ -1,5 +1,7 @@
 package com.batch.android.module;
 
+import android.content.Context;
+import androidx.annotation.NonNull;
 import com.batch.android.runtime.State;
 
 /**
@@ -23,6 +25,15 @@ public abstract class BatchModule {
     public abstract int getState();
 
     // ----------------------------------->
+
+    /**
+     * Called by Batch as soon as a context is available in the runtimeManager
+     * For convenience, the application context is available as a parameter.
+     * LocalBroadcastManager is also up.
+     */
+    public void batchContextBecameAvailable(@NonNull Context applicationContext) {
+        // Override this method
+    }
 
     /**
      * Called by Batch before batch start<br>

@@ -8,7 +8,8 @@ import com.batch.android.core.Logger;
 /**
  * Batch's service for handling the push messages and show a notification
  * <p>
- * This is a legacy implementation, and should not be used on versions higher than Android O
+ * This can be used on Android O, if eligibility has been verified beforehand and startService
+ * exceptions are handled.
  *
  */
 @PublicSDK

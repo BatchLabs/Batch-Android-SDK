@@ -9,7 +9,6 @@ import androidx.annotation.NonNull;
 import com.batch.android.BatchDisplayReceiptJobService;
 import com.batch.android.WebserviceLauncher;
 import com.batch.android.core.InternalPushData;
-import com.batch.android.core.JobHelper;
 import com.batch.android.core.Logger;
 import com.batch.android.core.TaskRunnable;
 import com.batch.android.core.Webservice;
@@ -119,9 +118,9 @@ public class DisplayReceiptModule extends BatchModule {
                     Logger.internal(TAG, "Could not get Job Scheduler system service");
                     return;
                 }
-
+                int jobId = (int) (Math.random() * Integer.MAX_VALUE);
                 JobInfo.Builder builder = new JobInfo.Builder(
-                    JobHelper.generateUniqueJobId(scheduler),
+                    jobId,
                     new ComponentName(context, BatchDisplayReceiptJobService.class)
                 )
                     .setOverrideDeadline(dma * 1000L)
@@ -140,10 +139,8 @@ public class DisplayReceiptModule extends BatchModule {
                 } else {
                     Logger.internal(TAG, "Successfully scheduled the display receipt job");
                 }
-            } catch (JobHelper.GenerationException e) {
-                Logger.internal(TAG, "Could not find a suitable job ID", e);
             } catch (Exception e1) {
-                Logger.internal(TAG, "Could schedule Batch display receipt job", e1);
+                Logger.internal(TAG, "Could not schedule Batch display receipt job", e1);
             }
         } else {
             sendReceipt(context, false);

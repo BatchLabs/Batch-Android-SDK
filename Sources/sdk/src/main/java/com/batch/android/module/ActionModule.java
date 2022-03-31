@@ -13,6 +13,7 @@ import com.batch.android.actions.ClipboardActionRunnable;
 import com.batch.android.actions.DeeplinkActionRunnable;
 import com.batch.android.actions.GroupActionRunnable;
 import com.batch.android.actions.LocalCampaignsRefreshActionRunnable;
+import com.batch.android.actions.NotificationPermissionActionRunnable;
 import com.batch.android.actions.RatingActionRunnable;
 import com.batch.android.actions.UserDataBuiltinActionRunnable;
 import com.batch.android.actions.UserEventBuiltinActionRunnable;
@@ -249,6 +250,11 @@ public class ActionModule extends BatchModule {
         registeredActions.put(
             RatingActionRunnable.IDENTIFIER,
             new UserAction(RatingActionRunnable.IDENTIFIER, new RatingActionRunnable())
+        );
+
+        registeredActions.put(
+            NotificationPermissionActionRunnable.IDENTIFIER,
+            new UserAction(NotificationPermissionActionRunnable.IDENTIFIER, new NotificationPermissionActionRunnable())
         );
     }
 

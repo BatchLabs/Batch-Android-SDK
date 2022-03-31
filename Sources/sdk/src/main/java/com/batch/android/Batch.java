@@ -2,6 +2,7 @@ package com.batch.android;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Application;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -2126,15 +2127,6 @@ public final class Batch {
                     }
 
                     /*
-                     * Register the messaging lifecycle listener and session manager if we can
-                     */
-                    android.app.Application app = activity.getApplication();
-                    if (app != null) {
-                        runtimeManager.registerSessionManagerIfNeeded(app, true);
-                        runtimeManager.registerActivityListenerIfNeeded(app);
-                    }
-
-                    /*
                      * List the possible intents with push payload by priority :
                      * 1 - Intent from onNewIntent()
                      * 2 - Intent from the starting activity
@@ -2200,6 +2192,8 @@ public final class Batch {
                     return null;
                 }
 
+                final Context applicationContext = context.getApplicationContext();
+
                 /*
                  * Init stuff, if we were stopped
                  */
@@ -2207,12 +2201,15 @@ public final class Batch {
                     /*
                      * Set context
                      */
-                    runtimeManager.setContext(context.getApplicationContext());
+                    runtimeManager.setContext(applicationContext);
 
                     /*
                      * Warm up the local broadcast manager
                      */
-                    LocalBroadcastManagerProvider.get(context);
+                    LocalBroadcastManagerProvider.get(applicationContext);
+
+                    // Tell the modules about the context
+                    moduleMaster.batchContextBecameAvailable(applicationContext);
 
                     /*
                      * Check for update migration stuff
@@ -2222,7 +2219,7 @@ public final class Batch {
                     /*
                      * Check that we have mandatory permissions
                      */
-                    if (!GenericHelper.checkPermission("android.permission.INTERNET", runtimeManager.getContext())) {
+                    if (!GenericHelper.checkPermission("android.permission.INTERNET", applicationContext)) {
                         Logger.error(
                             "Batch needs android.permission.INTERNET, please update your manifest, aborting start"
                         );
@@ -2246,10 +2243,10 @@ public final class Batch {
                         Batch.advertisingID = advertisingID;
                     }
                     if (Batch.install == null) {
-                        Batch.install = new Install(runtimeManager.getContext());
+                        Batch.install = new Install(applicationContext);
                     }
                     if (Batch.user == null) {
-                        Batch.user = new com.batch.android.User(runtimeManager.getContext());
+                        Batch.user = new com.batch.android.User(applicationContext);
                     }
 
                     /*
@@ -2265,13 +2262,24 @@ public final class Batch {
                         IntentFilter filter = new IntentFilter();
                         filter.addAction(TaskExecutor.INTENT_WORK_FINISHED);
                         filter.addAction(OptOutModule.INTENT_OPTED_OUT);
-                        LocalBroadcastManagerProvider
-                            .get(runtimeManager.getContext())
-                            .registerReceiver(receiver, filter);
+                        LocalBroadcastManagerProvider.get(applicationContext).registerReceiver(receiver, filter);
                     }
 
                     // Check if we have a pending opt-in event
                     OptOutModuleProvider.get().trackOptinEventIfNeeded(context, advertisingID);
+                }
+
+                /*
+                 * Register the messaging lifecycle listener and session manager if we can
+                 */
+                if (applicationContext instanceof Application) {
+                    final android.app.Application app = (Application) applicationContext;
+                    runtimeManager.registerSessionManagerIfNeeded(app, true);
+                    runtimeManager.registerActivityListenerIfNeeded(app);
+                } else {
+                    // This should never happen, androidx relies on this
+                    // https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-master-dev/lifecycle/lifecycle-process/src/main/java/androidx/lifecycle/ProcessLifecycleOwner.java
+                    Logger.error("Context isn't an Application, could not register the session manager.");
                 }
 
                 /*
@@ -2285,15 +2293,19 @@ public final class Batch {
                 EventDispatcherModuleProvider.get().loadDispatcherFromContext(context);
 
                 try {
-                    JSONObject startParams = null;
-
+                    JSONObject startParams = new JSONObject();
                     if (userActivity) {
                         runtimeManager.updateLastUserStartDate();
                     } else {
-                        startParams = new JSONObject();
                         startParams.put("silent", true);
                     }
-
+                    startParams.putOpt(
+                        "dispatchers",
+                        EventDispatcherModuleProvider.get().getDispatchersAnalyticRepresentation()
+                    );
+                    if (startParams.length() == 0) {
+                        startParams = null;
+                    }
                     TrackerModuleProvider.get().track(InternalEvents.START, startParams);
                 } catch (JSONException e) {
                     Logger.internal("Could not track _START", e);

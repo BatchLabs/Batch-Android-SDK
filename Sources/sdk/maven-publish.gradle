@@ -71,9 +71,9 @@ publishing {
                 url = "https://batch.com"
 
                 scm {
-                    url = "https://github.com/BatchLabs/android-sdk"
-                    connection = "scm:git:https://github.com/BatchLabs/android-sdk.git"
-                    developerConnection = "scm:git:https://github.com/BatchLabs/android-sdk.git"
+                    url = "https://github.com/BatchLabs/Batch-Android-SDK"
+                    connection = "scm:git:https://github.com/BatchLabs/Batch-Android-SDK.git"
+                    developerConnection = "scm:git:https://github.com/BatchLabs/Batch-Android-SDK.git"
                 }
 
                 licenses {

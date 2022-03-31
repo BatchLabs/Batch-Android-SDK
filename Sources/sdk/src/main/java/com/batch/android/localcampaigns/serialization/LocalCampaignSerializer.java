@@ -62,6 +62,7 @@ public class LocalCampaignSerializer {
         if (campaign.customPayload != null) {
             jsonCampaign.put("customPayload", campaign.customPayload);
         }
+        jsonCampaign.put("requireJIT", campaign.requiresJustInTimeSync);
         return jsonCampaign;
     }
 

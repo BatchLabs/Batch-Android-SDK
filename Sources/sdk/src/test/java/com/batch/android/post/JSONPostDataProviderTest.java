@@ -1,8 +1,10 @@
 package com.batch.android.post;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import org.junit.Test;
 
@@ -32,6 +34,17 @@ public class JSONPostDataProviderTest {
         assertNotNull("data returned is null", data);
 
         assertTrue("decoded data is not equals to input", areEquals(input, new JSONObject(new String(data))));
+    }
+
+    @Test
+    public void testIsEmpty() throws JSONException {
+        JSONObject input = new JSONObject();
+        JSONPostDataProvider provider = new JSONPostDataProvider(input);
+        assertTrue(provider.isEmpty());
+
+        input.put("key", "value");
+        provider = new JSONPostDataProvider(input);
+        assertFalse(provider.isEmpty());
     }
 
     /**

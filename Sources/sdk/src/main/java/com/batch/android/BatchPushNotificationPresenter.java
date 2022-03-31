@@ -172,7 +172,7 @@ public class BatchPushNotificationPresenter {
 
         ApplicationInfo appInfo = context.getApplicationInfo();
 
-        if (!BatchPushHelper.isPushValid(context, batchData)) {
+        if (!BatchPushHelper.canDisplayPush(context, batchData)) {
             return;
         }
 
@@ -221,7 +221,7 @@ public class BatchPushNotificationPresenter {
         //TODO: Figure out a better place to register the channel (not on every notification display...)
         // Problem is that we have to do it here in case the app gets updated, and we never get the context when
         // set up in Application
-        batchChannelsManager.registerBatchChannelIfNeeded(context);
+        batchChannelsManager.registerBatchChannelIfNeeded(context, false);
 
         /*
          * Small icon
@@ -377,6 +377,7 @@ public class BatchPushNotificationPresenter {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     userFlags = userFlags | PendingIntent.FLAG_IMMUTABLE;
                 }
+                //noinspection WrongConstant
                 launchIntent.addFlags(userFlags);
             }
         }
@@ -544,9 +545,6 @@ public class BatchPushNotificationPresenter {
         } else {
             Logger.info("Batch.Push: notification can't be displayed, skipping event dispatcher...");
         }
-
-        // The push has been shown, make it as such
-        BatchPushHelper.markPushAsShown(context, pushId);
     }
 
     /**
@@ -599,8 +597,6 @@ public class BatchPushNotificationPresenter {
                 MessagingModuleProvider
                     .get()
                     .displayMessage(context, new BatchLandingMessage(extras, messageJSON), false);
-                // A push that's a mobile landing is considered shown
-                BatchPushHelper.markPushAsShown(context, batchData.getPushId());
                 return true;
             }
         } catch (PayloadParsingException | JSONException e) {

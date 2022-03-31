@@ -17,19 +17,19 @@ ext {
 }
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 32
     defaultPublishConfig "release"
 
     resourcePrefix "com_batchsdk_"
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 31
+        targetSdkVersion 32
         versionCode 1
-        versionName "1.18.2"
+        versionName "1.19.0"
         buildConfigField "String", SDK_VERSION, "\"$versionName\""
-        buildConfigField "Integer", API_LEVEL, '40'
-        buildConfigField "Integer", MESSAGING_API_LEVEL, '11'
+        buildConfigField "Integer", API_LEVEL, '50'
+        buildConfigField "Integer", MESSAGING_API_LEVEL, '12'
         buildConfigField "String", WS_DOMAIN, '"ws.batch.com"'
 
         consumerProguardFiles 'proguard-consumer-rules.txt'
@@ -62,11 +62,6 @@ android {
         }
     }
 
-    lintOptions {
-        abortOnError true
-        baseline file("lint-baseline.xml")
-        lintConfig file("lint.xml")
-    }
 
     testOptions {
         execution 'ANDROIDX_TEST_ORCHESTRATOR'
@@ -79,6 +74,11 @@ android {
                 }
             }
         }
+    }
+    lint {
+        abortOnError true
+        baseline file('lint-baseline.xml')
+        lintConfig file('lint.xml')
     }
 }
 

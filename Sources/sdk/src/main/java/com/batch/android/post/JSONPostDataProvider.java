@@ -49,6 +49,11 @@ public class JSONPostDataProvider implements PostDataProvider<JSONObject> {
     }
 
     @Override
+    public boolean isEmpty() {
+        return data == null || data.length() == 0;
+    }
+
+    @Override
     public JSONObject getRawData() {
         return data;
     }

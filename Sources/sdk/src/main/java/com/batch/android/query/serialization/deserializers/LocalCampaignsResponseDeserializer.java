@@ -1,5 +1,7 @@
 package com.batch.android.query.serialization.deserializers;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.batch.android.core.Logger;
 import com.batch.android.json.JSONArray;
 import com.batch.android.json.JSONException;
@@ -53,8 +55,75 @@ public class LocalCampaignsResponseDeserializer extends ResponseDeserializer {
         JSONArray jsonCampaigns = json.optJSONArray("campaigns");
         List<LocalCampaign> campaigns = localCampaignDeserializer.deserializeList(jsonCampaigns);
         response.setCampaigns(campaigns);
+
         response.setMinDisplayInterval(minDisplayInterval);
+
+        LocalCampaignsResponse.GlobalCappings cappings = deserializeCappings();
+        response.setCappings(cappings);
+
         return response;
+    }
+
+    /**
+     * Only deserialize the local campaigns from the json response
+     * @return A list of LocalCampaign
+     */
+    @NonNull
+    public List<LocalCampaign> deserializeCampaigns() {
+        JSONArray jsonCampaigns = json.optJSONArray("campaigns");
+        return localCampaignDeserializer.deserializeList(jsonCampaigns);
+    }
+
+    /**
+     * Only deserialize the global in-app cappings from the json response
+     *
+     * @return the LocalCampaignsResponse.GlobalCappings
+     * @throws JSONException parsing exception
+     */
+    @Nullable
+    public LocalCampaignsResponse.GlobalCappings deserializeCappings() throws JSONException {
+        LocalCampaignsResponse.GlobalCappings cappings = null;
+        if (json != null && json.hasNonNull("cappings")) {
+            JSONObject jsonCappings = json.getJSONObject("cappings");
+
+            Integer session = jsonCappings.reallyOptInteger("session", null);
+
+            List<LocalCampaignsResponse.GlobalCappings.TimeBasedCapping> timeBasedCappings = null;
+
+            if (jsonCappings.hasNonNull("time")) {
+                timeBasedCappings = parseTimeBasedCappings(jsonCappings.getJSONArray("time"));
+            }
+            cappings = new LocalCampaignsResponse.GlobalCappings(session, timeBasedCappings);
+        }
+        return cappings;
+    }
+
+    /**
+     * Parse a json array into a list of Time-Based Cappings
+     *
+     * @param json time based capping array
+     * @return the LocalCampaignsResponse.GlobalCappings.TimeBasedCapping list
+     */
+    @Nullable
+    private List<LocalCampaignsResponse.GlobalCappings.TimeBasedCapping> parseTimeBasedCappings(JSONArray json) {
+        List<LocalCampaignsResponse.GlobalCappings.TimeBasedCapping> timeBasedCappings = new ArrayList<>();
+        for (int i = 0; i < json.length(); i++) {
+            try {
+                JSONObject jsonTimeBasedCapping = json.getJSONObject(i);
+                Integer views = jsonTimeBasedCapping.reallyOptInteger("views", null);
+                Integer duration = jsonTimeBasedCapping.reallyOptInteger("duration", null);
+                if (views != null && views != 0 && duration != null && duration != 0) {
+                    LocalCampaignsResponse.GlobalCappings.TimeBasedCapping timeBasedCapping = new LocalCampaignsResponse.GlobalCappings.TimeBasedCapping(
+                        views,
+                        duration
+                    );
+                    timeBasedCappings.add(timeBasedCapping);
+                }
+            } catch (Exception e) {
+                Logger.internal(TAG, "An error occurred while parsing an In-App TimeBasedCapping. Skipping.", e);
+            }
+        }
+        return timeBasedCappings.isEmpty() ? null : timeBasedCappings;
     }
 
     /**
@@ -63,6 +132,7 @@ public class LocalCampaignsResponseDeserializer extends ResponseDeserializer {
      * @return LocalCampaignsResponse.Error || null
      * @throws JSONException parsing exception
      */
+    @Nullable
     private LocalCampaignsResponse.Error parseError() throws JSONException {
         LocalCampaignsResponse.Error error = null;
         if (json != null && json.hasNonNull("error")) {

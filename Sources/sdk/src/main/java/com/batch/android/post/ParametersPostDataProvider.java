@@ -75,4 +75,9 @@ public class ParametersPostDataProvider implements PostDataProvider<Map<String, 
     public String getContentType() {
         return "application/x-www-form-urlencoded";
     }
+
+    @Override
+    public boolean isEmpty() {
+        return params.isEmpty();
+    }
 }

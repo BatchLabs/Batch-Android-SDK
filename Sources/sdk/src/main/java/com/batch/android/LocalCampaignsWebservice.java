@@ -7,6 +7,7 @@ import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskRunnable;
 import com.batch.android.di.providers.CampaignManagerProvider;
 import com.batch.android.json.JSONObject;
+import com.batch.android.metrics.MetricRegistry;
 import com.batch.android.query.LocalCampaignsQuery;
 import com.batch.android.query.Query;
 import com.batch.android.query.QueryType;
@@ -15,7 +16,6 @@ import com.batch.android.webservice.listener.LocalCampaignsWebserviceListener;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Webservice to ask the server for all type of local campaigns (be in-app or notification)
@@ -55,13 +55,14 @@ public class LocalCampaignsWebservice extends BatchQueryWebservice implements Ta
         try {
             Logger.internal(TAG, "local campaigns webservice started");
             webserviceMetrics.onWebserviceStarted(this);
-
+            MetricRegistry.localCampaignsSyncResponseTime.startTimer();
             /*
              * Read response
              */
             JSONObject response = null;
             try {
                 response = getStandardResponseBodyIfValid();
+                MetricRegistry.localCampaignsSyncResponseTime.observeDuration();
                 webserviceMetrics.onWebserviceFinished(this, true);
             } catch (WebserviceError error) {
                 Logger.internal(
@@ -69,6 +70,7 @@ public class LocalCampaignsWebservice extends BatchQueryWebservice implements Ta
                     "Error while getting local campaigns list : " + error.getReason().toString(),
                     error.getCause()
                 );
+                MetricRegistry.localCampaignsSyncResponseTime.observeDuration();
                 webserviceMetrics.onWebserviceFinished(this, false);
 
                 switch (error.getReason()) {
@@ -85,7 +87,6 @@ public class LocalCampaignsWebservice extends BatchQueryWebservice implements Ta
                         listener.onError(FailReason.UNEXPECTED_ERROR);
                         break;
                 }
-
                 return;
             }
 
@@ -116,9 +117,7 @@ public class LocalCampaignsWebservice extends BatchQueryWebservice implements Ta
                     CampaignManagerProvider.get().deleteSavedCampaignsAsync(applicationContext);
                 } else {
                     // else we save them
-                    CampaignManagerProvider
-                        .get()
-                        .saveCampaignsAsync(applicationContext, localCampaignsResponse.getCampaignsToSave());
+                    CampaignManagerProvider.get().saveCampaignsAsync(applicationContext, localCampaignsResponse);
                     responses.add(localCampaignsResponse);
                 }
             } else {

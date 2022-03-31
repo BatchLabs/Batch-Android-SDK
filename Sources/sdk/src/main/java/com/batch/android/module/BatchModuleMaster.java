@@ -1,5 +1,7 @@
 package com.batch.android.module;
 
+import android.content.Context;
+import androidx.annotation.NonNull;
 import com.batch.android.di.providers.ActionModuleProvider;
 import com.batch.android.di.providers.DisplayReceiptModuleProvider;
 import com.batch.android.di.providers.EventDispatcherModuleProvider;
@@ -56,6 +58,13 @@ public class BatchModuleMaster extends BatchModule {
     @Override
     public int getState() {
         return 1;
+    }
+
+    @Override
+    public void batchContextBecameAvailable(@NonNull Context applicationContext) {
+        for (BatchModule module : modules) {
+            module.batchContextBecameAvailable(applicationContext);
+        }
     }
 
     @Override

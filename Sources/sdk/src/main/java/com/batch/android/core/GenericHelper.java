@@ -3,8 +3,10 @@ package com.batch.android.core;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.os.Build;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
+import androidx.annotation.NonNull;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
@@ -25,6 +27,27 @@ public class GenericHelper {
     public static boolean checkPermission(String permission, Context context) {
         int res = context.checkCallingOrSelfPermission(permission);
         return (res == PackageManager.PERMISSION_GRANTED);
+    }
+
+    public static boolean isWakeLockPermissionAvailable(@NonNull Context context) {
+        try {
+            return GenericHelper.checkPermission("android.permission.WAKE_LOCK", context);
+        } catch (Exception e) {
+            Logger.error("Error while checking android.permission.WAKE_LOCK permission", e);
+            return false;
+        }
+    }
+
+    public static boolean targets12LOrOlder(@NonNull Context context) {
+        // Note: any prerelease Android SDK, even older than 13, will return true here.
+        // We do not care about that edge case.
+        try {
+            int targetSdkVersion = context.getApplicationContext().getApplicationInfo().targetSdkVersion;
+            return targetSdkVersion <= Build.VERSION_CODES.S_V2;
+        } catch (Exception e) {
+            Logger.error("Could not check current target API level", e);
+            return true;
+        }
     }
 
     /**

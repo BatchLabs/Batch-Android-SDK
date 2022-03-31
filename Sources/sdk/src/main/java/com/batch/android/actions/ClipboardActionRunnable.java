@@ -18,6 +18,8 @@ import com.batch.android.module.ActionModule;
 public class ClipboardActionRunnable implements UserActionRunnable {
 
     private static final String TAG = "ClipboardBuiltinAction";
+    private static final String BASE_ERROR_MSG = "Could not perform clipboard action: ";
+
     public static final String IDENTIFIER = ActionModule.RESERVED_ACTION_IDENTIFIER_PREFIX + "clipboard";
 
     @Override
@@ -27,10 +29,15 @@ public class ClipboardActionRunnable implements UserActionRunnable {
         @NonNull JSONObject args,
         @Nullable UserActionSource source
     ) {
+        if (context == null) {
+            Logger.internal(TAG, BASE_ERROR_MSG + "no context.");
+            return;
+        }
+
         try {
             String text = args.getString("t");
             if (text == null) {
-                Logger.internal(TAG, "Could not perform clipboard action : text's null");
+                Logger.internal(TAG, BASE_ERROR_MSG + "text's null.");
                 return;
             }
             String description = args.optString("d", "text");

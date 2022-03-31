@@ -3,6 +3,7 @@ package com.batch.android.msgpack;
 import com.batch.android.msgpack.core.MessageBufferPacker;
 import com.batch.android.msgpack.value.Value;
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,8 @@ public abstract class MessagePackHelper {
             packer.packBoolean((Boolean) object);
         } else if (object instanceof String) {
             packer.packString((String) object);
+        } else if (object instanceof URI) {
+            packer.packString(object.toString());
         } else if (object instanceof Value) {
             ((Value) object).writeTo(packer);
         } else if (object instanceof Map) {

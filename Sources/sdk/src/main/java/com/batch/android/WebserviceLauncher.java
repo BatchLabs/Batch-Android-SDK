@@ -7,10 +7,15 @@ import com.batch.android.core.TaskRunnable;
 import com.batch.android.di.providers.LocalCampaignsWebserviceListenerImplProvider;
 import com.batch.android.di.providers.TaskExecutorProvider;
 import com.batch.android.event.Event;
+import com.batch.android.localcampaigns.model.LocalCampaign;
 import com.batch.android.post.DisplayReceiptPostDataProvider;
+import com.batch.android.post.LocalCampaignsJITPostDataProvider;
+import com.batch.android.post.MetricPostDataProvider;
 import com.batch.android.push.Registration;
 import com.batch.android.runtime.RuntimeManager;
 import com.batch.android.webservice.listener.DisplayReceiptWebserviceListener;
+import com.batch.android.webservice.listener.LocalCampaignsJITWebserviceListener;
+import com.batch.android.webservice.listener.MetricWebserviceListener;
 import com.batch.android.webservice.listener.TrackerWebserviceListener;
 import com.batch.android.webservice.listener.impl.AttributesCheckWebserviceListenerImpl;
 import com.batch.android.webservice.listener.impl.AttributesSendWebserviceListenerImpl;
@@ -120,6 +125,27 @@ public final class WebserviceLauncher {
     }
 
     /**
+     * Create an instance of the metrics webservice and return the runnable
+     *
+     * @param context      android context
+     * @param dataProvider provider
+     * @param listener     listener
+     * @return instance of the webservice ready to be run
+     */
+    public static TaskRunnable initMetricWebservice(
+        Context context,
+        MetricPostDataProvider dataProvider,
+        MetricWebserviceListener listener
+    ) {
+        try {
+            return new MetricWebservice(context, listener, dataProvider);
+        } catch (Exception e) {
+            Logger.internal(TAG, "Error while initializing metrics webservice", e);
+            return null;
+        }
+    }
+
+    /**
      * Launch the push webservice
      */
     public static boolean launchPushWebservice(RuntimeManager runtimeManager, @NonNull Registration registration) {
@@ -197,6 +223,23 @@ public final class WebserviceLauncher {
             return true;
         } catch (Exception e) {
             Logger.internal(TAG, "Error while initializing LC WS", e);
+            return false;
+        }
+    }
+
+    public static boolean launchLocalCampaignsJITWebservice(
+        RuntimeManager runtimeManager,
+        List<LocalCampaign> campaigns,
+        LocalCampaignsJITWebserviceListener listener
+    ) {
+        LocalCampaignsJITPostDataProvider dataProvider = new LocalCampaignsJITPostDataProvider(campaigns);
+        try {
+            TaskExecutorProvider
+                .get(runtimeManager.getContext())
+                .submit(new LocalCampaignsJITWebservice(runtimeManager.getContext(), listener, dataProvider));
+            return true;
+        } catch (Exception e) {
+            Logger.internal(TAG, "Error while initializing Local Campaigns JIT WS", e);
             return false;
         }
     }

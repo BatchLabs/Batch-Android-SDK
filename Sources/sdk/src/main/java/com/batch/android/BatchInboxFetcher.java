@@ -58,6 +58,16 @@ public class BatchInboxFetcher {
     }
 
     /**
+     * Sets whether the SDK should filter silent notifications (pushes that don't result in a message
+     * being shown to the user).
+     *
+     * Default: true
+     */
+    public void setFilterSilentNotifications(boolean filterSilentNotifications) {
+        impl.setFilterSilentNotifications(filterSilentNotifications);
+    }
+
+    /**
      * Returns whether all of the user or installation's notifications have been fetched.
      * If this method returns true, calling fetchNextPage will always return an error, as there is nothing left to fetch.
      * Also artificially returns true if the maximum number of fetched messages has been reached.

@@ -71,7 +71,7 @@ public abstract class GCMAbstractRegistrationProvider implements PushRegistratio
             throw new PushRegistrationProviderAvailabilityException("Batch.Push : Permission C2D_MESSAGE is missing.");
         }
 
-        if (!isWakeLockPermissionAvailable()) {
+        if (!GenericHelper.isWakeLockPermissionAvailable(context)) {
             throw new PushRegistrationProviderAvailabilityException("Batch.Push : Permission WAKE_LOCK is missing.");
         }
     }
@@ -97,15 +97,6 @@ public abstract class GCMAbstractRegistrationProvider implements PushRegistratio
             return GenericHelper.checkPermission(context.getPackageName() + ".permission.C2D_MESSAGE", context);
         } catch (Exception e) {
             Logger.error(TAG, "Error while checking C2D_MESSAGE permission", e);
-            return false;
-        }
-    }
-
-    private boolean isWakeLockPermissionAvailable() {
-        try {
-            return GenericHelper.checkPermission("android.permission.WAKE_LOCK", context);
-        } catch (Exception e) {
-            Logger.error(TAG, "Error while checking android.permission.WAKE_LOCK permission", e);
             return false;
         }
     }

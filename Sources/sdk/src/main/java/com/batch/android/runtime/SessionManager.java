@@ -8,11 +8,15 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.SystemClock;
+import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import com.batch.android.core.ExcludedActivityHelper;
 import com.batch.android.core.Logger;
 import com.batch.android.core.Parameters;
+import com.batch.android.di.providers.CampaignManagerProvider;
 import com.batch.android.di.providers.LocalBroadcastManagerProvider;
+import com.batch.android.di.providers.LocalCampaignsModuleProvider;
+import com.batch.android.localcampaigns.LocalCampaignsTracker;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -57,11 +61,6 @@ public class SessionManager implements ComponentCallbacks2, Application.Activity
         return sessionIdentifier;
     }
 
-    public synchronized boolean isSessionActive() {
-        invalidateSessionIfNeeded();
-        return sessionActive;
-    }
-
     private synchronized void invalidateSessionIfNeeded() {
         if (
             sessionActive &&
@@ -73,11 +72,17 @@ public class SessionManager implements ComponentCallbacks2, Application.Activity
         }
     }
 
-    synchronized void startNewSessionIfNeeded(Context c) {
+    synchronized void startNewSessionIfNeeded(@NonNull Context c) {
         invalidateSessionIfNeeded();
         if (!sessionActive) {
             sessionActive = true;
             sessionIdentifier = UUID.randomUUID().toString();
+
+            // Reset the view tracker session count
+            LocalCampaignsTracker tracker = (LocalCampaignsTracker) CampaignManagerProvider.get().getViewTracker();
+            tracker.resetSessionViewsCount();
+
+            // Broadcast the new session intent
             Logger.internal(TAG, "Starting a new session, id: '" + sessionIdentifier + "'");
             LocalBroadcastManagerProvider.get(c).sendBroadcast(new Intent(INTENT_NEW_SESSION));
         }

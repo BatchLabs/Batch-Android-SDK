@@ -84,17 +84,24 @@ public final class ParameterKeys
     public final static String INBOX_WS_CONNECT_TIMEOUT_KEY				= "ws.inbox.connect.timeout";
     public final static String INBOX_WS_READ_TIMEOUT_KEY				= "ws.inbox.read.timeout";
 
-    public final static String DISPLAY_RECEIPT_WS_URLSORTER_PATTERN_KEY		= "ws.displayreceipt.pattern";
-    public final static String DISPLAY_RECEIPT_WS_CRYPTORTYPE_KEY	        = "ws.displayreceipt.getcryptor.type";
-    public final static String DISPLAY_RECEIPT_WS_CRYPTORMODE_KEY           = "ws.displayreceipt.getcryptor.mode";
-    public final static String DISPLAY_RECEIPT_WS_POST_CRYPTORTYPE_KEY	    = "ws.displayreceipt.postcryptor.type";
-    public final static String DISPLAY_RECEIPT_WS_READ_CRYPTORTYPE_KEY		= "ws.displayreceipt.readcryptor.type";
-    public final static String DISPLAY_RECEIPT_WS_RETRYCOUNT_KEY			= "ws.displayreceipt.retry";
-    public final static String DISPLAY_RECEIPT_WS_CONNECT_TIMEOUT_KEY		= "ws.displayreceipt.connect.timeout";
-    public final static String DISPLAY_RECEIPT_WS_READ_TIMEOUT_KEY			= "ws.displayreceipt.read.timeout";
+    // Default MsgPack webservice parameters
+    public final static String MESSAGE_PACK_WS_POST_CRYPTORTYPE_KEY	    = "ws.msgpack.postcryptor.type";
+    public final static String MESSAGE_PACK_WS_READ_CRYPTORTYPE_KEY		= "ws.msgpack.readcryptor.type";
+    public final static String MESSAGE_PACK_WS_URLSORTER_PATTERN_KEY	= "ws.msgpack.pattern";
+    public final static String MESSAGE_PACK_WS_CRYPTORTYPE_KEY	        = "ws.msgpack.getcryptor.type";
+    public final static String MESSAGE_PACK_WS_CRYPTORMODE_KEY          = "ws.msgpack.getcryptor.mode";
+    public final static String MESSAGE_PACK_WS_RETRYCOUNT_KEY			= "ws.msgpack.retry";
+    public final static String MESSAGE_PACK_WS_CONNECT_TIMEOUT_KEY		= "ws.msgpack.connect.timeout";
+    public final static String MESSAGE_PACK_WS_READ_TIMEOUT_KEY			= "ws.msgpack.read.timeout";
+
+    public final static String DISPLAY_RECEIPT_WS_CRYPTORTYPE_KEY	    =   "ws.displayreceipt.getcryptor.type";
+    public final static String DISPLAY_RECEIPT_WS_RETRYCOUNT_KEY	    =   "ws.displayreceipt.retry";
+    public final static String METRIC_WS_RETRYCOUNT_KEY	                =   "ws.metrics.retry";
+    public final static String LOCAL_CAMPAIGNS_JIT_WS_RETRYCOUNT_KEY	=   "ws.localcampaignsjit.retry";
+    public final static String LOCAL_CAMPAIGNS_JIT_WS_READ_TIMEOUT_KEY  =   "ws.localcampaignsjit.read.timeout";
+    public final static String LOCAL_CAMPAIGNS_JIT_WS_CONNECT_TIMEOUT_KEY = "ws.localcampaignsjit.connect.timeout";
 
     public final static String LOCAL_CAMPAIGNS_WS_INITIAL_DELAY         = "lc.wsdelay.initial";
-
     public final static String WS_CIPHERV2_LAST_FAILURE_KEY             = "ws.cipherv2.lastfailure";
     public final static String DEFAULT_RETRY_NUMBER_KEY					= "ws.defaultRetry";
     public final static String DEFAULT_CONNECT_TIMEOUT_KEY				= "ws.defaultconnectTimeout";
@@ -126,7 +133,6 @@ public final class ParameterKeys
     public final static String USER_DATA_TRANSACTION_ID					= "user_profile.data.transactionID";
     public final static String USER_PROFILE_LANGUAGE_KEY                = "u_c_l";
     public final static String USER_PROFILE_REGION_KEY                  = "u_c_r";
-
 
     public final static String LIB_CURRENTVERSION_KEY					= "app.version.current";
     public final static String LIB_PREVIOUSVERSION_KEY					= "app.version.previous";

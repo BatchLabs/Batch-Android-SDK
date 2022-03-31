@@ -705,7 +705,6 @@ public class PushModule extends BatchModule {
         try {
             if (shouldDisplayPush(context, intent)) {
                 InternalPushData pushData = InternalPushData.getPushDataForReceiverIntent(intent);
-                BatchPushHelper.markPushAsShown(context, pushData.getPushId());
 
                 if (pushData.getReceiptMode() == InternalPushData.ReceiptMode.DISPLAY) {
                     displayReceiptModule.scheduleDisplayReceipt(context, pushData);
@@ -723,7 +722,6 @@ public class PushModule extends BatchModule {
         try {
             if (shouldDisplayPush(context, message)) {
                 InternalPushData pushData = InternalPushData.getPushDataForFirebaseMessage(message);
-                BatchPushHelper.markPushAsShown(context, pushData.getPushId());
 
                 if (pushData.getReceiptMode() == InternalPushData.ReceiptMode.DISPLAY) {
                     displayReceiptModule.scheduleDisplayReceipt(context, pushData);

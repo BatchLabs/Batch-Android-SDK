@@ -32,6 +32,11 @@ public class LocalCampaignsResponse extends Response {
      */
     private Long minDisplayInterval;
 
+    /**
+     * Global in-app cappings
+     */
+    private GlobalCappings cappings;
+
     public LocalCampaignsResponse(String queryID) {
         super(QueryType.LOCAL_CAMPAIGNS, queryID);
     }
@@ -82,6 +87,82 @@ public class LocalCampaignsResponse extends Response {
 
     public boolean hasError() {
         return error != null;
+    }
+
+    @Nullable
+    public GlobalCappings getCappings() {
+        return cappings;
+    }
+
+    public void setCappings(GlobalCappings cappings) {
+        this.cappings = cappings;
+    }
+
+    public boolean hasCappings() {
+        return cappings != null;
+    }
+
+    /**
+     * Global In-App Cappings
+     */
+    public static class GlobalCappings {
+
+        /**
+         * Time-Based Capping
+         * Eg: Display no more than 3 in-apps every 1 hours
+         */
+        public static class TimeBasedCapping {
+
+            /**
+             * Number of views allowed
+             */
+            private final Integer views;
+
+            /**
+             * Capping duration (in seconds)
+             */
+            private final Integer duration;
+
+            public TimeBasedCapping(Integer views, Integer duration) {
+                this.views = views;
+                this.duration = duration;
+            }
+
+            @Nullable
+            public Integer getViews() {
+                return views;
+            }
+
+            @Nullable
+            public Integer getDuration() {
+                return duration;
+            }
+        }
+
+        /**
+         * Number of in-apps displayable during a user session
+         */
+        private final Integer session;
+
+        /**
+         * List of time-based cappings
+         */
+        private final List<TimeBasedCapping> timeBasedCappings;
+
+        public GlobalCappings(Integer session, List<TimeBasedCapping> timeBasedCappings) {
+            this.session = session;
+            this.timeBasedCappings = timeBasedCappings;
+        }
+
+        @Nullable
+        public Integer getSession() {
+            return session;
+        }
+
+        @Nullable
+        public List<TimeBasedCapping> getTimeBasedCappings() {
+            return timeBasedCappings;
+        }
     }
 
     public static class Error {

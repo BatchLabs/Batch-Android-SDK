@@ -63,6 +63,8 @@ public class InboxFetcherInternal {
 
     private InboxDatasource datasource;
 
+    private boolean filterSilentNotifications = true;
+
     private InboxFetcherInternal(
         @NonNull TrackerModule trackerModule,
         @Nullable InboxDatasource datasource,
@@ -161,6 +163,10 @@ public class InboxFetcherInternal {
         this.fetchLimit = fetchLimit;
     }
 
+    public void setFilterSilentNotifications(boolean filterSilentNotifications) {
+        this.filterSilentNotifications = filterSilentNotifications;
+    }
+
     public boolean isEndReached() {
         return endReached || fetchedNotifications.size() >= fetchLimit;
     }
@@ -243,12 +249,19 @@ public class InboxFetcherInternal {
     }
 
     @NonNull
-    private static List<BatchInboxNotificationContent> convertInternalModelsToPublic(
+    private List<BatchInboxNotificationContent> convertInternalModelsToPublic(
         @NonNull List<InboxNotificationContentInternal> privateNotifications
     ) {
         final List<BatchInboxNotificationContent> res = new ArrayList<>();
         for (InboxNotificationContentInternal privateNotification : privateNotifications) {
-            res.add(PrivateNotificationContentHelper.getPublicContent(privateNotification));
+            final BatchInboxNotificationContent publicContent = PrivateNotificationContentHelper.getPublicContent(
+                privateNotification
+            );
+            if (filterSilentNotifications && publicContent.isSilent()) {
+                Logger.verbose(TAG, "Filtering silent notification");
+                continue;
+            }
+            res.add(publicContent);
         }
         return res;
     }
@@ -501,7 +514,7 @@ public class InboxFetcherInternal {
     @NonNull
     public List<BatchInboxNotificationContent> getPublicFetchedNotifications() {
         synchronized (fetchedNotifications) {
-            return convertInternalModelsToPublic(this.fetchedNotifications);
+            return convertInternalModelsToPublic(fetchedNotifications);
         }
     }
 

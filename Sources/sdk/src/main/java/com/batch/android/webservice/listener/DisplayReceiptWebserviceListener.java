@@ -14,7 +14,7 @@ public interface DisplayReceiptWebserviceListener {
     /**
      * Called when a request fail
      *
-     * @param error
+     * @param error webservice request error
      */
     void onFailure(Webservice.WebserviceError error);
 }

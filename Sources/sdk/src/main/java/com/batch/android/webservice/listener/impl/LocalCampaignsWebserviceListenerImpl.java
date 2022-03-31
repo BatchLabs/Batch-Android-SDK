@@ -5,7 +5,6 @@ import com.batch.android.core.Logger;
 import com.batch.android.di.providers.CampaignManagerProvider;
 import com.batch.android.di.providers.LocalCampaignsModuleProvider;
 import com.batch.android.localcampaigns.CampaignManager;
-import com.batch.android.localcampaigns.signal.CampaignsRefreshedSignal;
 import com.batch.android.module.LocalCampaignsModule;
 import com.batch.android.processor.Module;
 import com.batch.android.processor.Provide;
@@ -20,6 +19,7 @@ import java.util.List;
 public class LocalCampaignsWebserviceListenerImpl implements LocalCampaignsWebserviceListener {
 
     private LocalCampaignsModule localCampaignsModule;
+
     private CampaignManager campaignManager;
 
     private LocalCampaignsWebserviceListenerImpl(
@@ -48,10 +48,12 @@ public class LocalCampaignsWebserviceListenerImpl implements LocalCampaignsWebse
     @Override
     public void onError(FailReason reason) {
         Logger.internal(LocalCampaignsModule.TAG, "Error while refreshing local campaigns: " + reason.toString());
+        localCampaignsModule.onLocalCampaignsWebserviceFinished();
     }
 
     private void handleInAppResponse(LocalCampaignsResponse response) {
+        campaignManager.setCappings(response.getCappings());
         campaignManager.updateCampaignList(response.getCampaigns());
-        localCampaignsModule.sendSignal(new CampaignsRefreshedSignal());
+        localCampaignsModule.onLocalCampaignsWebserviceFinished();
     }
 }

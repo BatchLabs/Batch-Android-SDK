@@ -43,7 +43,8 @@ public class BatchPushJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters jobParameters) {
-        return true;
+        Logger.internal(TAG, "onStopJob");
+        return false;
     }
 
     private static class PresentPushTask extends AsyncTask<Void, Void, Void> {

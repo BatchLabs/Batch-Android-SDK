@@ -4,16 +4,15 @@ import android.text.TextUtils;
 import com.batch.android.core.Logger;
 import com.batch.android.date.TimezoneAwareDate;
 import com.batch.android.date.UTCDate;
+import com.batch.android.di.providers.ActionOutputProvider;
 import com.batch.android.di.providers.LandingOutputProvider;
 import com.batch.android.json.JSONArray;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.localcampaigns.model.LocalCampaign;
-import com.batch.android.localcampaigns.trigger.CampaignsLoadedTrigger;
-import com.batch.android.localcampaigns.trigger.CampaignsRefreshedTrigger;
+import com.batch.android.localcampaigns.output.ActionOutput;
 import com.batch.android.localcampaigns.trigger.EventLocalCampaignTrigger;
 import com.batch.android.localcampaigns.trigger.NextSessionTrigger;
-import com.batch.android.localcampaigns.trigger.NowTrigger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -110,6 +109,8 @@ public class LocalCampaignDeserializer {
 
         campaign.customPayload = json.optJSONObject("customPayload");
 
+        campaign.requiresJustInTimeSync = json.reallyOptBoolean("requireJIT", false);
+
         return campaign;
     }
 
@@ -155,6 +156,8 @@ public class LocalCampaignDeserializer {
         JSONObject payload = json.getJSONObject("payload");
         if ("LANDING".equals(type)) {
             output = LandingOutputProvider.get(payload);
+        } else if ("ACTION".equals(type)) {
+            output = ActionOutputProvider.get(payload);
         } else {
             throw new JSONException("Invalid campaign output type");
         }
@@ -202,12 +205,8 @@ public class LocalCampaignDeserializer {
         type = type.toUpperCase(Locale.US);
 
         switch (type) {
+            // Workaround to handle deprecated ASAP trigger as NEXT_SESSION (post-sync)
             case "NOW":
-                return new NowTrigger();
-            case "CAMPAIGNS_REFRESHED":
-                return new CampaignsRefreshedTrigger();
-            case "CAMPAIGNS_LOADED":
-                return new CampaignsLoadedTrigger();
             case "NEXT_SESSION":
                 return new NextSessionTrigger();
             case "EVENT":

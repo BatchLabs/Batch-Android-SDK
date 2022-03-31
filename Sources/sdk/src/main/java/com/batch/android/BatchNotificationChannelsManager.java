@@ -85,8 +85,12 @@ public final class BatchNotificationChannelsManager {
         return channelOverride == null;
     }
 
-    void registerBatchChannelIfNeeded(Context c) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && shouldRegisterDefaultChannel()) {
+    void registerBatchChannelIfNeeded(Context c, boolean forceIfOverridden) {
+        if (!forceIfOverridden && !shouldRegisterDefaultChannel()) {
+            Logger.internal(PushModule.TAG, "Channel ID overriden, not registering Batch's channel.");
+            return;
+        }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             Logger.internal(PushModule.TAG, "Registering default Batch notification channel");
             //try {
             NotificationChannel channel = new NotificationChannel(

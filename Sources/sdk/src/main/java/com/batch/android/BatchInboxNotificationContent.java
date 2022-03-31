@@ -74,6 +74,21 @@ public class BatchInboxNotificationContent {
     }
 
     /**
+     * Returns whether Batch considers this a silent notification.
+     *
+     * A silent notification is a notification with no title and message, which won't be displayed by
+     * Batch SDK.
+     * Warning: Other services listening to push messages might display it.
+     */
+    public boolean isSilent() {
+        try {
+            return internalContent.body == null || getPushPayload().getInternalData().isSilent();
+        } catch (BatchPushPayload.ParsingException ignored) {
+            return true;
+        }
+    }
+
+    /**
      * Get the payload in its raw JSON form. This might differ from what you're used to in other classes
      * handling push payloads. If you want to simulate the push behaviour, call {@link BatchPushPayload#getPushBundle()} on the instance given by {@link #getPushPayload()} .
      */

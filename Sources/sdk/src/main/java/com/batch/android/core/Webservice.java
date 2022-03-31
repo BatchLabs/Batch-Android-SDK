@@ -4,6 +4,7 @@ import android.content.Context;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.batch.android.Batch;
 import com.batch.android.core.URLBuilder.CryptorMode;
 import com.batch.android.core.Webservice.WebserviceError.Reason;
 import com.batch.android.di.providers.OptOutModuleProvider;
@@ -52,6 +53,12 @@ public abstract class Webservice {
      * Allow us to enable the fallback mode on the cipher
      */
     private static final int WEBSERVICE_ERROR_INVALID_CIPHER = 487;
+
+    /**
+     * Default retry-after delay (in seconds) when server is overloaded
+     * and no header is provided.
+     */
+    private static final int DEFAULT_RETRY_AFTER = 60;
 
     /**
      * Debug interceptor. Allows the sample to tweak the SDK behaviour
@@ -164,6 +171,19 @@ public abstract class Webservice {
         }
 
         builder.addGETParameter(key, value);
+    }
+
+    /**
+     * Prepend the API Key into the url parameters
+     *
+     * @param parameters
+     * @return the same parameters with Batch key prepended
+     */
+    protected static String[] addBatchApiKey(String[] parameters) {
+        final String[] retParams = new String[parameters.length + 1];
+        retParams[0] = Batch.getAPIKey();
+        System.arraycopy(parameters, 0, retParams, 1, parameters.length);
+        return retParams;
     }
 
     /**
@@ -400,7 +420,7 @@ public abstract class Webservice {
 
         HttpURLConnection connection = null;
         WebserviceError error = null;
-        int errorCode = -1;
+        int responseCode = -1;
 
         /*
          * Execute request, with retry
@@ -417,11 +437,10 @@ public abstract class Webservice {
             try {
                 try {
                     connection = buildConnection();
-
                     connection.connect();
                 } catch (IOException ce) {
                     error = new WebserviceError(WebserviceError.Reason.NETWORK_ERROR, ce);
-                    errorCode = -1;
+                    responseCode = -1;
                     count++;
                     continue;
                 } catch (Exception e) {
@@ -432,16 +451,16 @@ public abstract class Webservice {
                     in = new BufferedInputStream(connection.getInputStream());
                 } catch (SocketTimeoutException e) {
                     error = new WebserviceError(WebserviceError.Reason.NETWORK_ERROR, e);
-                    errorCode = -1;
+                    responseCode = -1;
                     count++;
                     continue;
                 } catch (IOException ioe) {
                     // Silently continue since error will be handled by isResponseValid();
                 }
 
-                errorCode = connection.getResponseCode();
+                responseCode = connection.getResponseCode();
 
-                if (isResponseValid(errorCode)) {
+                if (isResponseValid(responseCode)) {
                     // Treat GZIP stream.
                     String header = connection.getHeaderField("Content-Encoding");
                     if (header != null && header.equals("gzip")) {
@@ -479,12 +498,11 @@ public abstract class Webservice {
 
                     return ba;
                 } else {
-                    int responseCode = connection.getResponseCode();
-                    error =
-                        new WebserviceError(
-                            getResponseErrorCause(connection.getResponseCode()),
-                            new IOException("Response code : " + responseCode)
-                        );
+                    Reason reason = getResponseErrorCause(responseCode);
+                    error = new WebserviceError(reason, new IOException("Response code : " + responseCode));
+                    if (reason == Reason.TOO_MANY_REQUESTS) {
+                        error.setRetryAfter(connection.getHeaderFieldInt("Retry-After", DEFAULT_RETRY_AFTER));
+                    }
                     if (responseCode == WEBSERVICE_ERROR_INVALID_CIPHER) {
                         enabledDowngradedMode();
                     }
@@ -514,7 +532,7 @@ public abstract class Webservice {
             }
 
             count++;
-        } while (count <= getMaxRetryCount() && shouldRetry(errorCode));
+        } while (count <= getMaxRetryCount() && shouldRetry(responseCode));
 
         throw error;
     }
@@ -703,6 +721,10 @@ public abstract class Webservice {
     public static WebserviceError.Reason getResponseErrorCause(int statusCode) {
         if (isResponseValid(statusCode)) {
             return Reason.UNEXPECTED_ERROR;
+        }
+
+        if (statusCode == 429) {
+            return Reason.TOO_MANY_REQUESTS;
         }
 
         if (statusCode == 404) {
@@ -1050,6 +1072,14 @@ public abstract class Webservice {
          */
         private Reason reason;
 
+        /**
+         * Number of seconds we have to wait before sending another request to a webservice who failed.
+         *
+         * Server can respond with an HTTP status code 429 ({@link Reason#TOO_MANY_REQUESTS})
+         * and specify the time we have to wait with a 'Retry-After' header.
+         */
+        private int retryAfter = 0;
+
         // ------------------------------------------>
 
         /**
@@ -1106,6 +1136,11 @@ public abstract class Webservice {
             SERVER_ERROR,
 
             /**
+             * Server overloaded (429)
+             */
+            TOO_MANY_REQUESTS,
+
+            /**
              * Server returns a not found status (404)
              */
             NOT_FOUND_ERROR,
@@ -1134,6 +1169,21 @@ public abstract class Webservice {
              * Batch has globally been opted out from: network calls are not allowed
              */
             SDK_OPTED_OUT,
+        }
+
+        /**
+         * Get the time to wait before sending another request
+         * @return retryAfter (in milliseconds)
+         */
+        public int getRetryAfterInMillis() {
+            return retryAfter * 1000;
+        }
+
+        /**
+         * Set the time (in seconds) to wait before sending another request
+         */
+        public void setRetryAfter(int retryAfter) {
+            this.retryAfter = retryAfter;
         }
     }
 

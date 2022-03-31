@@ -124,6 +124,14 @@ public final class Parameters {
      * URL of the display receipt WS
      */
     public static final String DISPLAY_RECEIPT_WS_URL = "https://dr" + BuildConfig.WS_DOMAIN + "/a/%s";
+    /**
+     * URL of the metrics WS
+     */
+    public static final String METRIC_WS_URL = "https://wsmetrics.batch.com/api-sdk";
+    /**
+     * URL of the local campaigns JIT (check just in time) WS
+     */
+    public static final String LOCAL_CAMPAIGNS_JIT_WS_URL = BASE_WS_URL + "/lc_jit/%s";
 
     // -------------------------------------------------->
 
@@ -153,10 +161,16 @@ public final class Parameters {
         appParameters.put(ParameterKeys.INBOX_WS_READ_CRYPTORTYPE_KEY, 			"5");
         appParameters.put(ParameterKeys.INBOX_WS_POST_CRYPTORTYPE_KEY,          "5");
         appParameters.put(ParameterKeys.INBOX_WS_RETRYCOUNT_KEY, 				"0");
-        appParameters.put(ParameterKeys.DISPLAY_RECEIPT_WS_CRYPTORTYPE_KEY, 	"5");
-        appParameters.put(ParameterKeys.DISPLAY_RECEIPT_WS_RETRYCOUNT_KEY, 		"0");
         appParameters.put(ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_READ_CRYPTORTYPE_KEY, 	"5");
         appParameters.put(ParameterKeys.ATTR_LOCAL_CAMPAIGNS_WS_POST_CRYPTORTYPE_KEY, 	"5");
+
+        appParameters.put(ParameterKeys.DISPLAY_RECEIPT_WS_CRYPTORTYPE_KEY,                "5");
+        appParameters.put(ParameterKeys.DISPLAY_RECEIPT_WS_RETRYCOUNT_KEY, 		           "0");
+        appParameters.put(ParameterKeys.METRIC_WS_RETRYCOUNT_KEY, 		                   "0");
+        appParameters.put(ParameterKeys.LOCAL_CAMPAIGNS_JIT_WS_RETRYCOUNT_KEY, 	           "0");
+        appParameters.put(ParameterKeys.LOCAL_CAMPAIGNS_JIT_WS_READ_TIMEOUT_KEY, 	    "1000");
+        appParameters.put(ParameterKeys.LOCAL_CAMPAIGNS_JIT_WS_CONNECT_TIMEOUT_KEY, 	"1000");
+
         appParameters.put(ParameterKeys.LOCAL_CAMPAIGNS_WS_INITIAL_DELAY, 	"5");
         appParameters.put(ParameterKeys.EVENT_TRACKER_STATE, 				"2");
         appParameters.put(ParameterKeys.EVENT_TRACKER_INITIAL_DELAY, 		"10000");

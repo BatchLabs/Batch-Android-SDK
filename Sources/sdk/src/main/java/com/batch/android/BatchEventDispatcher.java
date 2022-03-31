@@ -1,6 +1,7 @@
 package com.batch.android;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.batch.android.annotation.PublicSDK;
 
 /**
@@ -9,6 +10,25 @@ import com.batch.android.annotation.PublicSDK;
  */
 @PublicSDK
 public interface BatchEventDispatcher {
+    /**
+     * Get the name of the dispatcher
+     * This information is only used for analytics
+     * @return the name of the dispatcher
+     */
+    @Nullable
+    default String getName() {
+        return null;
+    }
+
+    /**
+     * Get the version of the dispatcher
+     * This information is only used for analytics
+     * @return the version of the dispatcher
+     */
+    default int getVersion() {
+        return 0;
+    }
+
     /**
      * Callback when a new events just happened in the Batch SDK
      *

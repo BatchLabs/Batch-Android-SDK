@@ -41,6 +41,14 @@ public interface ViewTracker {
      */
     long campaignLastOccurrence(@NonNull String campaignId) throws ViewTrackerUnavailableException;
 
+    /**
+     * Get the number of view event tracked since a given timestamp
+     * @param timestamp date (timestamp in ms)
+     * @return total view events since the given date
+     * @throws ViewTrackerUnavailableException exception
+     */
+    int getNumberOfViewEventsSince(long timestamp) throws ViewTrackerUnavailableException;
+
     class CountedViewEvent {
 
         @NonNull

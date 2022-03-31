@@ -8,6 +8,7 @@ import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.localcampaigns.LocalCampaignsResponseFactory;
 import com.batch.android.localcampaigns.model.LocalCampaign;
+import com.batch.android.localcampaigns.output.ActionOutput;
 import com.batch.android.localcampaigns.output.LandingOutput;
 import com.batch.android.query.response.LocalCampaignsResponse;
 import com.batch.android.query.serialization.deserializers.LocalCampaignsResponseDeserializer;
@@ -32,10 +33,26 @@ public class LocalCampaignsResponseSerializationTest {
     @Test
     public void testValidSerialization() throws JSONException {
         LocalCampaignsResponse response = factory.createLocalCampaignsResponse();
-        LocalCampaignsResponseSerializer serializer = new LocalCampaignsResponseSerializer(response);
-        JSONObject serializedResponse = serializer.serialize();
+        LocalCampaignsResponseSerializer serializer = new LocalCampaignsResponseSerializer();
+        JSONObject serializedResponse = serializer.serialize(response);
+
         Assert.assertEquals(response.getQueryID(), serializedResponse.getString("id"));
         Assert.assertFalse(serializedResponse.has("minDisplayInterval"));
+
+        // Global cappings
+        LocalCampaignsResponse.GlobalCappings cappings = response.getCappings();
+        JSONObject jsonGlobalCappings = serializer.serializeCappings(cappings);
+        Assert.assertEquals(cappings.getSession(), Integer.valueOf(jsonGlobalCappings.getInt("session")));
+        Assert.assertEquals(
+            cappings.getTimeBasedCappings().get(0).getViews(),
+            Integer.valueOf(jsonGlobalCappings.getJSONArray("time").getJSONObject(0).getInt("views"))
+        );
+        Assert.assertEquals(
+            cappings.getTimeBasedCappings().get(0).getDuration(),
+            Integer.valueOf(jsonGlobalCappings.getJSONArray("time").getJSONObject(0).getInt("duration"))
+        );
+
+        // Local campaigns
         Assert.assertTrue(serializedResponse.hasNonNull("campaigns"));
         LocalCampaign campaign = response.getCampaigns().get(0);
         JSONObject serializedCampaign = serializedResponse.getJSONArray("campaigns").getJSONObject(0);
@@ -69,6 +86,7 @@ public class LocalCampaignsResponseSerializationTest {
             campaign.output.payload,
             serializedCampaign.getJSONObject("output").getJSONObject("payload")
         );
+        Assert.assertTrue(serializedCampaign.getBoolean("requireJIT"));
     }
 
     @Test
@@ -82,7 +100,27 @@ public class LocalCampaignsResponseSerializationTest {
         Assert.assertFalse(response.hasError());
         Assert.assertTrue(response.hasCampaigns());
         Assert.assertNull(response.getMinDisplayInterval());
-        Assert.assertEquals(response.getCampaigns().size(), 1);
+        Assert.assertEquals(response.getCampaigns().size(), 2);
+
+        // Global cappings
+        JSONObject jsonCappings = validJsonCampaignsResponse.getJSONObject("cappings");
+        JSONObject jsonTimeBasedCappings = jsonCappings.getJSONArray("time").getJSONObject(0);
+        Assert.assertNotNull(response.getCappings());
+        Assert.assertNotNull(response.getCappings().getSession());
+        Assert.assertNotNull(response.getCappings().getTimeBasedCappings());
+        Assert.assertTrue(response.hasCappings());
+        Assert.assertEquals(response.getCappings().getSession().intValue(), jsonCappings.getInt("session"));
+        Assert.assertEquals(response.getCappings().getTimeBasedCappings().size(), 1);
+        Assert.assertEquals(
+            response.getCappings().getTimeBasedCappings().get(0).getViews().intValue(),
+            jsonTimeBasedCappings.getInt("views")
+        );
+        Assert.assertEquals(
+            response.getCappings().getTimeBasedCappings().get(0).getDuration().intValue(),
+            jsonTimeBasedCappings.getInt("duration")
+        );
+
+        // Local Campaign
         JSONObject jsonCampaign = validJsonCampaignsResponse.getJSONArray("campaigns").getJSONObject(0);
         LocalCampaign campaign = response.getCampaigns().get(0);
         Assert.assertEquals(jsonCampaign.getString("campaignId"), campaign.id);
@@ -112,6 +150,13 @@ public class LocalCampaignsResponseSerializationTest {
         Assert.assertEquals(jsonTriggers.getJSONObject(0).getString("type"), campaign.triggers.get(0).getType());
         Assert.assertTrue(campaign.output instanceof LandingOutput);
         Assert.assertEquals(jsonCampaign.getJSONObject("output").getJSONObject("payload"), campaign.output.payload);
+        Assert.assertTrue(campaign.requiresJustInTimeSync);
+
+        // Test ACTION deserialization
+        jsonCampaign = validJsonCampaignsResponse.getJSONArray("campaigns").getJSONObject(1);
+        campaign = response.getCampaigns().get(1);
+        Assert.assertTrue(campaign.output instanceof ActionOutput);
+        Assert.assertEquals(jsonCampaign.getJSONObject("output").getJSONObject("payload"), campaign.output.payload);
     }
 
     @Test
@@ -122,6 +167,7 @@ public class LocalCampaignsResponseSerializationTest {
         LocalCampaignsResponse response = deserializer.deserialize();
         Assert.assertTrue(response.hasError());
         Assert.assertFalse(response.hasCampaigns());
+        Assert.assertFalse(response.hasCappings());
     }
 
     @Test
@@ -132,5 +178,6 @@ public class LocalCampaignsResponseSerializationTest {
         LocalCampaignsResponse response = deserializer.deserialize();
         Assert.assertFalse(response.hasError());
         Assert.assertFalse(response.hasCampaigns());
+        Assert.assertFalse(response.hasCappings());
     }
 }

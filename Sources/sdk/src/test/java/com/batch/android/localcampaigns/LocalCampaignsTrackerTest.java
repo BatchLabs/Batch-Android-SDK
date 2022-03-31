@@ -5,6 +5,8 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
+import com.batch.android.core.DateProvider;
+import com.batch.android.core.SystemDateProvider;
 import java.lang.reflect.Field;
 import org.junit.Assert;
 import org.junit.Before;
@@ -13,7 +15,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 @SmallTest
-public class LocalCampaignSQLTrackerTest {
+public class LocalCampaignsTrackerTest {
 
     private Context appContext;
     private Field dbHelperField;
@@ -125,6 +127,38 @@ public class LocalCampaignSQLTrackerTest {
     }
 
     @Test
+    public void testGetNumberOfViewEventsSince() throws ViewTrackerUnavailableException {
+        // Clear database
+        appContext.deleteDatabase(LocalCampaignTrackDbHelper.DATABASE_NAME);
+
+        LocalCampaignsSQLTracker tracker = new LocalCampaignsSQLTracker();
+        tracker.open(appContext);
+
+        DateProvider dateProvider = new SystemDateProvider();
+
+        //0 tracked view events
+        Assert.assertEquals(
+            0,
+            tracker.getNumberOfViewEventsSince(dateProvider.getCurrentDate().getTime() - (60 * 1000))
+        );
+
+        // track view event
+        tracker.trackViewEvent("campaign_id");
+
+        long timestamp = dateProvider.getCurrentDate().getTime();
+        // 1 tracked view event since 1 sec
+        Assert.assertEquals(1, tracker.getNumberOfViewEventsSince(timestamp - (1000)));
+
+        // Adding 1 sec
+        timestamp += 1000;
+
+        // 0 tracked view event since 1 sec
+        Assert.assertEquals(0, tracker.getNumberOfViewEventsSince(timestamp - (1000)));
+
+        tracker.close();
+    }
+
+    @Test
     // Tests that the db being not opened results in a specific exception
     public void testUnavailabilityException() {
         LocalCampaignsSQLTracker tracker = new LocalCampaignsSQLTracker();
@@ -134,5 +168,17 @@ public class LocalCampaignSQLTrackerTest {
             return;
         }
         Assert.fail("A ViewTrackerUnavailableException should have been thrown");
+    }
+
+    @Test
+    public void testSessionViewsCount() throws ViewTrackerUnavailableException {
+        LocalCampaignsTracker tracker = new LocalCampaignsTracker();
+        tracker.open(appContext);
+        Assert.assertEquals(0, tracker.getSessionViewsCount());
+        tracker.trackViewEvent("campaign_id");
+        Assert.assertEquals(1, tracker.getSessionViewsCount());
+        tracker.close();
+        tracker.resetSessionViewsCount();
+        Assert.assertEquals(0, tracker.getSessionViewsCount());
     }
 }

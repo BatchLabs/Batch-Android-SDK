@@ -27,4 +27,10 @@ public interface PostDataProvider<T> {
      * @return
      */
     String getContentType();
+
+    /**
+     * Checks whether this provider is empty or not.
+     * @return true if empty
+     */
+    boolean isEmpty();
 }

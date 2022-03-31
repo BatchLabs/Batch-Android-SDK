@@ -13,7 +13,11 @@ public class BatchNotificationChannelsManagerPrivateHelper {
         return manager.getChannelId(null);
     }
 
-    public static void registerBatchChannelIfNeeded(BatchNotificationChannelsManager manager, Context context) {
-        manager.registerBatchChannelIfNeeded(context);
+    public static void registerBatchChannelIfNeeded(
+        BatchNotificationChannelsManager manager,
+        Context context,
+        boolean forceIfOverridden
+    ) {
+        manager.registerBatchChannelIfNeeded(context, forceIfOverridden);
     }
 }

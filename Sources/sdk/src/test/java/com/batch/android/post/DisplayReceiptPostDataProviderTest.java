@@ -2,6 +2,8 @@ package com.batch.android.post;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.batch.android.displayreceipt.DisplayReceipt;
 import java.util.ArrayList;
@@ -57,5 +59,16 @@ public class DisplayReceiptPostDataProviderTest {
         assertEquals("application/msgpack", provider.getContentType());
         assertArrayEquals(receiptList.toArray(), provider.getRawData().toArray());
         assertArrayEquals(body, provider.getData());
+    }
+
+    @Test
+    public void testIsEmpty() {
+        List<DisplayReceipt> receiptList = new ArrayList<>();
+        DisplayReceiptPostDataProvider provider = new DisplayReceiptPostDataProvider(receiptList);
+        assertTrue(provider.isEmpty());
+
+        receiptList.add(null);
+        provider = new DisplayReceiptPostDataProvider(receiptList);
+        assertFalse(provider.isEmpty());
     }
 }

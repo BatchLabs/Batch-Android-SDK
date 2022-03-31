@@ -126,6 +126,11 @@ public class LocalCampaign {
     @Nullable
     public JSONObject customPayload;
 
+    /**
+     * Flag indicating if this campaign must be verified from the server before being displayed
+     */
+    public boolean requiresJustInTimeSync;
+
     public void generateOccurrenceID() {
         try {
             eventData.put("i", Long.toString(System.currentTimeMillis()));
@@ -174,5 +179,35 @@ public class LocalCampaign {
          * @return true is the campaign was displayed with success
          */
         protected abstract boolean displayMessage(LocalCampaign campaign);
+    }
+
+    /**
+     * Class used to cache the result of a LocalCampaign after a JIT sync.
+     * Keep the timestamp of the sync and whether the campaign was eligible or not.
+     */
+    public static class SyncedJITResult {
+
+        /**
+         * Possible states for a synced JIT campaign
+         */
+        public enum State {
+            ELIGIBLE,
+            NOT_ELIGIBLE,
+            REQUIRES_SYNC,
+        }
+
+        /**
+         * Timestamp of the sync
+         */
+        public long timestamp;
+
+        /**
+         * Whether the campaign was eligible or not after the sync
+         */
+        public boolean eligible;
+
+        public SyncedJITResult(long timestamp) {
+            this.timestamp = timestamp;
+        }
     }
 }

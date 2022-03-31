@@ -1,6 +1,9 @@
 package com.batch.android.post;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,5 +33,16 @@ public class ParametersPostDataProviderTest {
 
         byte[] data = provider.getData();
         assertEquals("decoded data is not equals to input", key + "=" + value, new String(data));
+    }
+
+    @Test
+    public void testIsEmpty() {
+        Map<String, String> input = new HashMap<>();
+        ParametersPostDataProvider provider = new ParametersPostDataProvider(input);
+        assertTrue(provider.isEmpty());
+
+        input.put("key", "value");
+        provider = new ParametersPostDataProvider(input);
+        assertFalse(provider.isEmpty());
     }
 }

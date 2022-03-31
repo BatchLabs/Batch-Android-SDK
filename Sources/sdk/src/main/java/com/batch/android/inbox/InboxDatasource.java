@@ -377,8 +377,8 @@ public final class InboxDatasource {
             final ContentValues values = new ContentValues();
             values.put(InboxDatabaseHelper.COLUMN_NOTIFICATION_ID, notification.identifiers.identifier);
             values.put(InboxDatabaseHelper.COLUMN_SEND_ID, notification.identifiers.sendID);
-            values.put(InboxDatabaseHelper.COLUMN_TITLE, notification.title);
-            values.put(InboxDatabaseHelper.COLUMN_BODY, notification.body);
+            values.put(InboxDatabaseHelper.COLUMN_TITLE, notification.title != null ? notification.title : "");
+            values.put(InboxDatabaseHelper.COLUMN_BODY, notification.body != null ? notification.body : "");
             values.put(InboxDatabaseHelper.COLUMN_UNREAD, notification.isUnread ? 1 : 0);
             values.put(InboxDatabaseHelper.COLUMN_DATE, notification.date.getTime());
 

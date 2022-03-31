@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class LocalCampaignsSQLTracker implements ViewTracker {
+public class LocalCampaignsSQLTracker implements ViewTracker {
 
     private static final String TAG = "LocalCampaignsSQLTracker";
     private LocalCampaignTrackDbHelper dbHelper;
@@ -88,6 +88,16 @@ public final class LocalCampaignsSQLTracker implements ViewTracker {
             new String[] { campaignID, Integer.toString(ev.count), Long.toString(ev.lastOccurrence) }
         );
 
+        database.execSQL(
+            "INSERT INTO " +
+            LocalCampaignEntry.TABLE_VIEW_EVENTS_NAME +
+            " (" +
+            LocalCampaignEntry.COLUMN_NAME_VE_CAMPAIGN_ID +
+            ", " +
+            LocalCampaignEntry.COLUMN_NAME_VE_TIMESTAMP +
+            ") VALUES (?, ?)",
+            new String[] { campaignID, Long.toString(ev.lastOccurrence) }
+        );
         return ev;
     }
 
@@ -189,6 +199,31 @@ public final class LocalCampaignsSQLTracker implements ViewTracker {
         countCursor.close();
 
         return lastOccurence;
+    }
+
+    @Override
+    public int getNumberOfViewEventsSince(long timestamp) throws ViewTrackerUnavailableException {
+        ensureWritableDatabase();
+        int total = 0;
+        Cursor countCursor = database.rawQuery(
+            "SELECT COUNT(*) " +
+            " FROM " +
+            LocalCampaignEntry.TABLE_VIEW_EVENTS_NAME +
+            " WHERE " +
+            LocalCampaignEntry.COLUMN_NAME_VE_TIMESTAMP +
+            " > ?",
+            new String[] { Long.toString(timestamp) }
+        );
+        if (countCursor.moveToFirst()) {
+            total = countCursor.getInt(0);
+        }
+        countCursor.close();
+        return total;
+    }
+
+    public void deleteViewEvents() throws ViewTrackerUnavailableException {
+        ensureWritableDatabase();
+        database.execSQL("DELETE FROM " + LocalCampaignEntry.TABLE_VIEW_EVENTS_NAME);
     }
 
     private void ensureWritableDatabase() throws ViewTrackerUnavailableException {

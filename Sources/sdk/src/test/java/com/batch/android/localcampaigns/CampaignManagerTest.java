@@ -1,8 +1,10 @@
 package com.batch.android.localcampaigns;
 
+import static com.batch.android.localcampaigns.model.LocalCampaign.SyncedJITResult;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -27,12 +29,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.reflect.Whitebox;
 
 @RunWith(AndroidJUnit4.class)
 @MediumTest
@@ -41,14 +49,14 @@ public class CampaignManagerTest {
     private Context context;
     private CampaignManager campaignManager;
     private JSONObject jsonCampaigns;
-    private LocalCampaignsSQLTracker tracker;
+    private LocalCampaignsTracker tracker;
 
     @Before
     public void setUp() throws IOException, JSONException {
         context = ApplicationProvider.getApplicationContext();
         RuntimeManagerProvider.get().setContext(context);
 
-        tracker = new LocalCampaignsSQLTracker();
+        tracker = new LocalCampaignsTracker();
         campaignManager = new CampaignManager(tracker);
 
         // Read fake campaigns file
@@ -73,7 +81,7 @@ public class CampaignManagerTest {
         removeExistingSave();
         assertFalse(campaignManager.hasSavedCampaigns(context));
         LocalCampaignsResponse response = new LocalCampaignsResponseDeserializer(jsonCampaigns).deserialize();
-        campaignManager.saveCampaigns(context, response.getCampaigns());
+        campaignManager.saveCampaigns(context, response);
         assertTrue(campaignManager.hasSavedCampaigns(context));
 
         removeExistingSave();
@@ -100,12 +108,14 @@ public class CampaignManagerTest {
         // Save using the code that will actually save the response in production, rather
         // than reimplementing it in the tests.
         LocalCampaignsResponse response = new LocalCampaignsResponseDeserializer(jsonCampaigns).deserialize();
-        campaignManager.saveCampaigns(context, response.getCampaigns());
+        campaignManager.saveCampaigns(context, response);
         assertTrue(campaignManager.hasSavedCampaigns(context));
         assertEquals(0, campaignManager.getCampaignList().size());
+        assertNull(campaignManager.getCappings());
 
         campaignManager.loadSavedCampaignResponse(context);
         assertEquals(1, campaignManager.getCampaignList().size());
+        assertNotNull(campaignManager.getCappings());
 
         removeExistingSave();
         assertFalse(campaignManager.hasSavedCampaigns(context));
@@ -115,11 +125,31 @@ public class CampaignManagerTest {
     public void testLoadCampaigns() throws NoSuchFieldException, IllegalAccessException, JSONException {
         removeExistingSave();
         LocalCampaignsResponse response = new LocalCampaignsResponseDeserializer(jsonCampaigns).deserialize();
-        campaignManager.saveCampaigns(context, response.getCampaigns());
+        campaignManager.saveCampaigns(context, response);
         assertTrue(campaignManager.getCampaignList().isEmpty());
+        assertNull(campaignManager.getCappings());
 
         campaignManager.loadSavedCampaignResponse(context);
         assertFalse(campaignManager.getCampaignList().isEmpty());
+        assertNotNull(campaignManager.getCappings());
+    }
+
+    @Test
+    public void testLoadExpiredCampaigns() throws JSONException, NoSuchFieldException, IllegalAccessException {
+        removeExistingSave();
+
+        final BatchDate fakeCurrentDate = new UTCDate(0);
+        Field dateProviderField = CampaignManager.class.getDeclaredField("dateProvider");
+        dateProviderField.setAccessible(true);
+        dateProviderField.set(campaignManager, (DateProvider) () -> fakeCurrentDate);
+
+        LocalCampaignsResponse response = new LocalCampaignsResponseDeserializer(jsonCampaigns).deserialize();
+        campaignManager.saveCampaigns(context, response);
+
+        fakeCurrentDate.setTime(TimeUnit.DAYS.toMillis(15));
+
+        campaignManager.loadSavedCampaignResponse(context);
+        assertTrue(campaignManager.getCampaignList().isEmpty());
     }
 
     @Test
@@ -169,6 +199,45 @@ public class CampaignManagerTest {
 
         // We can't track again, campaign is over capping
         assertTrue(campaignManager.isCampaignOverCapping(campaign, true));
+    }
+
+    @Test
+    public void testGlobalCapping()
+        throws JSONException, NoSuchFieldException, IllegalAccessException, ViewTrackerUnavailableException {
+        // Load cappings from the json local campaign response (2/session & 1/h)
+        reloadCampaigns();
+
+        // Setting fake date provider
+        final BatchDate fakeCurrentDate = new UTCDate(0);
+        Field dateProviderField = CampaignManager.class.getDeclaredField("dateProvider");
+        dateProviderField.setAccessible(true);
+        dateProviderField.set(campaignManager, (DateProvider) () -> fakeCurrentDate);
+
+        DateProvider oldDateProvider = tracker.getDateProvider();
+        tracker.setDateProvider(() -> fakeCurrentDate);
+
+        assertFalse(campaignManager.isOverGlobalCappings());
+
+        campaignManager.getViewTracker().trackViewEvent("campaign_id");
+
+        // We have reached time-based capping
+        assertTrue(campaignManager.isOverGlobalCappings());
+
+        // Adding 1h
+        fakeCurrentDate.setTime(3600 * 1000);
+
+        // time-based capping released
+        assertFalse(campaignManager.isOverGlobalCappings());
+
+        campaignManager.getViewTracker().trackViewEvent("campaign_id");
+
+        // Adding 1h
+        fakeCurrentDate.setTime(3600 * 1000);
+
+        // We have reached the session capping
+        assertTrue(campaignManager.isOverGlobalCappings());
+
+        tracker.setDateProvider(oldDateProvider);
     }
 
     @Test
@@ -289,9 +358,81 @@ public class CampaignManagerTest {
 
         campaignManager.updateCampaignList(fakeCampaigns);
 
-        LocalCampaign campainToDisplay = campaignManager.getCampaignToDisplay(trigger -> true);
+        List<LocalCampaign> eligibleCampaigns = campaignManager.getEligibleCampaignsSortedByPriority(trigger -> true);
 
-        assertSame(highPriorityCampaign, campainToDisplay);
+        assertFalse(eligibleCampaigns.isEmpty());
+        assertSame(highPriorityCampaign, eligibleCampaigns.get(0));
+    }
+
+    @Test
+    public void testGetEligibleCampaignsRequiringSync() {
+        List<LocalCampaign> fakeCampaigns = new ArrayList<>();
+        fakeCampaigns.add(createFakeCampaignWithPriority(0));
+        fakeCampaigns.add(createFakeCampaignWithPriority(10));
+        Assert.assertEquals(0, campaignManager.getFirstEligibleCampaignsRequiringSync(fakeCampaigns).size());
+        LocalCampaign jitCampaign = createFakeCampaignWithPriority(0);
+        jitCampaign.requiresJustInTimeSync = true;
+        fakeCampaigns.add(0, jitCampaign);
+        Assert.assertEquals(jitCampaign, campaignManager.getFirstEligibleCampaignsRequiringSync(fakeCampaigns).get(0));
+    }
+
+    @Test
+    public void testGetFirstCampaignNotRequiringJITSync() {
+        List<LocalCampaign> fakeCampaigns = new ArrayList<>();
+        LocalCampaign jitCampaign = createFakeCampaignWithPriority(0);
+        jitCampaign.requiresJustInTimeSync = true;
+        fakeCampaigns.add(jitCampaign);
+        LocalCampaign expectedCampaign = createFakeCampaignWithPriority(0);
+        fakeCampaigns.add(expectedCampaign);
+        Assert.assertEquals(expectedCampaign, campaignManager.getFirstCampaignNotRequiringJITSync(fakeCampaigns));
+    }
+
+    @Test
+    public void testIsJITServiceAvailable() {
+        Assert.assertTrue(campaignManager.isJITServiceAvailable());
+        Whitebox.setInternalState(campaignManager, "nextAvailableJITTimestamp", new Date().getTime() + 1000L);
+        Assert.assertFalse(campaignManager.isJITServiceAvailable());
+    }
+
+    @Test
+    public void testGetSyncedJITCampaignState() throws NoSuchFieldException, IllegalAccessException {
+        // Get synced jit campaign from manager
+        Field syncedCampaignsField = CampaignManager.class.getDeclaredField("syncedJITCampaigns");
+        syncedCampaignsField.setAccessible(true);
+        Map<String, SyncedJITResult> syncedCampaigns = (HashMap<String, SyncedJITResult>) syncedCampaignsField.get(
+            campaignManager
+        );
+
+        // Replace the SecureDateProvider with a fake DateProvider
+        final BatchDate fakeCurrentDate = new UTCDate(0);
+        Field dateProviderField = CampaignManager.class.getDeclaredField("dateProvider");
+        dateProviderField.setAccessible(true);
+        dateProviderField.set(campaignManager, (DateProvider) () -> fakeCurrentDate);
+
+        // Ensure non-jit campaign is return as eligible
+        LocalCampaign campaign = createFakeCampaignWithPriority(0);
+        Assert.assertEquals(SyncedJITResult.State.ELIGIBLE, campaignManager.getSyncedJITCampaignState(campaign));
+
+        // Ensure non-cached jit campaign requires a sync
+        campaign.requiresJustInTimeSync = true;
+        assert syncedCampaigns != null;
+        Assert.assertEquals(SyncedJITResult.State.REQUIRES_SYNC, campaignManager.getSyncedJITCampaignState(campaign));
+
+        // Adding fake synced jit result in cache
+        SyncedJITResult result = new SyncedJITResult(fakeCurrentDate.getTime());
+        result.eligible = false;
+        syncedCampaigns.put(campaign.id, result);
+
+        // Ensure cached jit campaign is not eligible
+        Assert.assertEquals(SyncedJITResult.State.NOT_ELIGIBLE, campaignManager.getSyncedJITCampaignState(campaign));
+
+        // Ensure cached jit campaign is eligible
+        result.eligible = true;
+        Assert.assertEquals(SyncedJITResult.State.ELIGIBLE, campaignManager.getSyncedJITCampaignState(campaign));
+
+        // Ensure cached jit campaign requires a new sync
+        fakeCurrentDate.setTime(30_000);
+        Assert.assertEquals(SyncedJITResult.State.REQUIRES_SYNC, campaignManager.getSyncedJITCampaignState(campaign));
     }
 
     private void removeExistingSave() throws NoSuchFieldException, IllegalAccessException {
@@ -315,7 +456,7 @@ public class CampaignManagerTest {
     private void reloadCampaigns() throws NoSuchFieldException, IllegalAccessException, JSONException {
         removeExistingSave();
         LocalCampaignsResponse response = new LocalCampaignsResponseDeserializer(jsonCampaigns).deserialize();
-        campaignManager.saveCampaigns(context, response.getCampaigns());
+        campaignManager.saveCampaigns(context, response);
         campaignManager.loadSavedCampaignResponse(context);
     }
 
