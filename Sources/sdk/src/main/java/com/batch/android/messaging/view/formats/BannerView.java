@@ -193,18 +193,28 @@ public class BannerView
 
         final List<Pair<View, DOMNode>> views = new LinkedList<>();
 
+        // Title text view
+        View titleTv;
+        final FlexboxLayout.LayoutParams titleLp = new FlexboxLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        titleLp.flexGrow = 1;
+        titleLp.flexShrink = 0;
         if (!TextUtils.isEmpty(message.titleText)) {
-            final TextView titleTv = new TextView(context);
-            titleTv.setText(message.titleText);
-            final FlexboxLayout.LayoutParams titleLp = new FlexboxLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-            titleLp.flexGrow = 1;
-            titleLp.flexShrink = 0;
-            titleTv.setLayoutParams(titleLp);
-            views.add(new Pair<>(titleTv, new DOMNode("title", "text")));
+            titleTv = new TextView(context);
+            ((TextView) titleTv).setText(message.titleText);
+        } else {
+            // Insert a dummy view if there is no title, as the text view is used as an anchor
+            // for layouting some styles.
+            // We could improve this using container views/reworking the styles, but this
+            // allows special styling to work without issue.
+            titleTv = new View(context);
+            titleLp.height = 0;
+            titleLp.maxHeight = 0;
         }
+        titleTv.setLayoutParams(titleLp);
+        views.add(new Pair<>(titleTv, new DOMNode("title", "text")));
 
         // Use an xml, as android:scrollbars is not doable in pure code
         final TextView bodyTv = (TextView) inflater.inflate(

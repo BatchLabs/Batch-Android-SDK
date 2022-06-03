@@ -55,6 +55,10 @@ public class EventDispatcherModule extends BatchModule {
         Logger.internal(TAG, "Adding event dispatcher: " + name);
     }
 
+    private void printDeprecatedDispatcher(@NonNull String name) {
+        Logger.warning(TAG, "The version of your event dispatcher: " + name + " is outdated, please update it.");
+    }
+
     public void addEventDispatcher(BatchEventDispatcher dispatcher) {
         synchronized (eventDispatchers) {
             eventDispatchers.add(dispatcher);
@@ -118,17 +122,16 @@ public class EventDispatcherModule extends BatchModule {
                 if (dispatcher != null) {
                     addEventDispatcher(dispatcher);
                     String dispatcherName = dispatcher.getClass().getName();
-                    if (dispatcher.getName() != null) {
-                        dispatcherName = dispatcher.getName();
-                    } else {
-                        Logger.warning(
-                            TAG,
-                            "The version of your event dispatcher: " +
-                            dispatcherName +
-                            " is outdated, please update it."
-                        );
+                    try {
+                        if (dispatcher.getName() != null) {
+                            dispatcherName = dispatcher.getName();
+                        } else {
+                            printDeprecatedDispatcher(dispatcherName);
+                        }
+                        printLoadedDispatcher(dispatcherName);
+                    } catch (AbstractMethodError e) {
+                        printDeprecatedDispatcher(dispatcherName);
                     }
-                    printLoadedDispatcher(dispatcherName);
                 }
             } catch (Throwable e) {
                 Logger.error(String.format("Could not instantiate %s", name), e);
@@ -138,6 +141,7 @@ public class EventDispatcherModule extends BatchModule {
 
     /**
      * Get dispatchers as json object used for the analytics
+     *
      * @return A JSONObject of dispatcher Name:Version
      */
     @Nullable

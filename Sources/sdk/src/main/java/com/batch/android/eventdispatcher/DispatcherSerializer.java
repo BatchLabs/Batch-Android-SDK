@@ -50,7 +50,7 @@ public class DispatcherSerializer {
                     ? dispatcher.getName()
                     : CUSTOM_DISPATCHER_NAME;
                 json.put(name, dispatcher.getVersion());
-            } catch (JSONException ignored) {}
+            } catch (JSONException | AbstractMethodError ignored) {}
         }
         return json;
     }

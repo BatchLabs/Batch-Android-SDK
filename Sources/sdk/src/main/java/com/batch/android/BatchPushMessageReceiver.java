@@ -92,9 +92,10 @@ public class BatchPushMessageReceiver extends WakefulBroadcastReceiver {
             try {
                 startPresentationService(context, intent);
                 return true;
-            } catch (IllegalStateException e) {
-                // This exception can happen on Android O, fallback on scheduling a Job.
+            } catch (IllegalStateException | SecurityException e) {
+                // IllegalStateException can happen on Android O, fallback on scheduling a Job.
                 // On earlier Android versions, it should not happen.
+                // The SecurityException happens on some OEMs, like Wiko, for an unknown reason.
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     Logger.internal(TAG, "Failed to start service, scheduling Job");
                     return scheduleJob(context, intent);

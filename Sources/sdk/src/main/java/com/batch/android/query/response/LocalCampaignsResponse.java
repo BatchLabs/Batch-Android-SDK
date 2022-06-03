@@ -7,7 +7,6 @@ import com.batch.android.query.LocalCampaignsQuery;
 import com.batch.android.query.QueryType;
 import java.util.ArrayList;
 import java.util.List;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Response for {@link LocalCampaignsQuery}
@@ -193,7 +192,7 @@ public class LocalCampaignsResponse extends Response {
             this.message = message;
         }
 
-        @NotNull
+        @NonNull
         @Override
         public String toString() {
             return "Error{" + "code=" + code + ", message='" + message + '\'' + '}';

@@ -154,13 +154,13 @@ public class MetricManager {
                     new MetricWebserviceListener() {
                         @Override
                         public void onSuccess() {
-                            Logger.info(TAG, "Metrics sent with success.");
+                            Logger.internal(TAG, "Metrics sent with success.");
                             isSending.set(false);
                         }
 
                         @Override
                         public void onFailure(Webservice.WebserviceError error) {
-                            Logger.info(TAG, "Fail sending metrics.");
+                            Logger.internal(TAG, "Fail sending metrics.");
                             long retryAfter = error.getRetryAfterInMillis() != 0
                                 ? error.getRetryAfterInMillis()
                                 : DEFAULT_RETRY_AFTER;
