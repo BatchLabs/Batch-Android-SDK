@@ -19,50 +19,21 @@ if (signingFile.exists()) {
     }
 }
 
-sourceSets {
-    main {
-        java.srcDirs += 'build/generated'
-    }
-}
-
-task androidJavadocs(type: Javadoc) {
-    source = sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    options.addStringOption('Xdoclint:none', '-quiet')
-    android.libraryVariants.all { variant ->
-        if (variant.name == 'release') {
-            owner.classpath += variant.getCompileClasspath()
-        }
-    }
-    exclude '**/gif/README'
-    exclude '**/R.html', '**/R.*.html', '**/index.html'
-}
-
-task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-    archiveClassifier.set("javadoc")
-    from androidJavadocs.destinationDir
-}
-
-task androidSourcesJar(type: Jar) {
-    archiveClassifier.set("sources")
-    from sourceSets.main.java.srcDirs
-}
-
 nexusStaging {
     packageGroup = mavenGroupId
 }
 
 publishing {
     publications {
-        batchsdk(MavenPublication) {
+        release(MavenPublication) {
 
             groupId mavenGroupId
             artifactId mavenArtifact
             version android.defaultConfig.versionName
 
-            artifact(project.rootProject.file("../public-sdk/Batch.aar"))
-            artifact androidJavadocsJar
-            artifact androidSourcesJar
+            afterEvaluate {
+                from components.release
+            }
 
             pom {
                 name = "Batch.com Android SDK"
@@ -210,19 +181,6 @@ publishing {
                     url = "https://batch.com"
                 }
             }
-
-            pom.withXml {
-                def dependenciesNode = asNode().appendNode('dependencies')
-
-                // Add dependencies manually as we have only one
-                // See : https://discuss.gradle.org/t/maven-publish-doesnt-include-dependencies-in-the-project-pom-file/8544
-                def dependencyNode = dependenciesNode.appendNode('dependency')
-                dependencyNode.appendNode('groupId', 'androidx.core')
-                dependencyNode.appendNode('artifactId', 'core')
-                dependencyNode.appendNode('version', androidXLibraryVersion)
-                dependencyNode.appendNode('scope', 'compile')
-                dependencyNode.appendNode('type', 'aar')
-            }
         }
     }
 
@@ -246,7 +204,7 @@ publishing {
 }
 
 signing {
-    sign publishing.publications.batchsdk
+    sign publishing.publications.release
 }
 
 // Do not sign if we run the publishToMavenLocal task, useful for dev

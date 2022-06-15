@@ -377,6 +377,7 @@ public class BatchPushNotificationPresenter {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     userFlags = userFlags | PendingIntent.FLAG_IMMUTABLE;
                 }
+                //noinspection WrongConstant
                 launchIntent.addFlags(userFlags);
             }
         }

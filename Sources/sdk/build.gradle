@@ -1,6 +1,5 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 def SDK_VERSION = "SDK_VERSION"
 def ENABLE_DEBUG_LOGGER = "ENABLE_DEBUG_LOGGER"
@@ -26,7 +25,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 31
         versionCode 1
-        versionName "1.18.2"
+        versionName "1.18.3"
         buildConfigField "String", SDK_VERSION, "\"$versionName\""
         buildConfigField "Integer", API_LEVEL, '40'
         buildConfigField "Integer", MESSAGING_API_LEVEL, '11'
@@ -62,12 +61,6 @@ android {
         }
     }
 
-    lintOptions {
-        abortOnError true
-        baseline file("lint-baseline.xml")
-        lintConfig file("lint.xml")
-    }
-
     testOptions {
         execution 'ANDROIDX_TEST_ORCHESTRATOR'
         unitTests {
@@ -80,6 +73,18 @@ android {
             }
         }
     }
+    lint {
+        abortOnError true
+        baseline file('lint-baseline.xml')
+        lintConfig file('lint.xml')
+    }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 // Prevent from having accidental kotlin in production code
@@ -88,6 +93,13 @@ afterEvaluate {
         if (!sourceSet.name.startsWith("test")) {
             sourceSet.kotlin.setSrcDirs([])
         }
+    }
+}
+
+// Print the sdk version name
+task printVersion {
+    doLast {
+        println project.version
     }
 }
 
@@ -147,7 +159,7 @@ dependencies {
     testImplementation "org.powermock:powermock-api-mockito2:2.0.7"
     testImplementation "org.powermock:powermock-classloading-xstream:2.0.7"
 
-    testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_couroutines_version"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlin_couroutines_version"
 }

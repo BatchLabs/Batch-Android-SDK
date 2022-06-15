@@ -10,6 +10,14 @@
  * We can compare a previously generated signature file with the current API using the metalavaCompareSignature task.
  */
 
+configurations {
+    metalavaRuntime
+}
+
+dependencies {
+    metalavaRuntime 'com.android.tools.metalava:metalava:1.0.0-alpha04'
+}
+
 /**
  * Recursively list all packages from a directory
  * The package must contains at least one .java file to be included
@@ -39,7 +47,7 @@ void getPackagesInDirectory(File rootDirectory, File directory, Set<String> pack
  */
 List<String> getBaseMetalavaArgs() {
     def args = [
-            '-cp', project.rootProject.file('../prebuilt/*'),
+            '-cp', configurations.metalavaRuntime.asPath,
             'com.android.tools.metalava.Driver',
             '--format=v2',
     ]
@@ -100,17 +108,24 @@ task metalavaGenerateSignature {
         addBaseline(signatureArgs, project.file('metalava-baseline.txt'))
         signatureArgs.addAll([
                 '--source-path', android.sourceSets.main.java.srcDirs.toArray().join(':'),
-                '--api', project.rootProject.file('../metalava-api/' + android.defaultConfig.versionName + '/api.txt')
+                '--api', project.rootProject.file('../metalava-api/api-latest.txt')
         ])
         exec {
             executable = 'java'
             args = signatureArgs
         }
+    }
+}
 
+// Generate a release metalava signature
+// This builds api-latest and copies it to a versioned release
+task("metalavaGenerateTaggedSignature", dependsOn: ["metalavaGenerateSignature"]) {
+    doFirst {
         copy {
-            from project.rootProject.file('../metalava-api/' + android.defaultConfig.versionName + '/api.txt')
-            into project.rootProject.file('../metalava-api')
-            rename 'api.txt', 'api-latest.txt'
+            from project.rootProject.file('../metalava-api/api-latest.txt')
+            into project.rootProject.file('../metalava-api/' + android.defaultConfig.versionName + '/')
+
+            rename 'api-latest.txt', 'api.txt'
         }
     }
 }

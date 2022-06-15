@@ -40,7 +40,6 @@ import com.batch.android.messaging.view.helper.ThemeHelper;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Universal messaging template fragment class. Extends DialogFragment so it can be displayed in its own window easily.
@@ -122,7 +121,7 @@ public class UniversalTemplateFragment
     @Nullable
     @Override
     public View onCreateView(
-        @NotNull LayoutInflater inflater,
+        @NonNull LayoutInflater inflater,
         @Nullable ViewGroup container,
         @Nullable Bundle savedInstanceState
     ) {
