@@ -221,7 +221,7 @@ public class BatchPushNotificationPresenter {
         //TODO: Figure out a better place to register the channel (not on every notification display...)
         // Problem is that we have to do it here in case the app gets updated, and we never get the context when
         // set up in Application
-        batchChannelsManager.registerBatchChannelIfNeeded(context, false);
+        batchChannelsManager.registerBatchChannelIfNeeded(context);
 
         /*
          * Small icon

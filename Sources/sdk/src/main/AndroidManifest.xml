@@ -31,6 +31,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".BatchPermissionActivity"
+            android:theme="@style/com_batchsdk_PermissionActivityTheme"
+            android:exported="false" />
+
+        <activity
             android:name=".debug.BatchDebugActivity"
             android:theme="@style/com_batchsdk_DebugActivityTheme"
             android:exported="false" />

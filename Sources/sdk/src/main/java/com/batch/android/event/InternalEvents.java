@@ -21,6 +21,7 @@ public final class InternalEvents {
     public static final String INSTALL_DATA_CHANGED_TRACK_FAILURE = "_INSTALL_DATA_CHANGED_TRACK_FAIL";
 
     public static final String LOCATION_CHANGED = "_LOCATION_CHANGED";
+    public static final String NOTIFICATION_STATUS_CHANGE = "_NOTIF_STATUS_CHANGE";
 
     public static final String INBOX_MARK_AS_READ = "_INBOX_MARK_READ";
     public static final String INBOX_MARK_AS_DELETED = "_INBOX_MARK_DELETED";

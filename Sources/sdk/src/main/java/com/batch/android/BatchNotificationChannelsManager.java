@@ -1,5 +1,6 @@
 package com.batch.android;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
@@ -81,18 +82,19 @@ public final class BatchNotificationChannelsManager {
         return channelId;
     }
 
-    private boolean shouldRegisterDefaultChannel() {
-        return channelOverride == null;
+    private boolean isChannelIdOverridden() {
+        return channelOverride != null;
     }
 
-    void registerBatchChannelIfNeeded(Context c, boolean forceIfOverridden) {
-        if (!forceIfOverridden && !shouldRegisterDefaultChannel()) {
-            Logger.internal(PushModule.TAG, "Channel ID overriden, not registering Batch's channel.");
+    void registerBatchChannelIfNeeded(Context c) {
+        if (isChannelIdOverridden()) {
+            Logger.internal(PushModule.TAG, "Channel ID overridden, not registering Batch's channel.");
             return;
         }
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             Logger.internal(PushModule.TAG, "Registering default Batch notification channel");
             //try {
+            @SuppressLint("WrongConstant")
             NotificationChannel channel = new NotificationChannel(
                 DEFAULT_CHANNEL_ID,
                 getBatchChannelName(),
@@ -234,6 +236,7 @@ public final class BatchNotificationChannelsManager {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             try {
                 Intent intent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.putExtra(Settings.EXTRA_CHANNEL_ID, channelId);
                 intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.getPackageName());
                 context.startActivity(intent);

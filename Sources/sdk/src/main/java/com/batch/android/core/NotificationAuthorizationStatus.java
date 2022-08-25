@@ -14,12 +14,114 @@ import androidx.core.app.NotificationManagerCompat;
 import com.batch.android.BatchNotificationChannelsManager;
 import com.batch.android.BatchNotificationChannelsManagerPrivateHelper;
 import com.batch.android.PushNotificationType;
+import com.batch.android.WebserviceLauncher;
+import com.batch.android.di.providers.BatchNotificationChannelsManagerProvider;
 import com.batch.android.di.providers.ParametersProvider;
+import com.batch.android.di.providers.PushModuleProvider;
+import com.batch.android.di.providers.RuntimeManagerProvider;
+import com.batch.android.di.providers.TrackerModuleProvider;
+import com.batch.android.event.InternalEvents;
+import com.batch.android.json.JSONException;
+import com.batch.android.json.JSONObject;
+import com.batch.android.push.Registration;
+import com.batch.android.runtime.RuntimeManager;
 import java.util.EnumSet;
 
 public class NotificationAuthorizationStatus {
 
     public static final String TAG = "Notification Authorization";
+
+    /**
+     * Last notification authorization status
+     */
+    private static Boolean lastNotificationAuthorizationStatus = null;
+
+    /**
+     * Check whether the notification authorization status change
+     * @param context context
+     */
+    public static void checkForNotificationAuthorizationChange(@NonNull Context context) {
+        // Get the current notification authorization
+        boolean hasNotificationAuthorization = canAppShowNotifications(
+            context,
+            BatchNotificationChannelsManagerProvider.get()
+        );
+
+        // Check if the notification settings changed between the last time we sent them to the server and now
+        boolean shouldTrack = shouldTrackNotificationStatusChangeEvent(context, hasNotificationAuthorization);
+        if (shouldTrack) {
+            JSONObject params = new JSONObject();
+            try {
+                // Send the event to the server, and store it so that future calls of this method don't send the same
+                params.put("has_notification_authorization", hasNotificationAuthorization);
+                TrackerModuleProvider.get().track(InternalEvents.NOTIFICATION_STATUS_CHANGE, params);
+                ParametersProvider
+                    .get(context)
+                    .set(
+                        ParameterKeys.PUSH_NOTIF_LAST_AUTH_STATUS_SENT,
+                        String.valueOf(hasNotificationAuthorization),
+                        true
+                    );
+            } catch (JSONException e) {
+                Logger.internal("Cannot track event NOTIFICATION_STATUS_CHANGE.");
+            }
+        }
+
+        // First time, store it, as the start will send it
+        // If it changes, force a Push query
+        if (lastNotificationAuthorizationStatus == null) {
+            lastNotificationAuthorizationStatus = hasNotificationAuthorization;
+            return;
+        }
+
+        if (lastNotificationAuthorizationStatus != hasNotificationAuthorization) {
+            lastNotificationAuthorizationStatus = hasNotificationAuthorization;
+            Logger.internal(
+                "Notification Authorization changed (is now " + (hasNotificationAuthorization ? "true" : "false") + ")"
+            );
+
+            RuntimeManager runtimeManager = RuntimeManagerProvider.get();
+            boolean sdkReady = runtimeManager.runIfReady(() -> {
+                // Trigger a push token webservice
+                Registration registration = PushModuleProvider.get().getRegistration(context);
+                if (registration == null) {
+                    Logger.internal(
+                        "Notif. Authorization changed but no registration is available. Not sending update to the server."
+                    );
+                    return;
+                }
+                WebserviceLauncher.launchPushWebservice(runtimeManager, registration);
+            });
+
+            if (!sdkReady) {
+                Logger.internal("Notif. Authorization changed but SDK isn't ready. Not sending update to the server.");
+            }
+        }
+    }
+
+    /**
+     * Check if the notification settings changed between the last time we sent them to the server and now
+     * @param context to get the last event sent
+     * @param hasNotificationAuthorization current notification authorization
+     */
+    @VisibleForTesting
+    static boolean shouldTrackNotificationStatusChangeEvent(
+        @NonNull Context context,
+        boolean hasNotificationAuthorization
+    ) {
+        String lastNotificationAuthorizationSend = ParametersProvider
+            .get(context)
+            .get(ParameterKeys.PUSH_NOTIF_LAST_AUTH_STATUS_SENT);
+        boolean hasChanged;
+        if (lastNotificationAuthorizationSend == null) {
+            // First time we get the notification authorization
+            hasChanged = true;
+        } else {
+            // Check if the notification authorization has changed since the last time we sent it.
+            hasChanged = Boolean.parseBoolean(lastNotificationAuthorizationSend) != hasNotificationAuthorization;
+        }
+        return hasChanged;
+    }
 
     // Returns whether the app can potentially show a notification using batch
     // Note: false negatives are possible if the developer uses a notification

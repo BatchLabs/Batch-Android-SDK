@@ -119,11 +119,6 @@ public final class Batch {
     private static boolean didLogOptOutWarning = false;
 
     /**
-     * Last notification authorization status
-     */
-    private static Boolean lastNotificationAuthorizationStatus = null;
-
-    /**
      * Default placement
      */
     public static final String DEFAULT_PLACEMENT = "DEFAULT";
@@ -1138,6 +1133,17 @@ public final class Batch {
          */
         public static void refreshRegistration() {
             PushModuleProvider.get().refreshRegistration();
+        }
+
+        /**
+         * Request the notification runtime permission.
+         * Android 13 (API 33) introduced a new runtime permission for notifications called POST_NOTIFICATIONS.
+         * Without this permission, apps on Android 13 cannot show notifications.
+         * This method does nothing on Android 12 and lower, or if your application does not target API 33 or higher.
+         * @param context requesting the permission
+         */
+        public static void requestNotificationPermission(@NonNull Context context) {
+            PushModuleProvider.get().requestNotificationPermission(context);
         }
     }
 
@@ -2180,7 +2186,7 @@ public final class Batch {
                     }
 
                     // Check if the notification authorization status changed from a previous value
-                    checkForNotificationAuthorizationChange(context);
+                    NotificationAuthorizationStatus.checkForNotificationAuthorizationChange(context);
 
                     newIntent = null;
                 }
@@ -2613,44 +2619,6 @@ public final class Batch {
             }
         } catch (Exception e) {
             Logger.internal("Error on updateVersionManagement", e);
-        }
-    }
-
-    private static void checkForNotificationAuthorizationChange(@NonNull Context context) {
-        boolean hasNotificationAuthorization = NotificationAuthorizationStatus.canAppShowNotifications(
-            context,
-            BatchNotificationChannelsManagerProvider.get()
-        );
-
-        // First time, store it, as the start will send it
-        // If it changes, force a Push query
-        if (lastNotificationAuthorizationStatus == null) {
-            lastNotificationAuthorizationStatus = hasNotificationAuthorization;
-            return;
-        }
-
-        if (lastNotificationAuthorizationStatus != hasNotificationAuthorization) {
-            lastNotificationAuthorizationStatus = hasNotificationAuthorization;
-            Logger.internal(
-                "Notification Authorization changed (is now " + (hasNotificationAuthorization ? "true" : "false") + ")"
-            );
-
-            RuntimeManager runtimeManager = RuntimeManagerProvider.get();
-            boolean sdkReady = runtimeManager.runIfReady(() -> {
-                // Trigger a push token webservice
-                Registration registration = PushModuleProvider.get().getRegistration(context);
-                if (registration == null) {
-                    Logger.internal(
-                        "Notif. Authorization changed but no registration is available. Not sending update to the server."
-                    );
-                    return;
-                }
-                WebserviceLauncher.launchPushWebservice(runtimeManager, registration);
-            });
-
-            if (!sdkReady) {
-                Logger.internal("Notif. Authorization changed but SDK isn't ready. Not sending update to the server.");
-            }
         }
     }
 

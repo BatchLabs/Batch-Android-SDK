@@ -38,12 +38,12 @@ public class GenericHelper {
         }
     }
 
-    public static boolean targets12LOrOlder(@NonNull Context context) {
+    public static boolean isTargetLowerThan13(@NonNull Context context) {
         // Note: any prerelease Android SDK, even older than 13, will return true here.
         // We do not care about that edge case.
         try {
             int targetSdkVersion = context.getApplicationContext().getApplicationInfo().targetSdkVersion;
-            return targetSdkVersion <= Build.VERSION_CODES.S_V2;
+            return targetSdkVersion < Build.VERSION_CODES.TIRAMISU;
         } catch (Exception e) {
             Logger.error("Could not check current target API level", e);
             return true;

@@ -16,18 +16,18 @@ ext {
 }
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
     defaultPublishConfig "release"
 
     resourcePrefix "com_batchsdk_"
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 32
+        targetSdkVersion 33
         versionCode 1
-        versionName "1.19.1"
+        versionName "1.19.2"
         buildConfigField "String", SDK_VERSION, "\"$versionName\""
-        buildConfigField "Integer", API_LEVEL, '50'
+        buildConfigField "Integer", API_LEVEL, '51'
         buildConfigField "Integer", MESSAGING_API_LEVEL, '12'
         buildConfigField "String", WS_DOMAIN, '"ws.batch.com"'
 
@@ -110,7 +110,7 @@ dependencies {
     compileOnly "com.google.android.gms:play-services-location:$playServicesVersion"
     compileOnly "com.google.android.gms:play-services-nearby:$playServicesVersion"
     compileOnly 'com.google.android.play:core:1.9.0'
-    compileOnly "com.google.firebase:firebase-core:17.4.3"
+    compileOnly "com.google.firebase:firebase-iid:21.1.0"
     compileOnly "com.google.firebase:firebase-messaging:22.0.0"
     compileOnly project(':sdk-stubs')
     compileOnly project(':sdk-processor')
@@ -124,6 +124,7 @@ dependencies {
 
     androidTestImplementation 'junit:junit:4.12'
     androidTestImplementation "androidx.annotation:annotation:$androidXLibraryVersion"
+    androidTestImplementation 'androidx.test:core-ktx:1.4.0'
     androidTestImplementation 'androidx.test:rules:1.4.0'
     androidTestImplementation 'androidx.test:runner:1.4.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

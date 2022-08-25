@@ -58,5 +58,10 @@
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
+    <style name="com_batchsdk_PermissionActivityTheme" parent="@android:style/Theme.DeviceDefault.Dialog.NoActionBar.MinWidth">
+        <item name="android:windowBackground">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
     <style name="com_batchsdk_DebugActivityTheme" parent="@android:style/Theme.DeviceDefault.Light.DarkActionBar"></style>
 </resources>

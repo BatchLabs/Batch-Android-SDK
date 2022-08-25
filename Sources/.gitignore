@@ -10,6 +10,7 @@
 # Recommended ignore from Gradle
 **/.idea/dataSources.*
 **/.idea/inspectionProfiles
+**/.idea/deploymentTargetDropDown.xml
 **/.idea/misc.xml
 **/.idea/gradle.xml
 **/.idea/modules.xml

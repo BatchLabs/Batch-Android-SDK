@@ -28,26 +28,22 @@
         </value>
       </option>
     </JavaCodeStyleSettings>
-    <XML>
-      <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
-    </XML>
     <editorconfig>
       <option name="ENABLED" value="false" />
     </editorconfig>
     <codeStyleSettings language="JAVA">
-      <option name="BRACE_STYLE" value="5" />
-      <option name="CLASS_BRACE_STYLE" value="2" />
-      <option name="METHOD_BRACE_STYLE" value="2" />
+      <option name="ALIGN_MULTILINE_CHAINED_METHODS" value="true" />
       <option name="SPACE_WITHIN_PARENTHESES" value="true" />
-      <option name="CALL_PARAMETERS_WRAP" value="5" />
-      <option name="METHOD_PARAMETERS_WRAP" value="5" />
+      <option name="CALL_PARAMETERS_RPAREN_ON_NEXT_LINE" value="true" />
       <option name="KEEP_SIMPLE_BLOCKS_IN_ONE_LINE" value="true" />
       <option name="KEEP_SIMPLE_METHODS_IN_ONE_LINE" value="true" />
       <option name="KEEP_SIMPLE_LAMBDAS_IN_ONE_LINE" value="true" />
       <option name="KEEP_SIMPLE_CLASSES_IN_ONE_LINE" value="true" />
       <option name="IF_BRACE_FORCE" value="3" />
+      <option name="DOWHILE_BRACE_FORCE" value="3" />
       <option name="WHILE_BRACE_FORCE" value="3" />
       <option name="FOR_BRACE_FORCE" value="3" />
+      <option name="KEEP_BUILDER_METHODS_INDENTS" value="true" />
       <indentOptions>
         <option name="SMART_TABS" value="true" />
       </indentOptions>

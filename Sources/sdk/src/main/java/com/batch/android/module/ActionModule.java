@@ -15,6 +15,8 @@ import com.batch.android.actions.GroupActionRunnable;
 import com.batch.android.actions.LocalCampaignsRefreshActionRunnable;
 import com.batch.android.actions.NotificationPermissionActionRunnable;
 import com.batch.android.actions.RatingActionRunnable;
+import com.batch.android.actions.RedirectNotificationSettingsAction;
+import com.batch.android.actions.SmartReOptInAction;
 import com.batch.android.actions.UserDataBuiltinActionRunnable;
 import com.batch.android.actions.UserEventBuiltinActionRunnable;
 import com.batch.android.core.Logger;
@@ -255,6 +257,16 @@ public class ActionModule extends BatchModule {
         registeredActions.put(
             NotificationPermissionActionRunnable.IDENTIFIER,
             new UserAction(NotificationPermissionActionRunnable.IDENTIFIER, new NotificationPermissionActionRunnable())
+        );
+
+        registeredActions.put(
+            SmartReOptInAction.IDENTIFIER,
+            new UserAction(SmartReOptInAction.IDENTIFIER, new SmartReOptInAction())
+        );
+
+        registeredActions.put(
+            RedirectNotificationSettingsAction.IDENTIFIER,
+            new UserAction(RedirectNotificationSettingsAction.IDENTIFIER, new RedirectNotificationSettingsAction())
         );
     }
 

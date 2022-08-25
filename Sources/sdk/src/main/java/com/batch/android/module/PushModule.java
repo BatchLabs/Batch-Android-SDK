@@ -35,6 +35,7 @@ import com.batch.android.PushRegistrationProviderAvailabilityException;
 import com.batch.android.WebserviceLauncher;
 import com.batch.android.core.InternalPushData;
 import com.batch.android.core.Logger;
+import com.batch.android.core.NotificationPermissionHelper;
 import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskRunnable;
@@ -933,6 +934,20 @@ public class PushModule extends BatchModule {
 
     private void printRegistration(@NonNull Registration registration) {
         Logger.info(TAG, "Registration ID/Push Token (" + registration.provider + "): " + registration.registrationID);
+    }
+
+    /**
+     * Request the notification runtime permission
+     * Required for Android 13 (api 33)
+     * Do nothing if app target is lower than 13
+     * @param context requesting the permission
+     */
+    public void requestNotificationPermission(@NonNull Context context) {
+        if (context == null) {
+            throw new IllegalArgumentException("Context can't be null");
+        }
+        NotificationPermissionHelper helper = new NotificationPermissionHelper();
+        helper.requestPermission(context, false, null);
     }
 
     // ---------------------------------------->

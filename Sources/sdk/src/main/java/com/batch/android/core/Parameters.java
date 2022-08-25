@@ -195,7 +195,7 @@ public final class Parameters {
     /**
      * A prefix applied to every user parameter saved into the storage
      */
-    private static final String PARAMETERS_KEY_PREFIX = "batch_parameter_";
+    public static final String PARAMETERS_KEY_PREFIX = "batch_parameter_";
 
     // ------------------------------------------->
 
