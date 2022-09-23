@@ -25,7 +25,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 33
         versionCode 1
-        versionName "1.19.2"
+        versionName "1.19.3"
         buildConfigField "String", SDK_VERSION, "\"$versionName\""
         buildConfigField "Integer", API_LEVEL, '51'
         buildConfigField "Integer", MESSAGING_API_LEVEL, '12'

@@ -226,6 +226,9 @@ public class PushRegistrationProviderFactory {
      * @return true if if the FCM Token APIs are available
      */
     private boolean isFCMTokenApiAvailable() {
+        if (!FCMAbstractRegistrationProvider.isFirebaseMessagingPresent()) {
+            return false;
+        }
         try {
             FirebaseMessaging.class.getMethod("getToken");
             return true;
