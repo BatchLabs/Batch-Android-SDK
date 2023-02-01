@@ -138,7 +138,22 @@ public class WebFormatView extends FrameLayout {
                     if (!isDialog && isUserGesture && actionListener != null) {
                         // A link with target="_blank" has been clicked
                         WebView.HitTestResult result = view.getHitTestResult();
-                        actionListener.onOpenDeeplinkAction(result.getExtra(), null, null);
+                        String url = result.getExtra();
+                        // Fix the case where we have an image in a hyperlink and
+                        // view.getHitTestResult() returns the source of the image
+                        // rather than the url.
+                        if (result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+                            Message href = view.getHandler().obtainMessage();
+                            view.requestFocusNodeHref(href);
+                            Bundle data = href.getData();
+                            if (data != null) {
+                                String imageUrl = data.getString("url");
+                                if (imageUrl != null && !imageUrl.isEmpty()) {
+                                    url = imageUrl;
+                                }
+                            }
+                        }
+                        actionListener.onOpenDeeplinkAction(url, null, null);
                     }
                     return super.onCreateWindow(view, isDialog, isUserGesture, resultMsg);
                 }

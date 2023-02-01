@@ -18,6 +18,7 @@ public class DispatcherSerializer {
     public static final String MIXPANEL_DISPATCHER_NAME = "mixpanel";
     public static final String GOOGLE_ANALYTICS_DISPATCHER_NAME = "google_analytics";
     public static final String BATCH_PLUGINS_DISPATCHER_NAME = "batch_plugins";
+    public static final String BATCH_PIANO_NAME = "piano";
 
     private static final String CUSTOM_DISPATCHER_NAME = "other";
 
@@ -29,7 +30,8 @@ public class DispatcherSerializer {
         AT_INTERNET_DISPATCHER_NAME,
         MIXPANEL_DISPATCHER_NAME,
         GOOGLE_ANALYTICS_DISPATCHER_NAME,
-        BATCH_PLUGINS_DISPATCHER_NAME
+        BATCH_PLUGINS_DISPATCHER_NAME,
+        BATCH_PIANO_NAME
     );
 
     /**
