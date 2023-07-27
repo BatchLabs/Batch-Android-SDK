@@ -3,11 +3,10 @@ package com.batch.android.post;
 import com.batch.android.displayreceipt.DisplayReceipt;
 import com.batch.android.msgpack.core.MessageBufferPacker;
 import com.batch.android.msgpack.core.MessagePack;
+import java.io.IOException;
 import java.util.Collection;
 
 public class DisplayReceiptPostDataProvider extends MessagePackPostDataProvider<Collection<DisplayReceipt>> {
-
-    private static final String TAG = "DisplayReceiptPostDataProvider";
 
     private final Collection<DisplayReceipt> receipts;
 
@@ -21,14 +20,18 @@ public class DisplayReceiptPostDataProvider extends MessagePackPostDataProvider<
     }
 
     @Override
-    byte[] pack() throws Exception {
+    byte[] pack() throws IOException {
         MessageBufferPacker packer = MessagePack.newDefaultBufferPacker();
-
-        packer.packArrayHeader(receipts.size());
-        for (DisplayReceipt data : receipts) {
-            data.writeTo(packer);
+        try {
+            packer.packArrayHeader(receipts.size());
+            for (DisplayReceipt data : receipts) {
+                data.writeTo(packer);
+            }
+        } catch (Exception e) {
+            throw new IOException(e);
+        } finally {
+            packer.close();
         }
-        packer.close();
         return packer.toByteArray();
     }
 

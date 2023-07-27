@@ -42,7 +42,7 @@ public final class BatchUserProfile {
      */
     @Deprecated
     public BatchUserProfile setLanguage(String language) {
-        Batch.User.editor().setLanguage(language).save(false);
+        Batch.User.editor().setLanguage(language).saveSync();
         return this;
     }
 
@@ -78,7 +78,7 @@ public final class BatchUserProfile {
      */
     @Deprecated
     public BatchUserProfile setRegion(String region) {
-        Batch.User.editor().setRegion(region).save(false);
+        Batch.User.editor().setRegion(region).saveSync();
         return this;
     }
 
@@ -118,7 +118,7 @@ public final class BatchUserProfile {
      */
     @Deprecated
     public BatchUserProfile setCustomID(String customID) {
-        Batch.User.editor().setIdentifier(customID).save(false);
+        Batch.User.editor().setIdentifier(customID).saveSync();
         return this;
     }
 

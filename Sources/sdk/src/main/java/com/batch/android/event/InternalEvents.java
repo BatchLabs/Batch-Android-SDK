@@ -19,6 +19,7 @@ public final class InternalEvents {
     public static final String PROFILE_CHANGED = "_PROFILE_CHANGED";
     public static final String INSTALL_DATA_CHANGED = "_INSTALL_DATA_CHANGED";
     public static final String INSTALL_DATA_CHANGED_TRACK_FAILURE = "_INSTALL_DATA_CHANGED_TRACK_FAIL";
+    public static final String EMAIL_CHANGED = "_EMAIL_CHANGED";
 
     public static final String LOCATION_CHANGED = "_LOCATION_CHANGED";
     public static final String NOTIFICATION_STATUS_CHANGE = "_NOTIF_STATUS_CHANGE";

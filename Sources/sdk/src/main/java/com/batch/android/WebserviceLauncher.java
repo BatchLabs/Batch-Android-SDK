@@ -84,27 +84,6 @@ public final class WebserviceLauncher {
     }
 
     /**
-     * Create an instance of the display receipt webservice and return the runnable
-     *
-     * @param context
-     * @param dataProvider
-     * @param listener
-     * @return instance of the webservice ready to be run
-     */
-    public static TaskRunnable initDisplayReceiptWebservice(
-        Context context,
-        DisplayReceiptPostDataProvider dataProvider,
-        DisplayReceiptWebserviceListener listener
-    ) {
-        try {
-            return new DisplayReceiptWebservice(context, listener, dataProvider);
-        } catch (Exception e) {
-            Logger.internal(TAG, "Error while initializing DRW", e);
-            return null;
-        }
-    }
-
-    /**
      * Create an instance of the Opt-Out Tracker webservice and return the runnable
      *
      * @param events
@@ -240,6 +219,28 @@ public final class WebserviceLauncher {
             return true;
         } catch (Exception e) {
             Logger.internal(TAG, "Error while initializing Local Campaigns JIT WS", e);
+            return false;
+        }
+    }
+
+    /**
+     * Launch the display receipt webservice
+     *
+     * @param context Android's context
+     * @param dataProvider Display receipt data provider
+     * @param listener Webservice callback
+     * @return instance of the webservice ready to be run
+     */
+    public static boolean launchDisplayReceiptWebservice(
+        Context context,
+        DisplayReceiptPostDataProvider dataProvider,
+        DisplayReceiptWebserviceListener listener
+    ) {
+        try {
+            TaskExecutorProvider.get(context).submit(new DisplayReceiptWebservice(context, listener, dataProvider));
+            return true;
+        } catch (Exception e) {
+            Logger.internal(TAG, "Error while initializing DRW", e);
             return false;
         }
     }

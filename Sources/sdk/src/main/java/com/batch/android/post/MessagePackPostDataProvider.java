@@ -1,12 +1,13 @@
 package com.batch.android.post;
 
 import com.batch.android.core.Logger;
+import java.io.IOException;
 
 public abstract class MessagePackPostDataProvider<T> implements PostDataProvider<T> {
 
     private static final String TAG = "MessagePackPostDataProvider";
 
-    abstract byte[] pack() throws Exception;
+    abstract byte[] pack() throws IOException;
 
     @Override
     public byte[] getData() {

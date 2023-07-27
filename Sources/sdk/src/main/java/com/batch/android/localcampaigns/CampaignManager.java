@@ -33,6 +33,7 @@ import com.batch.android.query.response.LocalCampaignsResponse;
 import com.batch.android.query.serialization.deserializers.LocalCampaignsResponseDeserializer;
 import com.batch.android.query.serialization.serializers.LocalCampaignsResponseSerializer;
 import com.batch.android.webservice.listener.LocalCampaignsJITWebserviceListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -627,7 +628,7 @@ public class CampaignManager {
         JSONObject campaignsRawData;
         try {
             campaignsRawData = persistor.loadData(context, PERSISTENCE_LOCAL_CAMPAIGNS_FILE_NAME);
-        } catch (PersistenceException e) {
+        } catch (PersistenceException | IOException e) {
             Logger.internal(TAG, "Can't load saved local campaigns", e);
             return false;
         }

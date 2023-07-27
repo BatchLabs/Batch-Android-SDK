@@ -46,12 +46,12 @@ public class BatchAlertContent implements BatchInAppMessage.Content {
 
     @Nullable
     public String getBody() {
-        return cancelLabel;
+        return body;
     }
 
     @Nullable
     public String getCancelLabel() {
-        return body;
+        return cancelLabel;
     }
 
     @Nullable

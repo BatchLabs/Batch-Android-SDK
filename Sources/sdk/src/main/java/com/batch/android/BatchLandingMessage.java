@@ -20,6 +20,12 @@ public class BatchLandingMessage extends BatchMessage implements PushUserActionS
     private Bundle payload;
     private JSONObject landing;
 
+    /**
+     * Flag indication whether this landing message has been triggered from an inbox notification.
+     * Default: false (meaning the display has been triggered from a push notification )
+     */
+    private boolean isDisplayedFromInbox = false;
+
     protected BatchLandingMessage(@NonNull Bundle rawPayload, @NonNull JSONObject parsedLanding) {
         payload = cleanBundle(rawPayload);
         landing = parsedLanding;
@@ -83,5 +89,19 @@ public class BatchLandingMessage extends BatchMessage implements PushUserActionS
 
     public Bundle getPushBundle() {
         return new Bundle(payload);
+    }
+
+    /**
+     * Whether this landing message has been triggered from an inbox notification
+     * through the method {@link BatchInboxNotificationContent#displayLandingMessage}.
+     *
+     * @return true if displayed from inbox, false if from a push notification.
+     */
+    public boolean isDisplayedFromInbox() {
+        return isDisplayedFromInbox;
+    }
+
+    void setIsDisplayedFromInbox(boolean triggeredFromInbox) {
+        isDisplayedFromInbox = triggeredFromInbox;
     }
 }

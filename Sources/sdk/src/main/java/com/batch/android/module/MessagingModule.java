@@ -243,7 +243,11 @@ public class MessagingModule extends BatchModule {
             if (payloadMessage instanceof BatchInAppMessage) {
                 message.source = Message.Source.LOCAL;
             } else if (payloadMessage instanceof BatchLandingMessage) {
-                message.source = Message.Source.LANDING;
+                if (((BatchLandingMessage) payloadMessage).isDisplayedFromInbox()) {
+                    message.source = Message.Source.INBOX_LANDING;
+                } else {
+                    message.source = Message.Source.LANDING;
+                }
             }
         } catch (PayloadParsingException e) {
             Logger.error(TAG, "Error while parsing push payload", e);
@@ -298,7 +302,11 @@ public class MessagingModule extends BatchModule {
             if (payloadMessage instanceof BatchInAppMessage) {
                 message.source = Message.Source.LOCAL;
             } else if (payloadMessage instanceof BatchLandingMessage) {
-                message.source = Message.Source.LANDING;
+                if (((BatchLandingMessage) payloadMessage).isDisplayedFromInbox()) {
+                    message.source = Message.Source.INBOX_LANDING;
+                } else {
+                    message.source = Message.Source.LANDING;
+                }
             }
         } catch (PayloadParsingException e) {
             Logger.error(TAG, "Error while parsing push payload", e);
@@ -389,6 +397,9 @@ public class MessagingModule extends BatchModule {
                 break;
             case LANDING:
                 sourceName = "landing";
+                break;
+            case INBOX_LANDING:
+                sourceName = "inbox-landing";
                 break;
             default:
                 sourceName = "unknown";

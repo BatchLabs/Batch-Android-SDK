@@ -1,6 +1,5 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
-apply plugin: 'io.codearte.nexus-staging'
 
 def propFile = project.rootProject.file("maven.properties")
 Properties props = new Properties()
@@ -29,7 +28,7 @@ publishing {
 
             groupId mavenGroupId
             artifactId mavenArtifact
-            version android.defaultConfig.versionName
+            version mavenArtifactVersion
 
             afterEvaluate {
                 from components.release
@@ -186,7 +185,7 @@ publishing {
 
     repositories {
         maven {
-            if (!props.getProperty("batch.maven.central.release_repo_url", "").equals("")) {
+            if (props.getProperty("batch.maven.central.release_repo_url", "") != "") {
                 url props.getProperty("batch.maven.central.release_repo_url", "")
                 credentials {
                     username = props.getProperty("batch.maven.central.username", "")

@@ -121,10 +121,11 @@ public class LocalCampaignsFilePersistence implements LocalCampaignsPersistence 
 
     @Nullable
     @Override
-    public JSONObject loadData(@NonNull Context context, @NonNull String filename) throws PersistenceException {
-        FileInputStream fis;
-        InputStreamReader isr;
-        BufferedReader bufferedReader;
+    public JSONObject loadData(@NonNull Context context, @NonNull String filename)
+        throws PersistenceException, IOException {
+        FileInputStream fis = null;
+        InputStreamReader isr = null;
+        BufferedReader bufferedReader = null;
 
         StringBuilder sb = new StringBuilder();
 
@@ -141,14 +142,16 @@ public class LocalCampaignsFilePersistence implements LocalCampaignsPersistence 
             }
         } catch (Exception ex) {
             throw new PersistenceException("Can't read file. " + ex.toString());
-        }
-
-        try {
-            bufferedReader.close();
-            isr.close();
-            fis.close();
-        } catch (IOException ex) {
-            throw new PersistenceException("Stream not closed. " + ex.toString());
+        } finally {
+            if (bufferedReader != null) {
+                bufferedReader.close();
+            }
+            if (isr != null) {
+                isr.close();
+            }
+            if (fis != null) {
+                fis.close();
+            }
         }
 
         try {

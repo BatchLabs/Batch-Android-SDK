@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.RemoteViews;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,7 +21,64 @@ import com.batch.android.json.JSONObject;
  */
 public class APENFormat extends BaseFormat implements NotificationFormat {
 
-    private ImageView.ScaleType imageScaleType;
+    private static final String LAYOUT_TYPE_KEY = "apen_layout_type";
+
+    protected enum LayoutType {
+        /**
+         * Layout match_parent and image scale type to center_crop
+         */
+        CENTER_CROP_MP(0, false),
+        /**
+         * Layout 200dp and image scale type to center_crop
+         */
+        CENTER_CROP_200(0, true),
+
+        /**
+         * Layout match_parent and image scale type to fit_center
+         */
+        FIT_CENTER_MP(1, false),
+
+        /**
+         * Layout 200dp and image scale type to fit_center (default)
+         */
+        FIT_CENTER_200(1, true);
+
+        /**
+         * ImageView scale type for the remote view
+         */
+        private final int imageScaleType;
+
+        /**
+         * Whether we should force the layout height to 200dp
+         */
+        private final boolean forceLayoutHeight;
+
+        LayoutType(int imageScaleType, boolean forceLayoutHeight) {
+            this.imageScaleType = imageScaleType;
+            this.forceLayoutHeight = forceLayoutHeight;
+        }
+
+        /**
+         * Whether we should force the layout height to 200dp
+         * @return true if should force the layout height to 200dp
+         */
+        public boolean shouldForceLayoutHeight() {
+            return this.forceLayoutHeight;
+        }
+
+        /**
+         * Whether the image scale type should be fit_center
+         * @return true if should be fit_center
+         */
+        public boolean shouldFitCenter() {
+            return imageScaleType == 1;
+        }
+    }
+
+    /**
+     * Layout type of the remote view
+     */
+    private LayoutType layoutType = LayoutType.FIT_CENTER_200;
 
     public APENFormat(
         @NonNull String title,
@@ -31,7 +87,6 @@ public class APENFormat extends BaseFormat implements NotificationFormat {
         @Nullable Bitmap picture
     ) {
         super(title, body, collapsedIcon, picture);
-        imageScaleType = ImageView.ScaleType.CENTER_CROP;
     }
 
     public RemoteViews generateCollapsedView(@NonNull String packageName) {
@@ -40,18 +95,21 @@ public class APENFormat extends BaseFormat implements NotificationFormat {
         view.setTextViewText(R.id.com_batchsdk_notification_body, body);
 
         Bitmap finalIcon = icon != null ? icon : picture;
-
         if (finalIcon != null) {
             view.setImageViewBitmap(R.id.com_batchsdk_notification_icon1, finalIcon);
         } else {
             view.setViewVisibility(R.id.com_batchsdk_notification_icon1, View.GONE);
         }
-
         return view;
     }
 
     public RemoteViews generateExpandedView(@NonNull String packageName) {
-        final RemoteViews view = new RemoteViews(packageName, R.layout.com_batchsdk_notification_layout_apen_expanded);
+        final RemoteViews view;
+        if (layoutType.shouldForceLayoutHeight()) {
+            view = new RemoteViews(packageName, R.layout.com_batchsdk_notification_layout_apen_expanded_200dp);
+        } else {
+            view = new RemoteViews(packageName, R.layout.com_batchsdk_notification_layout_apen_expanded);
+        }
 
         view.setTextViewText(R.id.com_batchsdk_notification_title, title);
         view.setTextViewText(R.id.com_batchsdk_notification_body, body);
@@ -60,21 +118,15 @@ public class APENFormat extends BaseFormat implements NotificationFormat {
         view.setViewVisibility(R.id.com_batchsdk_notification_icon_fitcenter, View.GONE);
 
         int targetImageResID;
-        switch (imageScaleType) {
-            case CENTER_CROP:
-            default:
-                targetImageResID = R.id.com_batchsdk_notification_icon_centercrop;
-                break;
-            case FIT_CENTER:
-                targetImageResID = R.id.com_batchsdk_notification_icon_fitcenter;
-                break;
+        if (layoutType.shouldFitCenter()) {
+            targetImageResID = R.id.com_batchsdk_notification_icon_fitcenter;
+        } else {
+            targetImageResID = R.id.com_batchsdk_notification_icon_centercrop;
         }
-
         if (picture != null) {
             view.setImageViewBitmap(targetImageResID, picture);
             view.setViewVisibility(targetImageResID, View.VISIBLE);
         }
-
         return view;
     }
 
@@ -85,13 +137,19 @@ public class APENFormat extends BaseFormat implements NotificationFormat {
     @Override
     public void applyArguments(@Nullable JSONObject arguments) {
         if (arguments != null) {
-            switch (arguments.reallyOptInteger("scale", 0)) {
-                case 0:
-                default:
-                    imageScaleType = ImageView.ScaleType.CENTER_CROP;
+            switch (arguments.optString(LAYOUT_TYPE_KEY)) {
+                case "fill_mp":
+                    this.layoutType = LayoutType.CENTER_CROP_MP;
                     break;
-                case 1:
-                    imageScaleType = ImageView.ScaleType.FIT_CENTER;
+                case "fill_200":
+                    this.layoutType = LayoutType.CENTER_CROP_200;
+                    break;
+                case "fit_mp":
+                    this.layoutType = LayoutType.FIT_CENTER_MP;
+                    break;
+                case "fit_200":
+                default:
+                    this.layoutType = LayoutType.FIT_CENTER_200;
                     break;
             }
         }
@@ -99,13 +157,13 @@ public class APENFormat extends BaseFormat implements NotificationFormat {
 
     public void applyExtraBuilderConfiguration(@NonNull NotificationCompat.Builder builder) {}
 
-    @VisibleForTesting
-    ImageView.ScaleType getImageScaleType() {
-        return imageScaleType;
-    }
-
     @SuppressLint("AnnotateVersionCheck")
     public static boolean isSupported() {
         return android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+    }
+
+    @VisibleForTesting
+    LayoutType getLayoutType() {
+        return layoutType;
     }
 }

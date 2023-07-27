@@ -3,11 +3,10 @@ package com.batch.android.post;
 import com.batch.android.metrics.model.Metric;
 import com.batch.android.msgpack.core.MessageBufferPacker;
 import com.batch.android.msgpack.core.MessagePack;
+import java.io.IOException;
 import java.util.Collection;
 
 public class MetricPostDataProvider extends MessagePackPostDataProvider<Collection<Metric<?>>> {
-
-    private static final String TAG = "DisplayReceiptPostDataProvider";
 
     private final Collection<Metric<?>> metrics;
 
@@ -21,13 +20,18 @@ public class MetricPostDataProvider extends MessagePackPostDataProvider<Collecti
     }
 
     @Override
-    byte[] pack() throws Exception {
+    byte[] pack() throws IOException {
         MessageBufferPacker packer = MessagePack.newDefaultBufferPacker();
         packer.packArrayHeader(metrics.size());
-        for (Metric<?> data : metrics) {
-            data.pack(packer);
+        try {
+            for (Metric<?> data : metrics) {
+                data.pack(packer);
+            }
+        } catch (Exception e) {
+            throw new IOException(e);
+        } finally {
+            packer.close();
         }
-        packer.close();
         return packer.toByteArray();
     }
 

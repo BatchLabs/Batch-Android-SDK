@@ -21,39 +21,23 @@ import com.batch.android.UserAction;
 import com.batch.android.UserActionRunnable;
 import com.batch.android.UserActionSource;
 import com.batch.android.di.DITest;
-import com.batch.android.di.DITestUtils;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.module.ActionModule;
-import com.batch.android.module.UserModule;
 import java.util.Map;
 import java.util.Set;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.robolectric.shadows.ShadowLog;
 
 @RunWith(AndroidJUnit4.class)
 @MediumTest
-@PowerMockIgnore({ "org.mockito.*", "org.robolectric.*", "android.*", "androidx.*" })
-@PrepareForTest({ UserModule.class })
 public class ActionModuleTest extends DITest {
 
     private static final String apiKey = "apiKey";
     private Context context;
-
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
 
     @Before
     public void setUp() {

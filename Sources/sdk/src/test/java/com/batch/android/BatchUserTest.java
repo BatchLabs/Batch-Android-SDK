@@ -12,17 +12,26 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 import com.batch.android.core.Promise;
 import com.batch.android.di.DITest;
+import com.batch.android.di.DITestUtils;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.json.JSONObject;
+import com.batch.android.module.UserModule;
+import com.batch.android.user.EmailSubscription;
+import com.batch.android.user.UserOperationQueue;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.reflect.Whitebox;
 
 @RunWith(AndroidJUnit4.class)
 @SmallTest
@@ -42,6 +51,7 @@ public class BatchUserTest extends DITest {
     @After
     public void tearDown() {
         super.tearDown();
+        //DI.reset();
         //Batch.getUserProfile().setLanguage(null).setRegion(null).setCustomID(null);
     }
 
@@ -202,7 +212,7 @@ public class BatchUserTest extends DITest {
         editor.setAttribute("int_value", 4);
         editor.setAttribute("url_value", new URI("batch://batch.com"));
         editor.setAttribute("wrong_url_value", new URI("batch.com"));
-        editor.save(false);
+        editor.saveSync();
 
         MockBatchAttributesFetchListener listener = new MockBatchAttributesFetchListener();
 
@@ -232,18 +242,18 @@ public class BatchUserTest extends DITest {
 
         // remove changes from test
         editor.clearAttributes();
-        editor.save(false);
+        editor.saveSync();
     }
 
     @Test
     public void testTagCollectionsRead() throws Exception {
         editor.clearTags();
-        editor.save(false);
+        editor.saveSync();
         editor.addTag("collection_1", "tag_1");
         editor.addTag("collection_1", "tag_2");
         editor.addTag("collection_2", "tag_3");
         editor.addTag("collection_3", "TAG_4");
-        editor.save(false);
+        editor.saveSync();
 
         MockBatchTagCollectionsFetchListener listener = new MockBatchTagCollectionsFetchListener();
 
@@ -265,7 +275,7 @@ public class BatchUserTest extends DITest {
 
         // remove changes from test
         editor.clearTags();
-        editor.save(false);
+        editor.saveSync();
     }
 
     @Test
@@ -283,7 +293,7 @@ public class BatchUserTest extends DITest {
         editor.setLanguage("ba");
         editor.setIdentifier("pp");
 
-        Promise<Void> savePromise = editor.save(false);
+        Promise<Void> savePromise = editor.saveSync();
 
         // No error
         assertEquals(Promise.Status.RESOLVED, savePromise.getStatus());
@@ -297,7 +307,7 @@ public class BatchUserTest extends DITest {
         editor.setLanguage(null);
         editor.setIdentifier(null);
 
-        savePromise = editor.save(false);
+        savePromise = editor.saveSync();
 
         // No error
         assertEquals(Promise.Status.RESOLVED, savePromise.getStatus());
@@ -308,6 +318,64 @@ public class BatchUserTest extends DITest {
         assertEquals(Batch.User.getRegion(context), initialRegion);
         assertEquals(Batch.User.getLanguage(context), initialLanguage);
         assertNull(Batch.User.getIdentifier(context));
+    }
+
+    @Test
+    public void testUserOperationsStacked() throws Exception {
+        UserModule module = DITestUtils.mockSingletonDependency(UserModule.class, null);
+        BatchUserDataEditor editor = Batch.User.editor();
+        editor.setAttribute("dummy", "value").save();
+        editor.setAttribute("dummy", "value").save();
+        Batch.User.editor().setAttribute("dummy", "value").save();
+
+        Field fieldQueues = UserModule.class.getDeclaredField("operationQueues");
+        fieldQueues.setAccessible(true);
+        List<UserOperationQueue> queues = (List<UserOperationQueue>) fieldQueues.get(module);
+
+        // Ensure every editor instance has added its queue
+        Assert.assertEquals(3, queues.size());
+    }
+
+    public void testSetEmail() {
+        // Ensure we can't setEmail wihtout identifier
+        editor.setEmail("test@batch.com");
+        assertNull(Whitebox.getInternalState(editor, "emailSubscription"));
+
+        // Check email is too long
+        editor
+            .setIdentifier("identifier")
+            .setEmail(
+                "testastringtoolongtobeanemailtestastringtoolongtobeanemailtestastringtoolongtobeanemailtestastringtoolongtobeanemailtestastringtoo@batch.com"
+            );
+        assertNull(Whitebox.getInternalState(editor, "emailSubscription"));
+
+        // Ensure email is set
+        editor.setIdentifier("identifier").setEmail("test@batch.com");
+        EmailSubscription subscription = Whitebox.getInternalState(editor, "emailSubscription");
+        assertNotNull(subscription);
+        assertEquals("test@batch.com", Whitebox.getInternalState(subscription, "email"));
+        assertFalse(Whitebox.getInternalState(subscription, "deleteEmail"));
+
+        // Ensure we will remove email
+        editor.setIdentifier("identifier").setEmail(null);
+        assertNull(Whitebox.getInternalState(subscription, "email"));
+        assertTrue(Whitebox.getInternalState(subscription, "deleteEmail"));
+        editor.save();
+    }
+
+    @Test
+    public void testSetEmailSubscription() {
+        editor.setEmailMarketingSubscriptionState(BatchEmailSubscriptionState.SUBSCRIBED);
+        EmailSubscription subscription = Whitebox.getInternalState(editor, "emailSubscription");
+        assertNotNull(subscription);
+        HashMap<EmailSubscription.Kind, BatchEmailSubscriptionState> currentSubscription = Whitebox.getInternalState(
+            subscription,
+            "subscriptions"
+        );
+        assertEquals(1, currentSubscription.size());
+        assertEquals(EmailSubscription.Kind.MARKETING, currentSubscription.keySet().toArray()[0]);
+        assertEquals(BatchEmailSubscriptionState.SUBSCRIBED, currentSubscription.values().toArray()[0]);
+        editor.save();
     }
 
     public static class WebserviceImpl extends BatchWebservice {

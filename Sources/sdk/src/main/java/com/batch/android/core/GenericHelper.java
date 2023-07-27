@@ -10,12 +10,18 @@ import androidx.annotation.NonNull;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 /**
  * Generic helper that contains generic helpful methods
  *
  */
 public class GenericHelper {
+
+    /**
+     * Valid email pattern
+     */
+    private static final Pattern EMAIL_KEY_PATTERN = Pattern.compile("^(\\S+@\\S+\\.\\S+)$");
 
     /**
      * Check if the permission is available
@@ -151,5 +157,9 @@ public class GenericHelper {
         Resources resources = context.getResources();
         DisplayMetrics metrics = resources.getDisplayMetrics();
         return Math.round((float) dp * metrics.density);
+    }
+
+    public static boolean isValidEmail(String email) {
+        return EMAIL_KEY_PATTERN.matcher(email).matches();
     }
 }

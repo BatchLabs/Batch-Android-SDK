@@ -4,6 +4,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.json.JSONObject;
+import java.io.IOException;
 
 public interface LocalCampaignsPersistence {
     boolean hasSavedData(@NonNull Context context, @NonNull String dataKey) throws PersistenceException;
@@ -15,7 +16,7 @@ public interface LocalCampaignsPersistence {
         throws PersistenceException;
 
     @Nullable
-    JSONObject loadData(@NonNull Context context, @NonNull String dataKey) throws PersistenceException;
+    JSONObject loadData(@NonNull Context context, @NonNull String dataKey) throws PersistenceException, IOException;
 
     void deleteData(@NonNull Context context, @NonNull String dataKey) throws PersistenceException;
 }

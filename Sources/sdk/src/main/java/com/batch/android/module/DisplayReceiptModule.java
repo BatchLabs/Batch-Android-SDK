@@ -183,12 +183,13 @@ public class DisplayReceiptModule extends BatchModule {
             }
 
             DisplayReceiptPostDataProvider dataProvider = new DisplayReceiptPostDataProvider(payloads.values());
-            TaskRunnable runnable = WebserviceLauncher.initDisplayReceiptWebservice(
+            WebserviceLauncher.launchDisplayReceiptWebservice(
                 context,
                 dataProvider,
                 new DisplayReceiptWebserviceListener() {
                     @Override
                     public void onSuccess() {
+                        Logger.internal(TAG, "Display receipt successfully sent");
                         // WS success - Delete all cached files
                         for (File file : payloads.keySet()) {
                             file.delete();
@@ -201,10 +202,6 @@ public class DisplayReceiptModule extends BatchModule {
                     }
                 }
             );
-
-            if (runnable != null) {
-                runnable.run();
-            }
         }
     }
 

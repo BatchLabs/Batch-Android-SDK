@@ -31,6 +31,7 @@ import com.batch.android.user.UserAttribute;
 import com.batch.android.user.UserDataDiff;
 import com.batch.android.user.UserDatabaseException;
 import com.batch.android.user.UserOperation;
+import com.batch.android.user.UserOperationQueue;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -67,7 +68,7 @@ public final class UserModule extends BatchModule {
         return Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory());
     }
 
-    private static final List<UserOperation> pendingUserOperation = new LinkedList<>();
+    private final List<UserOperationQueue> operationQueues = new LinkedList<>();
 
     private BroadcastReceiver localBroadcastReceiver;
 
@@ -135,8 +136,7 @@ public final class UserModule extends BatchModule {
                     .registerReceiver(localBroadcastReceiver, new IntentFilter(OptOutModule.INTENT_OPTED_IN));
             }
         }
-
-        executeUserPendingOperations();
+        submitOperationQueues(0);
     }
 
     // endregion
@@ -445,37 +445,45 @@ public final class UserModule extends BatchModule {
 
     // region User operations
 
-    /**
-     * Add pending operations when {@link BatchUserDataEditor#save()} is called before the SDK is started
-     *
-     * @param operations
-     */
-    public static void addUserPendingOperations(List<UserOperation> operations) {
-        synchronized (pendingUserOperation) {
-            pendingUserOperation.addAll(operations);
+    public void addOperationQueueAndSubmit(long msDelay, UserOperationQueue queue) {
+        synchronized (operationQueues) {
+            operationQueues.add(queue);
         }
+        if (!RuntimeManagerProvider.get().isReady()) {
+            Logger.internal(BatchUserDataEditor.TAG, "Batch is not started, enqueuing user operations");
+            return;
+        }
+        // Delay is used to prevent bad use of BatchUserEditor.save() method and trying to batch as much as possible user data transactions.
+        submitOperationQueues(msDelay);
     }
 
-    /**
-     * Execute pending operations in the apply queue when the {@link UserModule} is started
-     */
-    private void executeUserPendingOperations() {
-        synchronized (pendingUserOperation) {
-            if (!pendingUserOperation.isEmpty()) {
-                final List<UserOperation> tmpOperationQueue = new LinkedList<>(pendingUserOperation);
-                pendingUserOperation.clear();
-
-                Runnable runnable = () -> {
-                    try {
-                        UserModule.applyUserOperationsSync(tmpOperationQueue);
-                    } catch (UserModule.SaveException e) {
-                        e.log();
-                    }
-                };
-
-                // Execute operations on apply queue
-                UserModule.submitOnApplyQueue(0, runnable);
+    public void submitOperationQueues(long msDelay) {
+        synchronized (operationQueues) {
+            if (operationQueues.isEmpty()) {
+                return;
             }
+            Runnable runnable = () -> {
+                List<UserOperation> operations = new LinkedList<>();
+                if (operationQueues.size() >= 3) {
+                    Logger.warning(
+                        BatchUserDataEditor.TAG,
+                        "It looks like you are using many instances of BatchUserDataEditor. Please check our documentation to ensure you are using this api correctly: https://doc.batch.com/android/custom-data/custom-attributes#methods"
+                    );
+                }
+                for (UserOperationQueue userOperationQueue : operationQueues) {
+                    operations.addAll(userOperationQueue.popOperations());
+                }
+                operationQueues.clear();
+                if (operations.isEmpty()) {
+                    return;
+                }
+                try {
+                    applyUserOperationsSync(operations);
+                } catch (UserModule.SaveException e) {
+                    Logger.error(TAG, e.getMessage());
+                }
+            };
+            submitOnApplyQueue(msDelay, runnable);
         }
     }
 

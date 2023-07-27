@@ -1,6 +1,6 @@
 package com.batch.android.inbox;
 
-enum FetcherType {
+public enum FetcherType {
     INSTALLATION(0),
     USER_IDENTIFIER(1);
 

@@ -8,7 +8,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.MediumTest;
-import com.batch.android.Batch;
+import com.batch.android.di.DITest;
 import com.batch.android.di.DITestUtils;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.json.JSONException;
@@ -17,32 +17,19 @@ import com.batch.android.module.ActionModule;
 import com.batch.android.module.UserModule;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.robolectric.annotation.Config;
-import org.robolectric.res.android.Asset;
 import org.robolectric.shadows.ShadowLog;
 
 @RunWith(AndroidJUnit4.class)
 @MediumTest
-@PowerMockIgnore({ "org.mockito.*", "org.robolectric.*", "android.*", "androidx.*" })
-@PrepareForTest({ UserModule.class })
-public class UserEventActionTest {
+public class UserEventActionTest extends DITest {
 
     private Context context;
-
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
 
     @Before
     public void setUp() {

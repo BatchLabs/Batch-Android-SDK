@@ -123,7 +123,7 @@ task("metalavaGenerateTaggedSignature", dependsOn: ["metalavaGenerateSignature"]
     doFirst {
         copy {
             from project.rootProject.file('../metalava-api/api-latest.txt')
-            into project.rootProject.file('../metalava-api/' + android.defaultConfig.versionName + '/')
+            into project.rootProject.file('../metalava-api/' + project.version + '/')
 
             rename 'api-latest.txt', 'api.txt'
         }
@@ -149,7 +149,7 @@ android.libraryVariants.all { variant ->
     }
 
     task("metalavaGenerateJavadoc${variant.name.capitalize()}", type: Javadoc, dependsOn: ['assembleRelease', "metalavaGenerateStubs${variant.name.capitalize()}"]) {
-        title = "Batch Android SDK " + android.defaultConfig.versionName
+        title = "Batch Android SDK " + project.version
         source = "$buildDir.path/metalava/doc-stubs/"
         destinationDir = project.rootProject.file('../javadoc')
         failOnError = false

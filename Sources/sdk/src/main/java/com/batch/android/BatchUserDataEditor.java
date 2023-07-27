@@ -5,16 +5,19 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.annotation.PublicSDK;
+import com.batch.android.core.GenericHelper;
 import com.batch.android.core.Logger;
 import com.batch.android.core.Promise;
 import com.batch.android.di.providers.RuntimeManagerProvider;
+import com.batch.android.di.providers.UserModuleProvider;
 import com.batch.android.module.UserModule;
+import com.batch.android.user.EmailSubscription;
 import com.batch.android.user.SQLUserDatasource;
 import com.batch.android.user.UserOperation;
+import com.batch.android.user.UserOperationQueue;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -31,15 +34,19 @@ public class BatchUserDataEditor {
     public static final String TAG = "BatchUserDataEditor";
     static final Pattern ATTR_KEY_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{1,30}$");
 
-    private static final int LANGAGUE_INDEX = 0;
+    private static final int LANGUAGE_INDEX = 0;
     private static final int REGION_INDEX = 1;
     private static final int IDENTIFIER_INDEX = 2;
     private static final int ATTR_STRING_MAX_LENGTH = 64; // Also applies to tag values
     private static final int ATTR_URL_MAX_LENGTH = 2048;
+    private static final int EMAIL_MAX_LENGTH = 128;
 
-    private final List<UserOperation> operationQueue = new LinkedList<>();
+    private final UserOperationQueue operationQueue = new UserOperationQueue();
+
     private boolean[] updatedFields = { false, false, false };
     private String[] userFields = { null, null, null };
+
+    private EmailSubscription emailSubscription;
 
     BatchUserDataEditor() {}
 
@@ -58,8 +65,8 @@ public class BatchUserDataEditor {
             return this;
         }
 
-        this.userFields[LANGAGUE_INDEX] = language;
-        this.updatedFields[LANGAGUE_INDEX] = true;
+        this.userFields[LANGUAGE_INDEX] = language;
+        this.updatedFields[LANGUAGE_INDEX] = true;
         return this;
     }
 
@@ -100,9 +107,88 @@ public class BatchUserDataEditor {
     }
 
     /**
+     * Set the user email.
+     *
+     * Note: This method requires to already have a registered identifier for the user
+     * or to call {@link BatchUserDataEditor#setIdentifier} method before this one.
+     * @param email Email string
+     * @return This object instance, for method chaining.
+     */
+    public BatchUserDataEditor setEmail(final @Nullable String email) {
+        Context context = RuntimeManagerProvider.get().getContext();
+        if (context == null) {
+            Logger.warning(TAG, "Batch does not have a context yet. Make sure Batch is started beforehand.");
+            return this;
+        }
+
+        // Ensure we already have a custom user identifier
+        // or setIdentifier has been previously called in this editor instance
+        if (
+            Batch.User.getIdentifier(context) == null &&
+            (
+                !updatedFields[IDENTIFIER_INDEX] ||
+                (updatedFields[IDENTIFIER_INDEX] && userFields[IDENTIFIER_INDEX] == null)
+            )
+        ) {
+            Logger.error(
+                TAG,
+                "setEmail called whereas identifier is null. Please ensure to call setIdentifier before using this method."
+            );
+            return this;
+        }
+
+        // Deleting email case
+        if (email == null) {
+            if (emailSubscription == null) {
+                emailSubscription = new EmailSubscription(null);
+            } else {
+                emailSubscription.setEmail(null);
+            }
+            return this;
+        }
+
+        // Ensure email is not too long
+        if (email.length() > EMAIL_MAX_LENGTH) {
+            Logger.error(TAG, "Email can't be longer than " + EMAIL_MAX_LENGTH + " characters. Ignoring.");
+            return this;
+        }
+
+        // Ensure email has the right format
+        if (!GenericHelper.isValidEmail(email)) {
+            Logger.error(
+                TAG,
+                "setEmail called with invalid email format." +
+                " Please ensure to respect the following regex: .@.\\..* "
+            );
+            return this;
+        }
+
+        if (emailSubscription == null) {
+            emailSubscription = new EmailSubscription(email.trim());
+        } else {
+            emailSubscription.setEmail(email.trim());
+        }
+        return this;
+    }
+
+    /**
+     * Set the user email marketing subscription state.
+     *
+     * @param state State of the subscription
+     * @return This object instance, for method chaining.
+     */
+    public BatchUserDataEditor setEmailMarketingSubscriptionState(@NonNull BatchEmailSubscriptionState state) {
+        if (emailSubscription == null) {
+            emailSubscription = new EmailSubscription();
+        }
+        emailSubscription.addSubscription(EmailSubscription.Kind.MARKETING, state);
+        return this;
+    }
+
+    /**
      * Set a custom user attribute for a key.
      *
-     * @param key   Attribute key, can't be null. It should be made of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.
+     * @param key Attribute key, can't be null. It should be made of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.
      * @param value Attribute value.
      * @return This object instance, for method chaining
      */
@@ -113,11 +199,7 @@ public class BatchUserDataEditor {
         } catch (AttributeValidationException e) {
             return this;
         }
-
-        synchronized (operationQueue) {
-            operationQueue.add(datasource -> datasource.setAttribute(normalizedKey, value));
-        }
-
+        operationQueue.addOperation(datasource -> datasource.setAttribute(normalizedKey, value));
         return this;
     }
 
@@ -136,10 +218,7 @@ public class BatchUserDataEditor {
             return this;
         }
 
-        synchronized (operationQueue) {
-            operationQueue.add(datasource -> datasource.setAttribute(normalizedKey, value));
-        }
-
+        operationQueue.addOperation(datasource -> datasource.setAttribute(normalizedKey, value));
         return this;
     }
 
@@ -157,11 +236,7 @@ public class BatchUserDataEditor {
         } catch (AttributeValidationException e) {
             return this;
         }
-
-        synchronized (operationQueue) {
-            operationQueue.add(datasource -> datasource.setAttribute(normalizedKey, value));
-        }
-
+        operationQueue.addOperation(datasource -> datasource.setAttribute(normalizedKey, value));
         return this;
     }
 
@@ -190,7 +265,7 @@ public class BatchUserDataEditor {
         final Date date = (Date) value.clone();
 
         synchronized (operationQueue) {
-            operationQueue.add(datasource -> datasource.setAttribute(normalizedKey, date));
+            operationQueue.addOperation(datasource -> datasource.setAttribute(normalizedKey, date));
         }
 
         return this;
@@ -223,11 +298,7 @@ public class BatchUserDataEditor {
             );
             return this;
         }
-
-        synchronized (operationQueue) {
-            operationQueue.add(datasource -> datasource.setAttribute(normalizedKey, value));
-        }
-
+        operationQueue.addOperation(datasource -> datasource.setAttribute(normalizedKey, value));
         return this;
     }
 
@@ -268,10 +339,7 @@ public class BatchUserDataEditor {
             return this;
         }
 
-        synchronized (operationQueue) {
-            operationQueue.add(datasource -> datasource.setAttribute(normalizedKey, value));
-        }
-
+        operationQueue.addOperation(datasource -> datasource.setAttribute(normalizedKey, value));
         return this;
     }
 
@@ -289,11 +357,7 @@ public class BatchUserDataEditor {
         } catch (AttributeValidationException e) {
             return this;
         }
-
-        synchronized (operationQueue) {
-            operationQueue.add(datasource -> datasource.removeAttribute(normalizedKey));
-        }
-
+        operationQueue.addOperation(datasource -> datasource.removeAttribute(normalizedKey));
         return this;
     }
 
@@ -303,10 +367,7 @@ public class BatchUserDataEditor {
      * @return This object instance, for method chaining
      */
     public BatchUserDataEditor clearAttributes() {
-        synchronized (operationQueue) {
-            operationQueue.add(SQLUserDatasource::clearAttributes);
-        }
-
+        operationQueue.addOperation(SQLUserDatasource::clearAttributes);
         return this;
     }
 
@@ -347,10 +408,7 @@ public class BatchUserDataEditor {
             return this;
         }
 
-        synchronized (operationQueue) {
-            operationQueue.add(datasource -> datasource.addTag(normalizedCollection, normalizedValue));
-        }
-
+        operationQueue.addOperation(datasource -> datasource.addTag(normalizedCollection, normalizedValue));
         return this;
     }
 
@@ -391,11 +449,7 @@ public class BatchUserDataEditor {
             );
             return this;
         }
-
-        synchronized (operationQueue) {
-            operationQueue.add(datasource -> datasource.removeTag(normalizedCollection, normalizedValue));
-        }
-
+        operationQueue.addOperation(datasource -> datasource.removeTag(normalizedCollection, normalizedValue));
         return this;
     }
 
@@ -405,10 +459,7 @@ public class BatchUserDataEditor {
      * @return This object instance, for method chaining
      */
     public BatchUserDataEditor clearTags() {
-        synchronized (operationQueue) {
-            operationQueue.add(SQLUserDatasource::clearTags);
-        }
-
+        operationQueue.addOperation(SQLUserDatasource::clearTags);
         return this;
     }
 
@@ -420,64 +471,49 @@ public class BatchUserDataEditor {
      * @return This object instance, for method chaining
      */
     public BatchUserDataEditor clearTagCollection(final @NonNull String collection) {
-        synchronized (operationQueue) {
-            try {
-                final String normalizedCollection = normalizeTagCollection(collection);
-
-                operationQueue.add(datasource -> datasource.clearTags(normalizedCollection));
-            } catch (AttributeValidationException e) {
-                Logger.error(
-                    TAG,
-                    String.format("Invalid tag collection. Ignoring tag collection clear request '%s' .", collection)
-                );
-                return this;
-            }
+        try {
+            final String normalizedCollection = normalizeTagCollection(collection);
+            operationQueue.addOperation(datasource -> datasource.clearTags(normalizedCollection));
+        } catch (AttributeValidationException e) {
+            Logger.error(
+                TAG,
+                String.format("Invalid tag collection. Ignoring tag collection clear request '%s' .", collection)
+            );
+            return this;
         }
-
         return this;
     }
 
     /**
      * Save all of the pending changes made in that editor.
-     * Note that this call may fail if Batch isn't started. In that case, your changes will be lost.
+     * Note if Batch is not started, your changes will be enqueue until it start.
      * Once you called "save", you need to get a new editor in order to make further changes.
      * <p>
      * This action cannot be undone.
      */
     public void save() {
-        if (RuntimeManagerProvider.get().isReady()) {
-            save(true);
-        } else {
-            // Batch isn't started yet, keep operations in memory
-            synchronized (operationQueue) {
-                UserModule.addUserPendingOperations(popOperationQueue());
-            }
+        UserOperation userUpdateOperation = getUserUpdateOperation();
+        if (userUpdateOperation != null) {
+            operationQueue.addFirstOperation(userUpdateOperation);
         }
+        UserModuleProvider
+            .get()
+            .addOperationQueueAndSubmit(500, new UserOperationQueue(operationQueue.popOperations()));
     }
 
-    Promise<Void> save(boolean async) {
+    Promise<Void> saveSync() {
         final Promise<Void> promise = new Promise<>();
-
-        synchronized (operationQueue) {
-            final List<UserOperation> pendingOperationQueue = popOperationQueue();
-
-            Runnable runnable = () -> {
-                try {
-                    UserModule.applyUserOperationsSync(pendingOperationQueue);
-                    promise.resolve(null);
-                } catch (UserModule.SaveException e) {
-                    Logger.error(TAG, e.getMessage());
-                    promise.reject(e);
-                }
-            };
-
-            if (async) {
-                UserModule.submitOnApplyQueue(0, runnable);
-            } else {
-                runnable.run();
+        final List<UserOperation> pendingOperationQueue = popOperationQueue();
+        Runnable runnable = () -> {
+            try {
+                UserModule.applyUserOperationsSync(pendingOperationQueue);
+                promise.resolve(null);
+            } catch (UserModule.SaveException e) {
+                Logger.error(TAG, e.getMessage());
+                promise.reject(e);
             }
-        }
-
+        };
+        runnable.run();
         return promise;
     }
 
@@ -516,8 +552,18 @@ public class BatchUserDataEditor {
     }
 
     @Nullable
+    private UserOperation getEmailUpdateOperation() {
+        if (emailSubscription == null) {
+            return null;
+        }
+        return datasource -> {
+            emailSubscription.sendEmailSubscriptionEvent();
+        };
+    }
+
+    @Nullable
     private UserOperation getUserUpdateOperation() {
-        if (!updatedFields[LANGAGUE_INDEX] && !updatedFields[REGION_INDEX] && !updatedFields[IDENTIFIER_INDEX]) {
+        if (!updatedFields[LANGUAGE_INDEX] && !updatedFields[REGION_INDEX] && !updatedFields[IDENTIFIER_INDEX]) {
             // Nothing to do
             return null;
         }
@@ -538,8 +584,8 @@ public class BatchUserDataEditor {
             };
 
             final User user = new User(context);
-            if (updatedFields[LANGAGUE_INDEX]) {
-                user.setLanguage(userFields[LANGAGUE_INDEX]);
+            if (updatedFields[LANGUAGE_INDEX]) {
+                user.setLanguage(userFields[LANGUAGE_INDEX]);
             }
 
             if (updatedFields[REGION_INDEX]) {
@@ -558,12 +604,15 @@ public class BatchUserDataEditor {
     }
 
     private List<UserOperation> popOperationQueue() {
-        final List<UserOperation> pendingOperationQueue = new LinkedList<>(operationQueue);
-        operationQueue.clear();
-
+        final List<UserOperation> pendingOperationQueue = operationQueue.popOperations();
         UserOperation userUpdateOperation = getUserUpdateOperation();
         if (userUpdateOperation != null) {
             pendingOperationQueue.add(0, userUpdateOperation);
+        }
+
+        UserOperation emailUpdateOperation = getEmailUpdateOperation();
+        if (emailUpdateOperation != null) {
+            pendingOperationQueue.add(emailUpdateOperation);
         }
 
         return pendingOperationQueue;

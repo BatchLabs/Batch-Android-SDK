@@ -8,6 +8,7 @@ import com.batch.android.di.providers.CampaignManagerProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.SQLUserDatasourceProvider;
 import com.batch.android.localcampaigns.ViewTracker;
+import com.batch.android.localcampaigns.ViewTrackerUnavailableException;
 import com.batch.android.localcampaigns.model.LocalCampaign;
 import com.batch.android.msgpack.MessagePackHelper;
 import com.batch.android.msgpack.core.MessageBufferPacker;
@@ -45,7 +46,7 @@ public class LocalCampaignsJITPostDataProvider extends MessagePackPostDataProvid
     }
 
     @Override
-    byte[] pack() throws Exception {
+    byte[] pack() throws IOException {
         ViewTracker viewTracker = CampaignManagerProvider.get().getViewTracker();
         MessageBufferPacker packer = MessagePack.newDefaultBufferPacker();
 
@@ -65,12 +66,16 @@ public class LocalCampaignsJITPostDataProvider extends MessagePackPostDataProvid
         }
 
         // Adding views count for each campaign
-        Map<String, Integer> counts = viewTracker.getViewCounts(campaignIds);
         Map<String, Object> views = new HashMap<>();
-        for (Map.Entry<String, Integer> entry : counts.entrySet()) {
-            Map<String, Object> countMap = new HashMap<>();
-            countMap.put(COUNT_KEY, entry.getValue());
-            views.put(entry.getKey(), countMap);
+        try {
+            Map<String, Integer> counts = viewTracker.getViewCounts(campaignIds);
+            for (Map.Entry<String, Integer> entry : counts.entrySet()) {
+                Map<String, Object> countMap = new HashMap<>();
+                countMap.put(COUNT_KEY, entry.getValue());
+                views.put(entry.getKey(), countMap);
+            }
+        } catch (ViewTrackerUnavailableException e) {
+            Logger.internal("Could not get view tracker count", e);
         }
 
         // Adding attributes
@@ -82,8 +87,13 @@ public class LocalCampaignsJITPostDataProvider extends MessagePackPostDataProvid
         postData.put(ATTRIBUTES_KEY, attributes);
         postData.put(VIEWS_KEY, views);
 
-        MessagePackHelper.packObject(packer, postData);
-        packer.close();
+        try {
+            MessagePackHelper.packObject(packer, postData);
+        } catch (Exception e) {
+            throw new IOException(e);
+        } finally {
+            packer.close();
+        }
         return packer.toByteArray();
     }
 

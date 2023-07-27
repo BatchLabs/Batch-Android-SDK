@@ -233,7 +233,6 @@ public class DIProcessor extends AbstractProcessor
             parameters.add(ParameterSpec.get(param));
             provideParams.add(CodeBlock.of(ParameterSpec.get(param).name));
         }
-
         CodeBlock joinedParams = CodeBlock.join(provideParams, ", ");
         TypeName returnTypeName = TypeName.get(returnType);
         return MethodSpec.methodBuilder("get")
@@ -316,6 +315,10 @@ public class DIProcessor extends AbstractProcessor
             parameters.add(ParameterSpec.get(param));
             provideParams.add(CodeBlock.of(ParameterSpec.get(param).name));
         }
+        List<TypeName> exceptions = new ArrayList<>();
+        for(TypeMirror exception : element.getThrownTypes()) {
+            exceptions.add(TypeName.get(exception));
+        }
         CodeBlock varName = CodeBlock.of("instance");
 
         CodeBlock joinedParams = CodeBlock.join(provideParams, ", ");
@@ -324,6 +327,7 @@ public class DIProcessor extends AbstractProcessor
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC)
                 .returns(returnTypeName)
                 .addParameters(parameters)
+                .addExceptions(exceptions)
                 .addAnnotation(NonNull.class)
                 .addStatement("$T $L = $T.getInstance().getSingletonInstance($T.class)",
                         // We return a new instance every time

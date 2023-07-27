@@ -141,7 +141,6 @@ public class KVUserPreferencesStorage {
                         .getApplicationContext()
                         .getSharedPreferences(LEGACY_SHARED_PREFERENCES_FILENAME, Context.MODE_PRIVATE);
                 useLegacyStorage = true;
-                Logger.internal(TAG, "Data encryption migration has failed, fallback on legacy shared prefs.");
             }
         }
     }
@@ -151,23 +150,29 @@ public class KVUserPreferencesStorage {
      */
     @VisibleForTesting
     protected boolean migrate(Context context) {
-        // Use legacy cryptor to read data
-        Cryptor cryptor = CryptorFactory.getCryptorForType(CryptorFactory.CryptorType.EAS_BASE64);
+        try {
+            // Use legacy cryptor to read data
+            Cryptor cryptor = CryptorFactory.getCryptorForType(CryptorFactory.CryptorType.EAS_BASE64);
 
-        // Get data to migrate
-        SharedPreferences oldPreferences = context
-            .getApplicationContext()
-            .getSharedPreferences(LEGACY_SHARED_PREFERENCES_FILENAME, Context.MODE_PRIVATE);
+            // Get data to migrate
+            SharedPreferences oldPreferences = context
+                .getApplicationContext()
+                .getSharedPreferences(LEGACY_SHARED_PREFERENCES_FILENAME, Context.MODE_PRIVATE);
 
-        Map<String, String> decryptedData = new HashMap<>();
-        for (Map.Entry<String, ?> entry : oldPreferences.getAll().entrySet()) {
-            decryptedData.put(entry.getKey(), cryptor.decrypt(entry.getValue().toString()));
+            Map<String, String> decryptedData = new HashMap<>();
+            for (Map.Entry<String, ?> entry : oldPreferences.getAll().entrySet()) {
+                decryptedData.put(entry.getKey(), cryptor.decrypt(entry.getValue().toString()));
+            }
+
+            SharedPreferences.Editor editor = preferences.edit();
+            for (Map.Entry<String, String> entry : decryptedData.entrySet()) {
+                editor.putString(entry.getKey(), entry.getValue());
+            }
+            editor.apply();
+            return true;
+        } catch (Exception e) {
+            Logger.internal(TAG, "Data encryption migration has failed, fallback on legacy shared prefs.", e);
+            return false;
         }
-
-        SharedPreferences.Editor editor = preferences.edit();
-        for (Map.Entry<String, String> entry : decryptedData.entrySet()) {
-            editor.putString(entry.getKey(), entry.getValue());
-        }
-        return editor.commit();
     }
 }

@@ -6,7 +6,7 @@ configurations {
 }
 
 jacoco {
-    toolVersion = '0.8.5'
+    toolVersion = '0.8.10'
 }
 
 def offline_instrumented_outputDir = "$buildDir.path/intermediates/classes-instrumented/debug"
@@ -52,7 +52,7 @@ task testDebugCoverageUnitTest(dependsOn: ['instrument', 'testDebugUnitTest']) {
 
             //html(destdir: "$buildDir.path/reports/tests/jacocoDebugUnitTest")
             csv(destfile: "$buildDir.path/test-results/jacoco.csv")
-            //xml(destfile: "$buildDir.path/test-results/jacoco.xml")
+            xml(destfile: "$buildDir.path/test-results/jacoco.xml")
         }
     }
 }

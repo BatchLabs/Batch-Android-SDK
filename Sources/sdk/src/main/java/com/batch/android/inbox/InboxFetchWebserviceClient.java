@@ -16,6 +16,9 @@ import com.batch.android.json.JSONArray;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.post.PostDataProvider;
+import com.batch.android.processor.Module;
+import com.batch.android.processor.Provide;
+import com.batch.android.processor.Singleton;
 import com.batch.android.webservice.listener.InboxWebserviceListener;
 import java.net.MalformedURLException;
 import java.util.Date;
@@ -26,7 +29,8 @@ import java.util.Map;
  * Webservice client for the Inbox API
  * Used to fetch notifications from the server
  */
-
+@Module
+@Singleton
 public class InboxFetchWebserviceClient extends BatchWebservice implements TaskRunnable {
 
     private static final String TAG = "InboxFetchWebserviceClient";
@@ -37,7 +41,7 @@ public class InboxFetchWebserviceClient extends BatchWebservice implements TaskR
     private final String authentication;
 
     @NonNull
-    private final InboxWebserviceListener listener;
+    private InboxWebserviceListener listener;
 
     public InboxFetchWebserviceClient(
         @NonNull Context context,
@@ -61,6 +65,29 @@ public class InboxFetchWebserviceClient extends BatchWebservice implements TaskR
         if (limit != null) {
             addGetParameter("limit", limit.toString());
         }
+    }
+
+    @Provide
+    public static InboxFetchWebserviceClient provide(
+        @NonNull Context context,
+        @NonNull FetcherType type,
+        @NonNull String identifier,
+        @Nullable String authentication,
+        @Nullable Integer limit,
+        @Nullable String from,
+        long fetcherId,
+        @NonNull InboxWebserviceListener listener
+    ) throws MalformedURLException {
+        return new InboxFetchWebserviceClient(
+            context,
+            type,
+            identifier,
+            authentication,
+            limit,
+            from,
+            fetcherId,
+            listener
+        );
     }
 
     @Override
@@ -246,5 +273,9 @@ public class InboxFetchWebserviceClient extends BatchWebservice implements TaskR
     @Override
     protected String getSpecificRetryCountKey() {
         return ParameterKeys.INBOX_WS_RETRYCOUNT_KEY;
+    }
+
+    public void setListener(@NonNull InboxWebserviceListener listener) {
+        this.listener = listener;
     }
 }

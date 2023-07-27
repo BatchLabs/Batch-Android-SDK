@@ -56,5 +56,6 @@ public abstract class Message implements Serializable {
         UNKNOWN,
         LANDING,
         LOCAL,
+        INBOX_LANDING,
     }
 }
