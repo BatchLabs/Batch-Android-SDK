@@ -492,13 +492,8 @@ public class BatchUserDataEditor {
      * This action cannot be undone.
      */
     public void save() {
-        UserOperation userUpdateOperation = getUserUpdateOperation();
-        if (userUpdateOperation != null) {
-            operationQueue.addFirstOperation(userUpdateOperation);
-        }
-        UserModuleProvider
-            .get()
-            .addOperationQueueAndSubmit(500, new UserOperationQueue(operationQueue.popOperations()));
+        final List<UserOperation> pendingOperationQueue = popOperationQueue();
+        UserModuleProvider.get().addOperationQueueAndSubmit(500, new UserOperationQueue(pendingOperationQueue));
     }
 
     Promise<Void> saveSync() {
