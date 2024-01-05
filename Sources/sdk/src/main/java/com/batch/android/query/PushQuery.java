@@ -38,6 +38,7 @@ public class PushQuery extends Query {
         obj.put("tok", registration.registrationID);
         obj.put("provider", registration.provider);
         obj.put("senderid", registration.senderID != null ? registration.senderID : JSONObject.NULL);
+        obj.put("gcpprojectid", registration.gcpProjectID != null ? registration.gcpProjectID : JSONObject.NULL);
         obj.put("nty", getNotificationType());
 
         return obj;

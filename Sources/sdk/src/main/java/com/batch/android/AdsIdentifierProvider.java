@@ -2,7 +2,11 @@ package com.batch.android;
 
 import com.batch.android.annotation.PublicSDK;
 
+/**
+ * @deprecated Batch doesn't collects the Android Advertising Identifier anymore.
+ */
 @PublicSDK
+@Deprecated
 public interface AdsIdentifierProvider {
     /**
      * Is this provider available to use? This is the place to check if the libraries are here at
@@ -22,8 +26,10 @@ public interface AdsIdentifierProvider {
 
     /**
      * Interface used to callback from
+     * @deprecated Batch doesn't collects the Android Advertising Identifier anymore.
      */
     @PublicSDK
+    @Deprecated
     interface AdsIdentifierListener {
         /**
          * Called on success with the id & if the user selected to opt-out from ads

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
 
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
@@ -14,7 +15,10 @@ import com.batch.android.core.Promise;
 import com.batch.android.di.DITest;
 import com.batch.android.di.DITestUtils;
 import com.batch.android.di.providers.RuntimeManagerProvider;
+import com.batch.android.event.InternalEvents;
+import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
+import com.batch.android.module.TrackerModule;
 import com.batch.android.module.UserModule;
 import com.batch.android.user.EmailSubscription;
 import com.batch.android.user.UserOperationQueue;
@@ -31,6 +35,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.powermock.reflect.Whitebox;
 
 @RunWith(AndroidJUnit4.class)
@@ -101,6 +106,21 @@ public class BatchUserTest extends DITest {
         user.setCustomID(null);
 
         assertNull(user.getCustomID());
+    }
+
+    @Test
+    public void testAttributionID() {
+        User user = new User(context);
+
+        assertNull(user.getAttributionID());
+
+        user.setAttributionID("abcd");
+
+        assertEquals("abcd", user.getAttributionID());
+
+        user.setAttributionID(null);
+
+        assertNull(user.getAttributionID());
     }
 
     @Test
@@ -361,6 +381,48 @@ public class BatchUserTest extends DITest {
         assertNull(Whitebox.getInternalState(subscription, "email"));
         assertTrue(Whitebox.getInternalState(subscription, "deleteEmail"));
         editor.save();
+    }
+
+    @Test
+    public void testSetAttributionIdentifierEvent() throws JSONException {
+        TrackerModule trackerModule = DITestUtils.mockSingletonDependency(TrackerModule.class, null);
+        Whitebox.setInternalState(Batch.class, "user", new User(context));
+
+        // Ensure attribution id is not valid
+        JSONObject mockParamEvent = new JSONObject();
+        mockParamEvent.put("attribution_id", "abcd");
+        editor.setAttributionIdentifier("abcd").saveSync();
+        Mockito
+            .verify(trackerModule, Mockito.never())
+            .track(eq(InternalEvents.ATTRIBUTION_ID_CHANGED), JSONObjectMockitoMatcher.eq(mockParamEvent));
+
+        // Ensure attribution id is valid and event sent
+        mockParamEvent.put("attribution_id", "cdda802e-fb9c-47ad-9866-0794d394c912");
+        editor.setAttributionIdentifier("cdda802e-fb9c-47ad-9866-0794d394c912").saveSync();
+        Mockito
+            .verify(trackerModule)
+            .track(eq(InternalEvents.ATTRIBUTION_ID_CHANGED), JSONObjectMockitoMatcher.eq(mockParamEvent));
+
+        // Ensure event is not sent when value did not changed
+        mockParamEvent.put("attribution_id", "cdda802e-fb9c-47ad-9866-0794d394c912");
+        editor.setAttributionIdentifier("cdda802e-fb9c-47ad-9866-0794d394c912").saveSync();
+        Mockito
+            .verify(trackerModule)
+            .track(eq(InternalEvents.ATTRIBUTION_ID_CHANGED), JSONObjectMockitoMatcher.eq(mockParamEvent));
+
+        // Ensure event is sent when value is an oaid
+        mockParamEvent.put("attribution_id", "736ada07-7697-4895-a2b8-0228d23067c7");
+        editor.setAttributionIdentifier("736ada07-7697-4895-a2b8-0228d23067c7").saveSync();
+        Mockito
+            .verify(trackerModule)
+            .track(eq(InternalEvents.ATTRIBUTION_ID_CHANGED), JSONObjectMockitoMatcher.eq(mockParamEvent));
+
+        // Ensure we send null
+        mockParamEvent.put("attribution_id", JSONObject.NULL);
+        editor.setAttributionIdentifier(null).saveSync();
+        Mockito
+            .verify(trackerModule)
+            .track(eq(InternalEvents.ATTRIBUTION_ID_CHANGED), JSONObjectMockitoMatcher.eq(mockParamEvent));
     }
 
     @Test

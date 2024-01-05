@@ -121,11 +121,10 @@ dependencies {
     val kotlinVersion = ProjectConsts.KOTLIN_VERSION
     val kotlinCoroutinesVersion = ProjectConsts.KOTLIN_COROUTINES_VERSION
 
-    compileOnly("com.google.android.gms:play-services-ads:${playServicesVersion}")
     compileOnly("com.google.android.gms:play-services-gcm:${playServicesVersion}")
     compileOnly("com.google.android.gms:play-services-location:${playServicesVersion}")
     compileOnly("com.google.android.gms:play-services-nearby:${playServicesVersion}")
-    compileOnly("com.google.android.play:core:1.9.0")
+    compileOnly("com.google.android.play:review:2.0.1")
     compileOnly("com.google.firebase:firebase-iid:21.1.0")
     compileOnly("com.google.firebase:firebase-messaging:22.0.0")
     compileOnly(project(":sdk-stubs"))
@@ -148,7 +147,6 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.test.ext:truth:1.5.0")
 
-    androidTestImplementation("com.google.android.gms:play-services-ads:${playServicesVersion}")
     androidTestImplementation("com.google.android.gms:play-services-gcm:${playServicesVersion}")
     androidTestImplementation("com.google.android.gms:play-services-location:${playServicesVersion}")
     androidTestImplementation("com.google.android.gms:play-services-nearby:${playServicesVersion}")
@@ -164,7 +162,6 @@ dependencies {
     testImplementation("androidx.test.espresso:espresso-intents:3.5.1")
     testImplementation("androidx.test.espresso:espresso-core:3.5.1")
     testImplementation("androidx.test.ext:truth:1.5.0")
-    testImplementation("com.google.android.gms:play-services-ads:${playServicesVersion}")
     testImplementation("com.google.android.gms:play-services-gcm:${playServicesVersion}")
     testImplementation("com.google.android.gms:play-services-location:${playServicesVersion}")
     testImplementation("com.google.android.gms:play-services-nearby:${playServicesVersion}")

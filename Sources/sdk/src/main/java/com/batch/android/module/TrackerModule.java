@@ -2,8 +2,6 @@ package com.batch.android.module;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import com.batch.android.AdvertisingID;
-import com.batch.android.Batch;
 import com.batch.android.FailReason;
 import com.batch.android.WebserviceLauncher;
 import com.batch.android.core.Logger;
@@ -292,25 +290,23 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
      * Track the opt-in event
      *
      * @param context
-     * @param advertisingID
      * @throws JSONException
      */
-    void trackOptInEvent(final Context context, AdvertisingID advertisingID) throws JSONException {
-        track(InternalEvents.OPT_IN, makeOptBaseEventData(context, advertisingID));
+    void trackOptInEvent(final Context context) throws JSONException {
+        track(InternalEvents.OPT_IN, makeOptBaseEventData(context));
     }
 
     /**
      * Track the opt-out event
      *
      * @param context
-     * @param advertisingID
      * @param name
      * @return
      */
-    Promise<Void> trackOptOutEvent(final Context context, AdvertisingID advertisingID, String name) {
+    Promise<Void> trackOptOutEvent(final Context context, String name) {
         // iOS has debouncing, but is it really useful?
         try {
-            JSONObject data = makeOptBaseEventData(context, advertisingID);
+            JSONObject data = makeOptBaseEventData(context);
 
             final List<Event> eventsToSend = new ArrayList<>();
             eventsToSend.add(new Event(context, new Date().getTime(), name, data));
@@ -345,7 +341,7 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
         }
     }
 
-    private JSONObject makeOptBaseEventData(Context context, AdvertisingID advertisingID) throws JSONException {
+    private JSONObject makeOptBaseEventData(Context context) throws JSONException {
         final JSONObject data = new JSONObject();
 
         Parameters params = ParametersProvider.get(context);
@@ -360,13 +356,9 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
             data.put("cus", customID);
         }
 
-        if (Batch.shouldUseAdvertisingID() && advertisingID != null && advertisingID.isNotNull()) {
-            try {
-                String idv = advertisingID.get();
-                if (idv != null) {
-                    data.put("idv", idv);
-                }
-            } catch (IllegalStateException ignored) {}
+        String attributionID = params.get(ParameterKeys.ATTRIBUTION_ID);
+        if (attributionID != null) {
+            data.put("idv", attributionID);
         }
 
         Registration reg = pushModule.getRegistration(context);
@@ -375,6 +367,9 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
             data.put("provider", reg.provider);
             if (reg.senderID != null) {
                 data.put("senderid", reg.senderID);
+            }
+            if (reg.gcpProjectID != null) {
+                data.put("gcpproject", reg.gcpProjectID);
             }
         }
         return data;

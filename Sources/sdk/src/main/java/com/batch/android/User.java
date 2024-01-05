@@ -108,6 +108,29 @@ final class User {
         return ParametersProvider.get(context).get(ParameterKeys.CUSTOM_ID);
     }
 
+    /**
+     * Set the new attribution id
+     *
+     * @param attributionID can be null
+     */
+    public void setAttributionID(@Nullable String attributionID) {
+        if (attributionID != null) {
+            ParametersProvider.get(context).set(ParameterKeys.ATTRIBUTION_ID, attributionID, true);
+        } else {
+            ParametersProvider.get(context).remove(ParameterKeys.ATTRIBUTION_ID);
+        }
+    }
+
+    /**
+     * Return the attribution ID if any, null otherwise
+     *
+     * @return
+     */
+    @Nullable
+    public String getAttributionID() {
+        return ParametersProvider.get(context).get(ParameterKeys.ATTRIBUTION_ID);
+    }
+
     // ------------------------------------------->
 
     /**
@@ -139,6 +162,21 @@ final class User {
         return newVersion;
     }
 
+    public void sendAttributionIDChangedEvent() {
+        final String attributionIdentifier = getAttributionID();
+        JSONObject attributionParam = new JSONObject();
+        try {
+            if (attributionIdentifier != null) {
+                attributionParam.put("attribution_id", attributionIdentifier);
+            } else {
+                attributionParam.put("attribution_id", JSONObject.NULL);
+            }
+            TrackerModuleProvider.get().track(InternalEvents.ATTRIBUTION_ID_CHANGED, attributionParam);
+        } catch (JSONException e) {
+            Logger.internal(UserModule.TAG, "Could not track " + InternalEvents.ATTRIBUTION_ID_CHANGED, e);
+        }
+    }
+
     public void sendChangeEvent() {
         try {
             final JSONObject params = new JSONObject();
@@ -157,9 +195,7 @@ final class User {
             if (customID != null) {
                 params.put("cus", customID);
             }
-
             params.put("upv", incrementVersion());
-
             TrackerModuleProvider.get().track(InternalEvents.PROFILE_CHANGED, params);
         } catch (JSONException e) {
             Logger.internal(UserModule.TAG, "Could not track " + InternalEvents.PROFILE_CHANGED, e);

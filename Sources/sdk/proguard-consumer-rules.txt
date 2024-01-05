@@ -21,12 +21,3 @@
     public static int GOOGLE_PLAY_SERVICES_VERSION_CODE;
     public *** isGooglePlayServicesAvailable(...);
 }
-
--keepclassmembers class com.google.android.gms.ads.identifier.AdvertisingIdClient {
-    public *** getAdvertisingIdInfo(...);
-}
-
--keepclassmembers class com.google.android.gms.ads.identifier.AdvertisingIdClient$Info {
-    public *** getId();
-    public *** isLimitAdTrackingEnabled();
-}

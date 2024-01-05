@@ -20,7 +20,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import com.batch.android.AdsIdentifierProvider;
 import com.batch.android.Batch;
 import com.batch.android.BatchActionActivity;
 import com.batch.android.BatchNotificationInterceptor;
@@ -327,8 +326,9 @@ public class PushModule extends BatchModule {
             }
 
             String senderID = parameters.get(ParameterKeys.PUSH_REGISTRATION_SENDERID_KEY);
+            String gcpProjectID = parameters.get(ParameterKeys.PUSH_REGISTRATION_GCPPROJECTID_KEY);
 
-            return new Registration(registrationProvider, registrationID, senderID);
+            return new Registration(registrationProvider, registrationID, senderID, gcpProjectID);
         } catch (Exception e) {
             Logger.internal(TAG, "Error while retrieving registration id", e);
             return null;
@@ -748,19 +748,6 @@ public class PushModule extends BatchModule {
     }
 
     /**
-     * Get the ads identifier provider associated with the current registration provider
-     *
-     * @return
-     */
-    public AdsIdentifierProvider getAdsIdentifierProvider() {
-        final PushRegistrationProvider pushProvider = getRegistrationProvider();
-        if (pushProvider != null) {
-            return pushProvider.getAdsIdentifierProvider();
-        }
-        return null;
-    }
-
-    /**
      * Get the current version of the app.<br>
      * Use context
      *
@@ -823,7 +810,8 @@ public class PushModule extends BatchModule {
                         final Registration registration = new Registration(
                             provider.getShortname(),
                             registrationID,
-                            provider.getSenderID()
+                            provider.getSenderID(),
+                            provider.getGCPProjectID()
                         );
                         emitRegistration(context, registration);
                     }
@@ -865,6 +853,7 @@ public class PushModule extends BatchModule {
                             ParameterKeys.PUSH_REGISTRATION_PROVIDER_KEY
                         );
                         String currentSenderID = parameters.get(ParameterKeys.PUSH_REGISTRATION_SENDERID_KEY);
+                        String currentGCPProjectID = parameters.get(ParameterKeys.PUSH_REGISTRATION_GCPPROJECTID_KEY);
 
                         parameters.set(ParameterKeys.PUSH_APP_VERSION_KEY, getAppVersion(), true);
 
@@ -878,10 +867,21 @@ public class PushModule extends BatchModule {
                             parameters.remove(ParameterKeys.PUSH_REGISTRATION_SENDERID_KEY);
                         }
 
+                        if (registration.gcpProjectID != null) {
+                            parameters.set(
+                                ParameterKeys.PUSH_REGISTRATION_GCPPROJECTID_KEY,
+                                registration.gcpProjectID,
+                                true
+                            );
+                        } else {
+                            parameters.remove(ParameterKeys.PUSH_REGISTRATION_GCPPROJECTID_KEY);
+                        }
+
                         if (
                             !registration.registrationID.equals(currentRegistrationID) ||
                             !registration.provider.equals(currentRegistrationProvider) ||
-                            !TextUtils.equals(registration.senderID, currentSenderID)
+                            !TextUtils.equals(registration.senderID, currentSenderID) ||
+                            !TextUtils.equals(registration.gcpProjectID, currentGCPProjectID)
                         ) {
                             WebserviceLauncher.launchPushWebservice(RuntimeManagerProvider.get(), registration);
                         }

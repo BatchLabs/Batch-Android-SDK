@@ -77,9 +77,6 @@ public class PushRegistrationProviderFactory {
          * Thus, looking at the manifest to take this decision isn't the Provider's responsibility, but this Factory's.
          * To avoid unnecessary work, providers assume that they have been instantiated through this factory,
          * and will not check the manifest for their receiver.
-         *
-         * Note that the advertising identifier will be provided by the same provider than push,
-         * for consistency.
          */
 
         Logger.internal(TAG, "Determining which registration provider to use...");

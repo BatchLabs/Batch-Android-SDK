@@ -13,10 +13,7 @@ public final class Config {
      * The API key used for Batch
      */
     String apikey;
-    /**
-     * Should Batch use Advertising ID or not
-     */
-    boolean shouldUseAdvertisingID = true;
+
     /**
      * Should Batch use advanced device information or not
      */
@@ -57,15 +54,12 @@ public final class Config {
     }
 
     /**
-     * Set if Batch can use AvertisingId (default = true)<br>
-     * <br>
-     * Setting this to false have a negative impact on offer delivery and restore<br>
-     * You should only use it if you know what you are doing.
-     *
-     * @param canUse can Batch use AdvertisingID
+     * Batch doesn't support Android Advertising Identifier anymore.
+     * @param canUse This parameter does nothing.
+     * @deprecated This method does nothing, please stop using it and see {@link BatchUserDataEditor#setAttributionIdentifier(String)}
      */
+    @Deprecated
     public Config setCanUseAdvertisingID(boolean canUse) {
-        shouldUseAdvertisingID = canUse;
         return this;
     }
 
@@ -80,9 +74,6 @@ public final class Config {
      * <br>
      * Setting this to false have a negative impact on core Batch features</br>
      * You should only use it if you know what you are doing.
-     * <p>
-     * Note: Disabling this does not automatically disable Android ID/Advertising ID collection, use the
-     * appropriate methods to control these.
      *
      * @param canUse Can Batch use advanced device information?
      */

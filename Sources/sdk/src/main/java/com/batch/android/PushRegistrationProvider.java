@@ -10,8 +10,19 @@ import com.batch.android.annotation.PublicSDK;
 public interface PushRegistrationProvider {
     /**
      * Returns the Sender ID of the provider, or equivalent. For example: "8122930293"
+     * Also known as the GCP Project Number
      */
     String getSenderID();
+
+    /**
+     * Returns the GCP Project ID. For example "batch_sample". Not to be confused with Sender ID,
+     * which is the Project Number.
+     * Only for FCM.
+     */
+    @Nullable
+    default String getGCPProjectID() {
+        return null;
+    }
 
     /**
      * Returns the short name of the provider. For example: "FCM".
@@ -48,11 +59,4 @@ public interface PushRegistrationProvider {
      */
     @Nullable
     String getRegistration();
-
-    /**
-     * Return the ads identifier provider associated with the push registration provider
-     *
-     * @return
-     */
-    AdsIdentifierProvider getAdsIdentifierProvider();
 }

@@ -103,7 +103,7 @@ public class BatchMessagingWebViewJavascriptBridge {
         throws BridgeResultProviderException, UnknownMethodException {
         switch (method.toLowerCase(Locale.US)) {
             case "getattributionid":
-                return this::getAdvertisingID;
+                return this::getAttributionID;
             case "getinstallationid":
                 return this::getInstallationID;
             case "getcustomlanguage":
@@ -157,37 +157,9 @@ public class BatchMessagingWebViewJavascriptBridge {
     }
 
     @VisibleForTesting
-    @NonNull
-    protected String getAdvertisingID() throws BridgeResultProviderException {
-        if (isAdvertisingIDAllowedByConfig()) {
-            String advertisingID = getAdvertisingIDValue();
-            if (advertisingID != null) {
-                return advertisingID;
-            } else {
-                throw new BridgeResultProviderException(
-                    "Advertising ID unavailable: Couldn't fetch it from the system provider. Device user may have disabled it, missing project dependency or an library didn't return any."
-                );
-            }
-        } else {
-            throw new BridgeResultProviderException("Advertising ID unavailable: Disabled by config");
-        }
-    }
-
-    @VisibleForTesting
-    protected boolean isAdvertisingIDAllowedByConfig() {
-        return Batch.shouldUseAdvertisingID();
-    }
-
-    @VisibleForTesting
     @Nullable
-    protected String getAdvertisingIDValue() {
-        try {
-            AdvertisingID advertisingID = Batch.getAdvertisingID();
-            if (advertisingID != null && advertisingID.isNotNull()) {
-                return advertisingID.get();
-            }
-        } catch (IllegalArgumentException ignored) {}
-        return null;
+    protected String getAttributionID() {
+        return Batch.getUser().getAttributionID();
     }
 
     @NonNull

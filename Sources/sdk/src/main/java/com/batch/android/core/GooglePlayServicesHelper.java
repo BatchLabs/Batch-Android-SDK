@@ -13,11 +13,6 @@ import java.lang.reflect.Method;
 public final class GooglePlayServicesHelper {
 
     /**
-     * The version of the Google Play Services lib that contains advertising ID
-     */
-    private static final int ADVERTISING_ID_VERSION = 4030500;
-
-    /**
      * The version of the Google Play Services lib that contains push
      */
     private static final int PUSH_ID_VERSION = 4030500;
@@ -125,28 +120,6 @@ public final class GooglePlayServicesHelper {
         } finally {
             versionChecked = true;
         }
-    }
-
-    // ------------------------------------------------>
-
-    /**
-     * Check if the advertising ID is available by checking the version of the lib
-     *
-     * @param context
-     * @return
-     */
-    public static boolean isAdvertisingIDAvailable(Context context) {
-        Integer libVersion = getGooglePlayServicesLibVersion(context);
-        if (libVersion == null) {
-            return false;
-        }
-
-        Integer availability = getGooglePlayServicesAvailabilityInteger(context);
-        if (availability == null || availability != 0) {
-            return false;
-        }
-
-        return libVersion >= ADVERTISING_ID_VERSION;
     }
 
     // ------------------------------------------------>

@@ -9,11 +9,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import com.batch.android.AdvertisingID;
 import com.batch.android.Batch;
 import com.batch.android.BuildConfig;
 import com.batch.android.R;
-import com.batch.android.di.providers.AdvertisingIDProvider;
+import com.batch.android.core.ParameterKeys;
+import com.batch.android.di.providers.ParametersProvider;
 
 public class IdentifierDebugFragment extends Fragment implements View.OnClickListener {
 
@@ -38,14 +38,14 @@ public class IdentifierDebugFragment extends Fragment implements View.OnClickLis
                 )
             );
 
-        AdvertisingID advertisingID = AdvertisingIDProvider.get();
-        if (Batch.shouldUseAdvertisingID() && advertisingID.isReady() && advertisingID.isNotNull()) {
+        String attributionID = ParametersProvider.get(getContext()).get(ParameterKeys.ATTRIBUTION_ID);
+        if (attributionID != null) {
             shareContent =
                 shareContent.concat(
                     String.format(
                         "%s: %s\n",
                         getString(R.string.com_batchsdk_identifier_debug_fragment_advertising_id),
-                        advertisingID.get()
+                        attributionID
                     )
                 );
         } else {
@@ -108,9 +108,9 @@ public class IdentifierDebugFragment extends Fragment implements View.OnClickLis
         sdkVersion.setText(BuildConfig.SDK_VERSION);
         installId.setText(Batch.User.getInstallationID());
 
-        AdvertisingID advertisingID = AdvertisingIDProvider.get();
-        if (advertisingID.isReady() && advertisingID.isNotNull()) {
-            advertisingId.setText(advertisingID.get());
+        String attributionID = ParametersProvider.get(getContext()).get(ParameterKeys.ATTRIBUTION_ID);
+        if (attributionID != null) {
+            advertisingId.setText(attributionID);
         } else {
             advertisingId.setText(R.string.com_batchsdk_debug_view_empty);
         }

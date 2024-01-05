@@ -53,10 +53,7 @@ class BatchMessagingWebViewJavascriptBridgeTest {
 
         assertBridgeResult(MockingBridge.Expectations.advertisingID, bridge.get("getAttributionID"))
         bridge.shouldReturnAdvertisingID = false
-        assertBridgeError(bridge.get("getAttributionID"))
-        bridge.shouldReturnAdvertisingID = true
-        bridge.batchConfigAllowsAdvertisingID = false
-        assertBridgeError(bridge.get("getAttributionID"))
+        assertBridgeResult(null, bridge.get("getAttributionID"))
     }
 
     @Test
@@ -192,16 +189,13 @@ class MockingBridge(context: Context, message: BatchMessage?, actionListener: We
         return null
     }
 
-    override fun isAdvertisingIDAllowedByConfig(): Boolean {
-        return batchConfigAllowsAdvertisingID
-    }
-
-    override fun getAdvertisingIDValue(): String? {
+    override fun getAttributionID(): String? {
         if (shouldReturnAdvertisingID) {
             return Expectations.advertisingID
         }
         return null
     }
+
 }
 
 class MockMessage(val payload: JSONObject) : BatchMessage() {

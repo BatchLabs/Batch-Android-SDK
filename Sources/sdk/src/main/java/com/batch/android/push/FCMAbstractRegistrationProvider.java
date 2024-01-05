@@ -2,25 +2,23 @@ package com.batch.android.push;
 
 import android.content.Context;
 import android.text.TextUtils;
-import com.batch.android.AdsIdentifierProvider;
+import androidx.annotation.Nullable;
 import com.batch.android.PushRegistrationProvider;
 import com.batch.android.PushRegistrationProviderAvailabilityException;
-import com.batch.android.adsidentifier.GCMAdsIdentifierProvider;
 import com.batch.android.core.Logger;
 import com.batch.android.module.PushModule;
 import com.google.firebase.FirebaseApp;
 
 public abstract class FCMAbstractRegistrationProvider implements PushRegistrationProvider {
 
-    protected GCMAdsIdentifierProvider adsIdentifierProvider;
-    protected String senderID;
+    protected String senderID = null;
+    protected String fcmProjectID = null;
 
     FCMAbstractRegistrationProvider(Context context) {
-        this.senderID = fetchSenderID(context);
-        this.adsIdentifierProvider = new GCMAdsIdentifierProvider(context.getApplicationContext());
+        loadProjectInformation(context);
     }
 
-    public String fetchSenderID(Context context) {
+    public void loadProjectInformation(Context context) {
         try {
             FirebaseApp fbApp = FirebaseApp.getInstance();
             if (fbApp == null) {
@@ -28,7 +26,7 @@ public abstract class FCMAbstractRegistrationProvider implements PushRegistratio
                     PushModule.TAG,
                     "Could not register for FCM Push: Could not get a Firebase instance. Is your Firebase project configured?"
                 );
-                return null;
+                return;
             }
 
             String senderID = fbApp.getOptions().getGcmSenderId();
@@ -37,20 +35,30 @@ public abstract class FCMAbstractRegistrationProvider implements PushRegistratio
                     PushModule.TAG,
                     "Could not register for FCM Push: Could not get a Sender ID for this project. Are notifications well configured in the project's console and your google-services.json up to date?"
                 );
-                return null;
+                return;
             }
 
-            Logger.internal(PushModule.TAG, "Using FCM Sender ID from builtin configuration: " + senderID);
-            return senderID;
+            this.senderID = senderID;
+            this.fcmProjectID = fbApp.getOptions().getProjectId();
+
+            Logger.internal(
+                PushModule.TAG,
+                "Using FCM Sender ID from builtin configuration: " + senderID + ", Project ID: " + fcmProjectID
+            );
         } catch (NoClassDefFoundError | Exception e) {
             Logger.error(PushModule.TAG, "Could not register for FCM Push: Firebase has thrown an exception", e);
         }
-        return senderID;
     }
 
     @Override
     public String getSenderID() {
         return senderID;
+    }
+
+    @Nullable
+    @Override
+    public String getGCPProjectID() {
+        return fcmProjectID;
     }
 
     @Override
@@ -79,11 +87,6 @@ public abstract class FCMAbstractRegistrationProvider implements PushRegistratio
                 "com.batch.android.BatchPushService is missing from the manifest."
             );
         }
-    }
-
-    @Override
-    public AdsIdentifierProvider getAdsIdentifierProvider() {
-        return adsIdentifierProvider;
     }
 
     private boolean isFirebaseCorePresent() {

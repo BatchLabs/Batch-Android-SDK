@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
-import com.batch.android.AdvertisingID;
 import com.batch.android.BatchOptOutResultListener;
 import com.batch.android.core.Logger;
 import com.batch.android.core.ParameterKeys;
@@ -86,11 +85,11 @@ public class OptOutModule extends BatchModule {
         return isOptedOut;
     }
 
-    public void trackOptinEventIfNeeded(@NonNull Context context, @NonNull AdvertisingID advertisingID) {
+    public void trackOptinEventIfNeeded(@NonNull Context context) {
         SharedPreferences prefs = getPreferences(context);
         if (prefs.getBoolean(SHOULD_SEND_OPTIN_EVENT_KEY, false)) {
             try {
-                TrackerModuleProvider.get().trackOptInEvent(context, advertisingID);
+                TrackerModuleProvider.get().trackOptInEvent(context);
                 prefs.edit().remove(SHOULD_SEND_OPTIN_EVENT_KEY).apply();
             } catch (JSONException e) {
                 Logger.internal(TAG, "Could not track optin", e);
@@ -114,7 +113,6 @@ public class OptOutModule extends BatchModule {
 
     public Promise<Void> optOut(
         final Context context,
-        final AdvertisingID advertisingID,
         final boolean wipeData,
         final BatchOptOutResultListener listener
     ) {
@@ -129,12 +127,9 @@ public class OptOutModule extends BatchModule {
             Promise<Void> eventPromise = null;
             if (wipeData) {
                 eventPromise =
-                    TrackerModuleProvider
-                        .get()
-                        .trackOptOutEvent(context, advertisingID, InternalEvents.OPT_OUT_AND_WIPE_DATA);
+                    TrackerModuleProvider.get().trackOptOutEvent(context, InternalEvents.OPT_OUT_AND_WIPE_DATA);
             } else {
-                eventPromise =
-                    TrackerModuleProvider.get().trackOptOutEvent(context, advertisingID, InternalEvents.OPT_OUT);
+                eventPromise = TrackerModuleProvider.get().trackOptOutEvent(context, InternalEvents.OPT_OUT);
             }
 
             if (listener == null) {
@@ -196,6 +191,7 @@ public class OptOutModule extends BatchModule {
 
         Parameters parameters = ParametersProvider.get(context);
         parameters.remove(ParameterKeys.CUSTOM_ID);
+        parameters.remove(ParameterKeys.ATTRIBUTION_ID);
         parameters.remove(ParameterKeys.INSTALL_ID_KEY);
         parameters.remove(ParameterKeys.INSTALL_TIMESTAMP_KEY);
         parameters.remove(ParameterKeys.PUSH_APP_VERSION_KEY);

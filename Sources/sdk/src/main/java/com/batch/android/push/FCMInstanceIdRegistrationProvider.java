@@ -22,17 +22,20 @@ public class FCMInstanceIdRegistrationProvider extends FCMAbstractRegistrationPr
     }
 
     @Override
-    public String fetchSenderID(Context context) {
+    public void loadProjectInformation(Context context) {
+        super.loadProjectInformation(context);
+        // No FCM Project ID on legacy FCM Instance ID
+        this.fcmProjectID = null;
+
         int valueResource = MetaDataUtils.getIntMetaData(context, MetaDataUtils.MANIFEST_SENDER_ID_KEY);
         if (valueResource != -1) {
             String manifestSenderID = context.getString(valueResource);
             if (!TextUtils.isEmpty(manifestSenderID)) {
                 Logger.info(PushModule.TAG, "Using FCM Sender ID from manifest");
                 Logger.internal(PushModule.TAG, "Using FCM Sender ID from manifest: " + manifestSenderID);
-                return manifestSenderID;
+                this.senderID = manifestSenderID;
             }
         }
-        return super.fetchSenderID(context);
     }
 
     @Nullable

@@ -116,6 +116,7 @@ public final class ParameterKeys
     public final static String TASK_EXECUTOR_THREADTTL					= "app.executor.threadttl";
     public final static String SCHEME_CODE_PATTERN						= "app.scheme.codepattern";
     public final static String CUSTOM_ID								= "app.id.custom";
+    public final static String ATTRIBUTION_ID						    = "app.id.attribution";
     public final static String USER_DATA_VERSION						= "app.profile.version";
     public final static String SERVER_TIMESTAMP							= "ws.server.timestamp";
     public final static String EVENT_TRACKER_INITIAL_DELAY				= "tracker.delay.initial";
@@ -126,6 +127,8 @@ public final class ParameterKeys
     public final static String PUSH_REGISTRATION_ID_KEY					= "push.registration.id";
     public final static String PUSH_REGISTRATION_PROVIDER_KEY			= "push.registration.provider";
     public final static String PUSH_REGISTRATION_SENDERID_KEY			= "push.registration.sender_id";
+
+    public final static String PUSH_REGISTRATION_GCPPROJECTID_KEY		= "push.registration.gcp_project_id";
     public final static String PUSH_APP_VERSION_KEY						= "push.appversion";
     public final static String PUSH_NOTIF_TYPE							= "push.notiftype";
     public final static String PUSH_NOTIF_LAST_AUTH_STATUS_SENT		    = "push.notif.last_auth_status_sent";

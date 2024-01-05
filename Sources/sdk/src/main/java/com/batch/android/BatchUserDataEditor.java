@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -33,19 +34,16 @@ public class BatchUserDataEditor {
      */
     public static final String TAG = "BatchUserDataEditor";
     static final Pattern ATTR_KEY_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{1,30}$");
-
+    static final String ATTRIBUTION_ID_FORMAT = "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}";
     private static final int LANGUAGE_INDEX = 0;
     private static final int REGION_INDEX = 1;
     private static final int IDENTIFIER_INDEX = 2;
     private static final int ATTR_STRING_MAX_LENGTH = 64; // Also applies to tag values
     private static final int ATTR_URL_MAX_LENGTH = 2048;
     private static final int EMAIL_MAX_LENGTH = 128;
-
     private final UserOperationQueue operationQueue = new UserOperationQueue();
-
     private boolean[] updatedFields = { false, false, false };
     private String[] userFields = { null, null, null };
-
     private EmailSubscription emailSubscription;
 
     BatchUserDataEditor() {}
@@ -103,6 +101,39 @@ public class BatchUserDataEditor {
 
         this.userFields[IDENTIFIER_INDEX] = identifier;
         this.updatedFields[IDENTIFIER_INDEX] = true;
+        return this;
+    }
+
+    /**
+     * Set the user attribution identifier.<br>
+     *
+     * @param attributionID A valid uuid lowercase string or null to reset
+     * @return This object instance, for method chaining
+     */
+    public BatchUserDataEditor setAttributionIdentifier(final @Nullable String attributionID) {
+        if (attributionID != null && !Pattern.matches(ATTRIBUTION_ID_FORMAT, attributionID)) {
+            Logger.error(
+                TAG,
+                "setAttributionIdentifier called with invalid identifier. Should be a valid uuid lowercase string"
+            );
+            return this;
+        }
+
+        operationQueue.addFirstOperation(datasource -> {
+            Context context = RuntimeManagerProvider.get().getContext();
+            if (context == null) {
+                throw new UserModule.SaveException(
+                    "Error while applying. Make sure Batch is started beforehand, and not globally opted out from.",
+                    "'context' was null while saving."
+                );
+            }
+            User user = Batch.getUser();
+            String oldAttributionID = user.getAttributionID();
+            user.setAttributionID(attributionID);
+            if (!Objects.equals(oldAttributionID, attributionID)) {
+                user.sendAttributionIDChangedEvent();
+            }
+        });
         return this;
     }
 

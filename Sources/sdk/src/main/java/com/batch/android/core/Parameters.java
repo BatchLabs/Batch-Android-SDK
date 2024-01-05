@@ -184,7 +184,7 @@ public final class Parameters {
         appParameters.put(ParameterKeys.TASK_EXECUTOR_MAX_POOL, 			"5");
         appParameters.put(ParameterKeys.TASK_EXECUTOR_THREADTTL, 			"1000");
         appParameters.put(ParameterKeys.SCHEME_CODE_PATTERN, 				"^batch[A-Za-z0-9]{4,}://unlock/code/([^/\\?]+)");
-        appParameters.put(ParameterKeys.WEBSERVICE_IDS_PARAMETERS, 			"lvl,mlvl,dla,dre,dtz,osv,da,apv,apc,bid,di,i,idv,cifa,cus,lda,fda,did,sdk,brv,plv,s,nkd");
+        appParameters.put(ParameterKeys.WEBSERVICE_IDS_PARAMETERS, 			"lvl,mlvl,dla,dre,dtz,osv,da,apv,apc,bid,di,i,idv,cus,lda,fda,did,sdk,brv,plv,s,nkd");
         appParameters.put(ParameterKeys.WEBSERVICE_IDS_ADVANCED_PARAMETERS, "dty,brd,ntn,ntc,son,sop,sco");
     }
 

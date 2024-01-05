@@ -14,9 +14,18 @@ public class Registration {
     @Nullable
     public String senderID;
 
-    public Registration(@NonNull String provider, @NonNull String registrationID, @Nullable String senderID) {
+    @Nullable
+    public String gcpProjectID;
+
+    public Registration(
+        @NonNull String provider,
+        @NonNull String registrationID,
+        @Nullable String senderID,
+        @Nullable String gcpProjectID
+    ) {
         this.provider = provider;
         this.registrationID = registrationID;
         this.senderID = senderID;
+        this.gcpProjectID = gcpProjectID;
     }
 }

@@ -129,22 +129,12 @@ public class WebserviceParameterUtils {
                             ids.put(parameter, customID);
                         }
                     }
-                } else if (SystemParameterShortName.ADVERTISING_ID.shortName.equals(parameter)) {
-                    if (Batch.shouldUseAdvertisingID()) {
-                        AdvertisingID advertisingID = Batch.getAdvertisingID();
-                        if (advertisingID != null) {
-                            boolean isIdfaAvailable = advertisingID.isReady() && advertisingID.isNotNull();
-                            if (isIdfaAvailable) {
-                                ids.put(parameter, advertisingID.get());
-                            }
-                        }
-                    }
-                } else if (SystemParameterShortName.ADVERTISING_ID_OPTIN.shortName.equals(parameter)) {
-                    AdvertisingID advertisingID = Batch.getAdvertisingID();
-                    if (advertisingID != null) {
-                        boolean isIdfaAvailable = advertisingID.isReady();
-                        if (isIdfaAvailable) {
-                            ids.put(parameter, !advertisingID.isLimited());
+                } else if (SystemParameterShortName.ATTRIBUTION_ID.shortName.equals(parameter)) {
+                    User user = Batch.getUser();
+                    if (user != null) {
+                        String attributionID = user.getAttributionID();
+                        if (attributionID != null) {
+                            ids.put(parameter, attributionID);
                         }
                     }
                 } else if (SystemParameterShortName.BRIDGE_VERSION.shortName.equals(parameter)) {

@@ -3,7 +3,6 @@ package com.batch.android.core;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
@@ -70,32 +69,5 @@ public class GooglePlayServicesHelperTest {
         );
         assertNotNull(playServicesAvailability);
         assertEquals(ConnectionResult.SUCCESS, (int) playServicesAvailability);
-    }
-
-    /**
-     * Test the advertising id value response
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testGetAdvertisingIDValue() throws Exception {
-        latch = new CountDownLatch(1);
-        GooglePlayServicesHelper.getAdvertisingIDValue(
-            appContext,
-            new GooglePlayServicesHelper.AdvertisingValueListener() {
-                @Override
-                public void onValue(String value, boolean limited) {
-                    assertNotNull(value);
-                    latch.countDown();
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    fail("Error occured : " + e.getMessage());
-                    latch.countDown();
-                }
-            }
-        );
-        latch.await();
     }
 }

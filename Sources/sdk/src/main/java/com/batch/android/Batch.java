@@ -36,7 +36,6 @@ import com.batch.android.core.TaskExecutor;
 import com.batch.android.debug.BatchDebugActivity;
 import com.batch.android.debug.FindMyInstallationHelper;
 import com.batch.android.di.providers.ActionModuleProvider;
-import com.batch.android.di.providers.AdvertisingIDProvider;
 import com.batch.android.di.providers.BatchModuleMasterProvider;
 import com.batch.android.di.providers.BatchNotificationChannelsManagerProvider;
 import com.batch.android.di.providers.EventDispatcherModuleProvider;
@@ -81,10 +80,7 @@ public final class Batch {
      * Batch API key
      */
     private static Config config;
-    /**
-     * AdvertisingID object build on Batch start
-     */
-    private static AdvertisingID advertisingID;
+
     /**
      * Install object build on Batch start
      */
@@ -257,20 +253,15 @@ public final class Batch {
 
     /**
      * Can Batch use Advertising ID
-     *
-     * @return
+     * <p>
+     * Batch doesn't collects Android Advertising Identifier anymore.
+     * @deprecated This method does nothing, please stop using it
+     * and see {@link BatchUserDataEditor#setAttributionIdentifier(String)
+     * @return Always return false.
      */
+    @Deprecated
     public static boolean shouldUseAdvertisingID() {
-        final AtomicBoolean shouldUse = new AtomicBoolean(true);
-        RuntimeManagerProvider
-            .get()
-            .run(state -> {
-                if (config != null) {
-                    shouldUse.set(config.shouldUseAdvertisingID);
-                }
-            });
-
-        return shouldUse.get();
+        return false;
     }
 
     /**
@@ -503,7 +494,7 @@ public final class Batch {
 
         OptOutModuleProvider
             .get()
-            .optOut(context, advertisingID, wipeData, listener)
+            .optOut(context, wipeData, listener)
             .then(value -> {
                 RuntimeManager rm = RuntimeManagerProvider.get();
                 rm.resetServiceRefCount();
@@ -2243,11 +2234,6 @@ public final class Batch {
                     /*
                      * Init device/user/install data
                      */
-                    AdvertisingID advertisingID = Batch.advertisingID;
-                    if (advertisingID == null) {
-                        advertisingID = AdvertisingIDProvider.get();
-                        Batch.advertisingID = advertisingID;
-                    }
                     if (Batch.install == null) {
                         Batch.install = new Install(applicationContext);
                     }
@@ -2272,7 +2258,7 @@ public final class Batch {
                     }
 
                     // Check if we have a pending opt-in event
-                    OptOutModuleProvider.get().trackOptinEventIfNeeded(context, advertisingID);
+                    OptOutModuleProvider.get().trackOptinEventIfNeeded(context);
                 }
 
                 /*
@@ -2556,7 +2542,6 @@ public final class Batch {
     private static void clearCachedInstallData() {
         Logger.internal(OptOutModule.TAG, "Clearing cached install data");
         install = null;
-        advertisingID = null;
         user = null;
     }
 
@@ -2565,10 +2550,12 @@ public final class Batch {
     /**
      * Return the advertising ID object if available
      *
-     * @return advertising ID if available, null otherwise
+     * @deprecated this method has been deprecated and does nothing.
+     * @return Always return null.
      */
+    @Deprecated
     static AdvertisingID getAdvertisingID() {
-        return advertisingID;
+        return null;
     }
 
     /**

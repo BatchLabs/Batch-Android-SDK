@@ -443,7 +443,7 @@ public abstract class Webservice {
                     responseCode = -1;
                     count++;
                     continue;
-                } catch (Exception e) {
+                } catch (Exception | ExceptionInInitializerError e) {
                     throw new WebserviceError(WebserviceError.Reason.UNEXPECTED_ERROR, e);
                 }
 

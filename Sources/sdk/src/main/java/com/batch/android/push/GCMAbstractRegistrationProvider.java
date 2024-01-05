@@ -1,10 +1,8 @@
 package com.batch.android.push;
 
 import android.content.Context;
-import com.batch.android.AdsIdentifierProvider;
 import com.batch.android.PushRegistrationProvider;
 import com.batch.android.PushRegistrationProviderAvailabilityException;
-import com.batch.android.adsidentifier.GCMAdsIdentifierProvider;
 import com.batch.android.core.GenericHelper;
 import com.batch.android.core.GooglePlayServicesHelper;
 import com.batch.android.core.Logger;
@@ -15,15 +13,12 @@ public abstract class GCMAbstractRegistrationProvider implements PushRegistratio
 
     private static final String TAG = "GCMAbstractRegistrationProvider";
 
-    private GCMAdsIdentifierProvider adsIdentifierProvider;
-
     protected Context context;
     protected String senderID;
 
     GCMAbstractRegistrationProvider(Context c, String senderID) {
         this.context = c.getApplicationContext();
         this.senderID = senderID;
-        this.adsIdentifierProvider = new GCMAdsIdentifierProvider(this.context);
     }
 
     @Override
@@ -74,11 +69,6 @@ public abstract class GCMAbstractRegistrationProvider implements PushRegistratio
         if (!GenericHelper.isWakeLockPermissionAvailable(context)) {
             throw new PushRegistrationProviderAvailabilityException("Batch.Push : Permission WAKE_LOCK is missing.");
         }
-    }
-
-    @Override
-    public AdsIdentifierProvider getAdsIdentifierProvider() {
-        return adsIdentifierProvider;
     }
 
     protected abstract Integer getGMSAvailability();

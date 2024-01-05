@@ -39,17 +39,12 @@ public enum SystemParameterShortName {
      */
     SERVER_ID("i"),
 
-    ADVERTISING_ID("idv"),
+    ATTRIBUTION_ID("idv"),
 
     /**
      * Session id, regenerated at each start
      */
     SESSION_ID("s"),
-
-    /**
-     * Can use identifier
-     */
-    ADVERTISING_ID_OPTIN("cifa"),
 
     APPLICATION_VERSION("apv"),
 
