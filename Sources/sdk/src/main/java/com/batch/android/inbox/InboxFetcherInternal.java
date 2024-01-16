@@ -4,13 +4,13 @@ import android.content.Context;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.batch.android.BatchInboxFetcher;
 import com.batch.android.BatchInboxNotificationContent;
 import com.batch.android.PrivateNotificationContentHelper;
 import com.batch.android.core.Logger;
 import com.batch.android.core.NamedThreadFactory;
 import com.batch.android.di.providers.InboxDatasourceProvider;
-import com.batch.android.di.providers.InboxFetchWebserviceClientProvider;
 import com.batch.android.di.providers.InboxFetcherInternalProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.TrackerModuleProvider;
@@ -86,20 +86,6 @@ public class InboxFetcherInternal {
 
     @Provide
     public static InboxFetcherInternal provide(@NonNull Context context, String installID) {
-        return new InboxFetcherInternal(
-            TrackerModuleProvider.get(),
-            InboxDatasourceProvider.get(context),
-            context,
-            installID
-        );
-    }
-
-    @Provide
-    public static InboxFetcherInternal provide(
-        @NonNull Context context,
-        String installID,
-        @NonNull InboxFetchWebserviceClient client
-    ) {
         return new InboxFetcherInternal(
             TrackerModuleProvider.get(),
             InboxDatasourceProvider.get(context),
@@ -412,23 +398,28 @@ public class InboxFetcherInternal {
 
             try {
                 // No need for the TaskExecutor, run the WS directly on this thread since it has to work serially
-                InboxFetchWebserviceClient fetchWSClient = InboxFetchWebserviceClientProvider.get(
-                    c,
-                    fetcherType,
-                    identifier,
-                    authKey,
-                    maxPageSize,
-                    cursor,
-                    fetcherId,
-                    wsClientListener
+                runFetchWSClient(
+                    new InboxFetchWebserviceClient(
+                        c,
+                        fetcherType,
+                        identifier,
+                        authKey,
+                        maxPageSize,
+                        cursor,
+                        fetcherId,
+                        wsClientListener
+                    )
                 );
-                fetchWSClient.setListener(wsClientListener);
-                fetchWSClient.run();
             } catch (MalformedURLException e) {
                 Logger.internal(TAG, "Could not start inbox fetcher ws: ", e);
                 wsClientListener.onFailure("Internal network call error");
             }
         });
+    }
+
+    @VisibleForTesting
+    protected void runFetchWSClient(InboxFetchWebserviceClient client) {
+        client.run();
     }
 
     private boolean sync(@Nullable final String cursor, final InboxWebserviceListener wsClientListener) {

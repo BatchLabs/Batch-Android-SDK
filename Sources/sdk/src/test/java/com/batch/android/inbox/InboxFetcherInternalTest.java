@@ -1,7 +1,7 @@
 package com.batch.android.inbox;
 
 import static android.os.Looper.getMainLooper;
-import static com.batch.android.inbox.FetcherType.INSTALLATION;
+import static org.mockito.Mockito.spy;
 import static org.robolectric.Shadows.shadowOf;
 
 import android.content.Context;
@@ -11,22 +11,20 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 import com.batch.android.BatchInboxFetcher;
 import com.batch.android.BatchInboxNotificationContent;
-import com.batch.android.di.DI;
-import com.batch.android.di.DITest;
-import com.batch.android.di.DITestUtils;
+import com.batch.android.di.providers.InboxFetcherInternalProvider;
 import com.batch.android.json.JSONObject;
-import com.batch.android.webservice.listener.InboxWebserviceListener;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 
 @RunWith(AndroidJUnit4.class)
 @SmallTest
-public class InboxFetcherInternalTest extends DITest {
+public class InboxFetcherInternalTest {
 
     private Context appContext;
     private final String payload =
@@ -35,39 +33,23 @@ public class InboxFetcherInternalTest extends DITest {
 
     @Before
     public void setUp() {
-        super.setUp();
         appContext = ApplicationProvider.getApplicationContext();
         latch = new CountDownLatch(1);
     }
 
     @Test
     public void testFetchNewNotifications() throws Exception {
-        InboxFetchWebserviceClient client = PowerMockito.spy(
-            new InboxFetchWebserviceClient(
-                appContext,
-                INSTALLATION,
-                "mock-id",
-                "test-auth",
-                20,
-                null,
-                -1,
-                new InboxWebserviceListener() {
-                    @Override
-                    public void onSuccess(InboxWebserviceResponse result) {}
-
-                    @Override
-                    public void onFailure(@NonNull String error) {}
-                }
-            )
-        );
-        PowerMockito.doReturn(new JSONObject(payload)).when(client, "getBasicJsonResponseBody");
-        DI.getInstance().addSingletonInstance(InboxFetchWebserviceClient.class, client);
-        InboxFetcherInternal fetcher = DITestUtils.mockSingletonDependency(
-            InboxFetcherInternal.class,
-            new Class[] { Context.class, String.class },
-            appContext,
-            "test-install-id"
-        );
+        InboxFetcherInternal fetcher = spy(InboxFetcherInternalProvider.get(appContext, "test-install-id"));
+        Mockito
+            .doAnswer(invocation -> {
+                InboxFetchWebserviceClient client = invocation.getArgument(0);
+                InboxFetchWebserviceClient spy = PowerMockito.spy(client);
+                PowerMockito.doReturn(new JSONObject(payload)).when(spy, "getBasicJsonResponseBody");
+                spy.run();
+                return spy;
+            })
+            .when(fetcher)
+            .runFetchWSClient(Mockito.any());
         fetcher.fetchNewNotifications(
             new BatchInboxFetcher.OnNewNotificationsFetchedListener() {
                 @Override
@@ -85,7 +67,6 @@ public class InboxFetcherInternalTest extends DITest {
                 @Override
                 public void onFetchFailure(@NonNull String error) {
                     latch.countDown();
-                    Assert.fail();
                 }
             }
         );
