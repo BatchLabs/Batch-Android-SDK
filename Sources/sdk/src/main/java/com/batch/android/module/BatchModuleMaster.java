@@ -3,10 +3,12 @@ package com.batch.android.module;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import com.batch.android.di.providers.ActionModuleProvider;
+import com.batch.android.di.providers.DataCollectionModuleProvider;
 import com.batch.android.di.providers.DisplayReceiptModuleProvider;
 import com.batch.android.di.providers.EventDispatcherModuleProvider;
 import com.batch.android.di.providers.LocalCampaignsModuleProvider;
 import com.batch.android.di.providers.MessagingModuleProvider;
+import com.batch.android.di.providers.ProfileModuleProvider;
 import com.batch.android.di.providers.PushModuleProvider;
 import com.batch.android.di.providers.TrackerModuleProvider;
 import com.batch.android.di.providers.UserModuleProvider;
@@ -17,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Module master that dispatch to subcribed modules
+ * Module master that dispatch to subscribed modules
  *
  */
 @Module
@@ -27,7 +29,7 @@ public class BatchModuleMaster extends BatchModule {
     /**
      * Subscribed modules
      */
-    private List<BatchModule> modules;
+    private final List<BatchModule> modules;
 
     private BatchModuleMaster(List<BatchModule> modules) {
         this.modules = modules;
@@ -45,6 +47,8 @@ public class BatchModuleMaster extends BatchModule {
         modules.add(PushModuleProvider.get());
         modules.add(TrackerModuleProvider.get());
         modules.add(UserModuleProvider.get());
+        modules.add(ProfileModuleProvider.get());
+        modules.add(DataCollectionModuleProvider.get());
         return new BatchModuleMaster(modules);
     }
 

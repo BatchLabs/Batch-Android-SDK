@@ -13,6 +13,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationManagerCompat;
 import com.batch.android.BatchNotificationChannelsManager;
 import com.batch.android.BatchNotificationChannelsManagerPrivateHelper;
+import com.batch.android.BatchPushRegistration;
 import com.batch.android.PushNotificationType;
 import com.batch.android.WebserviceLauncher;
 import com.batch.android.di.providers.BatchNotificationChannelsManagerProvider;
@@ -23,7 +24,6 @@ import com.batch.android.di.providers.TrackerModuleProvider;
 import com.batch.android.event.InternalEvents;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
-import com.batch.android.push.Registration;
 import com.batch.android.runtime.RuntimeManager;
 import java.util.EnumSet;
 
@@ -83,7 +83,7 @@ public class NotificationAuthorizationStatus {
             RuntimeManager runtimeManager = RuntimeManagerProvider.get();
             boolean sdkReady = runtimeManager.runIfReady(() -> {
                 // Trigger a push token webservice
-                Registration registration = PushModuleProvider.get().getRegistration(context);
+                BatchPushRegistration registration = PushModuleProvider.get().getRegistration(context);
                 if (registration == null) {
                     Logger.internal(
                         "Notif. Authorization changed but no registration is available. Not sending update to the server."

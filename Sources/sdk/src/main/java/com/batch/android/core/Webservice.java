@@ -1,14 +1,15 @@
 package com.batch.android.core;
 
 import android.content.Context;
+import android.net.TrafficStats;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import com.batch.android.Batch;
 import com.batch.android.core.URLBuilder.CryptorMode;
 import com.batch.android.core.Webservice.WebserviceError.Reason;
 import com.batch.android.di.providers.OptOutModuleProvider;
 import com.batch.android.di.providers.ParametersProvider;
+import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.SecureDateProviderProvider;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
@@ -36,6 +37,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.GZIPInputStream;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLHandshakeException;
@@ -181,7 +183,9 @@ public abstract class Webservice {
      */
     protected static String[] addBatchApiKey(String[] parameters) {
         final String[] retParams = new String[parameters.length + 1];
-        retParams[0] = Batch.getAPIKey();
+        AtomicReference<String> apiKey = new AtomicReference<>();
+        RuntimeManagerProvider.get().readConfig(config -> apiKey.set(config.getApikey()));
+        retParams[0] = apiKey.toString();
         System.arraycopy(parameters, 0, retParams, 1, parameters.length);
         return retParams;
     }
@@ -436,6 +440,7 @@ public abstract class Webservice {
             ByteArrayOutputStream baos = null;
             try {
                 try {
+                    TrafficStats.setThreadStatsTag((int) Thread.currentThread().getId());
                     connection = buildConnection();
                     connection.connect();
                 } catch (IOException ce) {

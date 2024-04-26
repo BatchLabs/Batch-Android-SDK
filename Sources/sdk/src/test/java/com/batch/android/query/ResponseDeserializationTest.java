@@ -43,8 +43,8 @@ public class ResponseDeserializationTest {
         );
         AttributesSendResponse response = deserializer.deserialize();
         Assert.assertEquals("dummy_id", response.getQueryID());
-        Assert.assertEquals("1234-1234-1234", response.transactionID);
-        Assert.assertEquals(1L, response.version);
+        Assert.assertEquals("1234-1234-1234", response.getTransactionID());
+        Assert.assertEquals(1L, response.getVersion());
     }
 
     @Test

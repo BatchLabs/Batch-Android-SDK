@@ -200,18 +200,14 @@ public class StyleHelper {
                     targetView.setAlpha(val);
                 }
             } else if ("elevation".equalsIgnoreCase(rule.getKey())) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Float val = optFloat(rule.getValue());
-                    if (val != null) {
-                        targetView.setElevation(dpToPixels(res, val));
-                    }
+                Float val = optFloat(rule.getValue());
+                if (val != null) {
+                    targetView.setElevation(dpToPixels(res, val));
                 }
             } else if ("z-index".equalsIgnoreCase(rule.getKey())) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Float val = optFloat(rule.getValue());
-                    if (val != null) {
-                        targetView.setZ(dpToPixels(res, val));
-                    }
+                Float val = optFloat(rule.getValue());
+                if (val != null) {
+                    targetView.setZ(dpToPixels(res, val));
                 }
             } else if ("clip-subviews".equalsIgnoreCase(rule.getKey())) {
                 Float val = optFloat(rule.getValue());
@@ -269,12 +265,7 @@ public class StyleHelper {
                     finalDrawable = getPressableGradientDrawable(backgroundGradient);
                 }
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    targetView.setBackground(finalDrawable);
-                } else {
-                    //noinspection deprecation
-                    targetView.setBackgroundDrawable(finalDrawable);
-                }
+                targetView.setBackground(finalDrawable);
             } else if (backgroundColor != null) {
                 // Simply set the background color if we don't need more advanced stuff
                 // Buttons require another tinting way
@@ -292,7 +283,7 @@ public class StyleHelper {
                 }
             }
 
-            if (cornerRadius != null && shouldClipToOutline && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (cornerRadius != null && shouldClipToOutline) {
                 targetView.setClipToOutline(true);
             }
         }
@@ -733,32 +724,12 @@ public class StyleHelper {
      * @return A drawable that will be darkened on press
      */
     private static Drawable getPressableGradientDrawable(PositionableGradientDrawable baseDrawable) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // Generate a mask using the same shape. That way we can ripple a transparent drawable easily
-            PositionableGradientDrawable mask = (PositionableGradientDrawable) baseDrawable
-                .getConstantState()
-                .newDrawable()
-                .mutate();
-            mask.setColor(Color.WHITE);
-            return new RippleDrawable(ColorStateList.valueOf(RIPPLE_COLOR), baseDrawable, mask);
-        } else {
-            // Mutate the original drawable so we can keep the corner radius
-            PositionableGradientDrawable darkDrawable = (PositionableGradientDrawable) baseDrawable
-                .getConstantState()
-                .newDrawable()
-                .mutate();
-            darkDrawable.setStroke(0, Color.TRANSPARENT);
-            darkDrawable.setColor(RIPPLE_COLOR);
-
-            LayerDrawable ld = new LayerDrawable(new Drawable[] { baseDrawable, darkDrawable });
-
-            StateListDrawable stateListDrawable = new StateListDrawable();
-            stateListDrawable.addState(new int[] { android.R.attr.state_pressed }, ld);
-            stateListDrawable.addState(new int[] { android.R.attr.state_focused }, ld);
-            stateListDrawable.addState(new int[] { android.R.attr.state_activated }, ld);
-            stateListDrawable.addState(new int[] {}, baseDrawable);
-
-            return stateListDrawable;
-        }
+        // Generate a mask using the same shape. That way we can ripple a transparent drawable easily
+        PositionableGradientDrawable mask = (PositionableGradientDrawable) baseDrawable
+            .getConstantState()
+            .newDrawable()
+            .mutate();
+        mask.setColor(Color.WHITE);
+        return new RippleDrawable(ColorStateList.valueOf(RIPPLE_COLOR), baseDrawable, mask);
     }
 }

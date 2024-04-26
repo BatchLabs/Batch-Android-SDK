@@ -424,13 +424,10 @@ public class InboxFetcherInternal {
 
     private boolean sync(@Nullable final String cursor, final InboxWebserviceListener wsClientListener) {
         if (datasource != null && fetcherId != -1) {
-            List<InboxCandidateNotificationInternal> candidates = datasource.getCandidateNotifications(
-                cursor,
-                maxPageSize,
-                fetcherId
-            );
-
+            List<InboxCandidateNotificationInternal> candidates;
+            candidates = datasource.getCandidateNotifications(cursor, maxPageSize, fetcherId);
             if (!candidates.isEmpty()) {
+                List<InboxCandidateNotificationInternal> finalCandidates = candidates;
                 fetchExecutor.execute(() -> {
                     Context c = context != null ? context : RuntimeManagerProvider.get().getContext();
                     if (c == null) {
@@ -457,7 +454,7 @@ public class InboxFetcherInternal {
                             maxPageSize,
                             cursor,
                             fetcherId,
-                            candidates,
+                            finalCandidates,
                             wsClientListener
                         )
                             .run();
@@ -529,7 +526,7 @@ public class InboxFetcherInternal {
         InboxWebserviceResponse response,
         boolean askedForNewNotifications
     ) throws ResultHandlingError {
-        if (response.notifications.size() == 0) {
+        if (response.notifications.isEmpty()) {
             if (response.didTimeout) {
                 throw new ResultHandlingError(
                     "Server did timeout, but returned no notifications at all.",

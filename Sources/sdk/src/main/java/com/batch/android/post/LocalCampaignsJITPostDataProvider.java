@@ -80,7 +80,7 @@ public class LocalCampaignsJITPostDataProvider extends MessagePackPostDataProvid
 
         // Adding attributes
         final SQLUserDatasource datasource = SQLUserDatasourceProvider.get(context);
-        Map<String, Object> attributes = UserAttribute.getServerMapRepresentation(datasource.getAttributes());
+        Map<String, Object> attributes = UserAttribute.getServerMapRepresentation(datasource.getAttributes(), true);
 
         postData.put(IDS_KEY, ids);
         postData.put(CAMPAIGNS_KEY, campaignIds);

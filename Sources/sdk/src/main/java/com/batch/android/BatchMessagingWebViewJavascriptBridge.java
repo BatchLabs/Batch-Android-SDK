@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import com.batch.android.annotation.PublicSDK;
 import com.batch.android.core.Logger;
+import com.batch.android.di.providers.UserModuleProvider;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.messaging.WebViewActionListener;
@@ -159,7 +160,8 @@ public class BatchMessagingWebViewJavascriptBridge {
     @VisibleForTesting
     @Nullable
     protected String getAttributionID() {
-        return Batch.getUser().getAttributionID();
+        Logger.warning("Attribution identifier is not supported anymore");
+        return null;
     }
 
     @NonNull

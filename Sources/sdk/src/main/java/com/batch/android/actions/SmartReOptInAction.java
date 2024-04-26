@@ -43,7 +43,7 @@ public class SmartReOptInAction extends BroadcastReceiver implements UserActionR
             // Not running on Android 13, no need for permission.
             return;
         }
-        final NotificationPermissionHelper notificationPermissionHelper = new NotificationPermissionHelper();
+        final NotificationPermissionHelper notificationPermissionHelper = new NotificationPermissionHelper(null);
         if (notificationPermissionHelper.isNotificationPermissionGranted(context)) {
             Logger.internal(TAG, "Notification permission is already granted, aborting.");
             return;

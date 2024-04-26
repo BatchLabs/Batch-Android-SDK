@@ -66,18 +66,14 @@ final class TrackerWebservice extends BatchQueryWebservice implements TaskRunnab
     public void run() {
         try {
             Logger.internal(TAG, "tracker webservice started");
-            webserviceMetrics.onWebserviceStarted(this);
-
             /*
              * Read response
              */
             JSONObject response = null;
             try {
                 response = getStandardResponseBodyIfValid();
-                webserviceMetrics.onWebserviceFinished(this, true);
             } catch (WebserviceError error) {
                 Logger.internal(TAG, "Error on TrackerWebservice : " + error.getReason().toString(), error.getCause());
-                webserviceMetrics.onWebserviceFinished(this, false);
 
                 switch (error.getReason()) {
                     case NETWORK_ERROR:

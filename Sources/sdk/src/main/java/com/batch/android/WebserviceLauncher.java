@@ -11,7 +11,6 @@ import com.batch.android.localcampaigns.model.LocalCampaign;
 import com.batch.android.post.DisplayReceiptPostDataProvider;
 import com.batch.android.post.LocalCampaignsJITPostDataProvider;
 import com.batch.android.post.MetricPostDataProvider;
-import com.batch.android.push.Registration;
 import com.batch.android.runtime.RuntimeManager;
 import com.batch.android.webservice.listener.DisplayReceiptWebserviceListener;
 import com.batch.android.webservice.listener.LocalCampaignsJITWebserviceListener;
@@ -127,7 +126,10 @@ public final class WebserviceLauncher {
     /**
      * Launch the push webservice
      */
-    public static boolean launchPushWebservice(RuntimeManager runtimeManager, @NonNull Registration registration) {
+    public static boolean launchPushWebservice(
+        RuntimeManager runtimeManager,
+        @NonNull BatchPushRegistration registration
+    ) {
         try {
             TaskExecutorProvider
                 .get(runtimeManager.getContext())

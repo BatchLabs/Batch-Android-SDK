@@ -9,9 +9,7 @@ import android.os.Bundle;
  */
 public class MetaDataUtils {
 
-    public static final String MANIFEST_SENDER_ID_KEY = "batch_push_fcm_sender_id_override";
-
-    public static final String MANIFEST_FORCE_FCM_IID_KEY = "batch_push_force_fcm_iid_provider";
+    public static final String MANIFEST_OPT_OUT_BY_DEFAULT_KEY = "batch_opted_out_by_default";
 
     /**
      * Get the bundle meta data info from the AndroidManifest

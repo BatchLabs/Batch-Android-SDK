@@ -128,11 +128,7 @@ public final class TrackerDatasource {
                     null,
                     null,
                     null,
-                    "CASE WHEN " +
-                    TrackerDatabaseHelper.COLUMN_NAME +
-                    " LIKE '\\_%' ESCAPE '\\' THEN 1 ELSE 0 END DESC, " +
-                    TrackerDatabaseHelper.COLUMN_DB_ID +
-                    " desc",
+                    TrackerDatabaseHelper.COLUMN_DB_ID + " asc",
                     limitStr
                 );
             while (cursor.moveToNext()) {

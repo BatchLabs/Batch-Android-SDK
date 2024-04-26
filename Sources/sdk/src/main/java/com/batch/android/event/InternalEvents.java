@@ -15,12 +15,10 @@ public final class InternalEvents {
 
     public static final String MESSAGING = "_MESSAGING";
     public static final String LOCAL_CAMPAIGN_VIEWED = "_LC_VIEW";
-
-    public static final String PROFILE_CHANGED = "_PROFILE_CHANGED";
+    public static final String NATIVE_DATA_CHANGED = "_NATIVE_DATA_CHANGED";
     public static final String INSTALL_DATA_CHANGED = "_INSTALL_DATA_CHANGED";
+    public static final String PROFILE_DATA_CHANGED = "_PROFILE_DATA_CHANGED";
     public static final String INSTALL_DATA_CHANGED_TRACK_FAILURE = "_INSTALL_DATA_CHANGED_TRACK_FAIL";
-    public static final String EMAIL_CHANGED = "_EMAIL_CHANGED";
-    public static final String ATTRIBUTION_ID_CHANGED = "_ATTRIBUTION_ID_CHANGED";
     public static final String LOCATION_CHANGED = "_LOCATION_CHANGED";
     public static final String NOTIFICATION_STATUS_CHANGE = "_NOTIF_STATUS_CHANGE";
 
@@ -31,6 +29,8 @@ public final class InternalEvents {
     public static final String OPT_IN = "_OPT_IN";
     public static final String OPT_OUT = "_OPT_OUT";
     public static final String OPT_OUT_AND_WIPE_DATA = "_OPTOUT_WIPE_DATA";
+
+    public static final String PROFILE_IDENTIFY = "_PROFILE_IDENTIFY";
 
     public static final String FIND_MY_INSTALLATION = "_FIND_MY_INSTALLATION";
 }

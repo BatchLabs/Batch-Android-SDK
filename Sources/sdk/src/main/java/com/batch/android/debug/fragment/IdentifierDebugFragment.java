@@ -10,16 +10,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.batch.android.Batch;
+import com.batch.android.BatchPushRegistration;
 import com.batch.android.BuildConfig;
 import com.batch.android.R;
-import com.batch.android.core.ParameterKeys;
-import com.batch.android.di.providers.ParametersProvider;
 
 public class IdentifierDebugFragment extends Fragment implements View.OnClickListener {
 
     private TextView sdkVersion;
     private TextView installId;
-    private TextView advertisingId;
     private TextView pushToken;
 
     public static IdentifierDebugFragment newInstance() {
@@ -37,36 +35,14 @@ public class IdentifierDebugFragment extends Fragment implements View.OnClickLis
                     Batch.User.getInstallationID()
                 )
             );
-
-        String attributionID = ParametersProvider.get(getContext()).get(ParameterKeys.ATTRIBUTION_ID);
-        if (attributionID != null) {
-            shareContent =
-                shareContent.concat(
-                    String.format(
-                        "%s: %s\n",
-                        getString(R.string.com_batchsdk_identifier_debug_fragment_advertising_id),
-                        attributionID
-                    )
-                );
-        } else {
-            shareContent =
-                shareContent.concat(
-                    String.format(
-                        "%s: %s\n",
-                        getString(R.string.com_batchsdk_identifier_debug_fragment_advertising_id),
-                        getString(R.string.com_batchsdk_debug_view_empty)
-                    )
-                );
-        }
-
-        String token = Batch.Push.getLastKnownPushToken();
-        if (token != null) {
+        BatchPushRegistration registration = Batch.Push.getRegistration();
+        if (registration != null) {
             shareContent =
                 shareContent.concat(
                     String.format(
                         "%s: %s\n",
                         getString(R.string.com_batchsdk_identifier_debug_fragment_push_token),
-                        token
+                        registration.getToken()
                     )
                 );
         } else {
@@ -93,7 +69,6 @@ public class IdentifierDebugFragment extends Fragment implements View.OnClickLis
         View view = inflater.inflate(R.layout.com_batchsdk_identifier_debug_fragment, container, false);
         sdkVersion = view.findViewById(R.id.com_batchsdk_identifier_debug_fragment_sdk_version);
         installId = view.findViewById(R.id.com_batchsdk_identifier_debug_fragment_install_id);
-        advertisingId = view.findViewById(R.id.com_batchsdk_identifier_debug_fragment_advertising_id);
         pushToken = view.findViewById(R.id.com_batchsdk_identifier_debug_fragment_push_token);
 
         View shareButton = view.findViewById(R.id.com_batchsdk_identifier_debug_fragment_share_button);
@@ -108,16 +83,9 @@ public class IdentifierDebugFragment extends Fragment implements View.OnClickLis
         sdkVersion.setText(BuildConfig.SDK_VERSION);
         installId.setText(Batch.User.getInstallationID());
 
-        String attributionID = ParametersProvider.get(getContext()).get(ParameterKeys.ATTRIBUTION_ID);
-        if (attributionID != null) {
-            advertisingId.setText(attributionID);
-        } else {
-            advertisingId.setText(R.string.com_batchsdk_debug_view_empty);
-        }
-
-        String token = Batch.Push.getLastKnownPushToken();
-        if (token != null) {
-            pushToken.setText(token);
+        BatchPushRegistration registration = Batch.Push.getRegistration();
+        if (registration != null) {
+            pushToken.setText(registration.getToken());
         } else {
             pushToken.setText(R.string.com_batchsdk_debug_view_empty);
         }

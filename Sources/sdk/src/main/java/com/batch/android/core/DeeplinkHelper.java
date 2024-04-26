@@ -5,10 +5,8 @@ import static android.content.Intent.ACTION_VIEW;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import java.util.Locale;
 
 /**
@@ -20,22 +18,15 @@ public class DeeplinkHelper {
      * Gets a VIEW intent that will result in a Custom Tab.
      * Note: On unsupported API Levels (<18), this will return null
      */
-    @Nullable
+    @NonNull
     static Intent getCustomTabIntent(@NonNull Uri uri) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            return null;
-        }
-
         final Intent i = new Intent(ACTION_VIEW);
-
         final Bundle b = new Bundle();
         b.putBinder("android.support.customtabs.extra.SESSION", null);
         b.putBoolean("android.support.customtabs.extra.SHARE_MENU_ITEM", true);
         b.putInt("android.support.customtabs.extra.TITLE_VISIBILITY", 1);
-
         i.putExtras(b);
         i.setData(uri);
-
         return i;
     }
 
@@ -61,25 +52,18 @@ public class DeeplinkHelper {
      * @param useNewTask             Open in a new task (unsupported on custom tabs)
      * @return Intent to attempt to open for the deeplink
      */
-    @Nullable
+    @NonNull
     public static Intent getIntent(@NonNull String rawDeeplink, boolean useCustomTabIfPossible, boolean useNewTask) {
         Uri uri = Uri.parse(rawDeeplink);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            uri = uri.normalizeScheme();
-        }
-
+        uri = uri.normalizeScheme();
         if (useCustomTabIfPossible && customTabSupportsURI(uri)) {
-            final Intent customTabIntent = getCustomTabIntent(uri);
-            if (customTabIntent != null) {
-                return customTabIntent;
-            }
+            return getCustomTabIntent(uri);
         }
 
         final Intent i = new Intent(ACTION_VIEW, uri);
         if (useNewTask) {
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
-
         return i;
     }
 

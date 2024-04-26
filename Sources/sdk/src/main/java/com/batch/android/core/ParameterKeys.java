@@ -106,24 +106,20 @@ public final class ParameterKeys
     public final static String DEFAULT_RETRY_NUMBER_KEY					= "ws.defaultRetry";
     public final static String DEFAULT_CONNECT_TIMEOUT_KEY				= "ws.defaultconnectTimeout";
     public final static String DEFAULT_READ_TIMEOUT_KEY					= "ws.defaultreadTimeout";
-    public final static String WEBSERVICE_IDS_PARAMETERS				= "app.ids.pattern";
-    public final static String WEBSERVICE_IDS_ADVANCED_PARAMETERS		= "app.ids.pattern_advanced";
     public final static String INSTALL_ID_KEY 							= "app.install.id";
     public final static String INSTALL_TIMESTAMP_KEY 					= "app.install.timestamp";
-    public final static String SERVER_ID_KEY							= "app.server.id";
     public final static String TASK_EXECUTOR_MIN_POOL					= "app.executor.minpool";
     public final static String TASK_EXECUTOR_MAX_POOL					= "app.executor.maxpool";
     public final static String TASK_EXECUTOR_THREADTTL					= "app.executor.threadttl";
     public final static String SCHEME_CODE_PATTERN						= "app.scheme.codepattern";
     public final static String CUSTOM_ID								= "app.id.custom";
-    public final static String ATTRIBUTION_ID						    = "app.id.attribution";
     public final static String USER_DATA_VERSION						= "app.profile.version";
+    public final static String PROJECT_KEY						        = "app.project.key";
     public final static String SERVER_TIMESTAMP							= "ws.server.timestamp";
     public final static String EVENT_TRACKER_INITIAL_DELAY				= "tracker.delay.initial";
     public final static String EVENT_TRACKER_MAX_DELAY					= "tracker.delay.max";
     public final static String EVENT_TRACKER_BATCH_QUANTITY				= "tracker.batch.quantity";
     public final static String EVENT_TRACKER_EVENTS_LIMIT				= "tracker.db.limit";
-    public final static String EVENT_TRACKER_STATE						= "tracker.state";
     public final static String PUSH_REGISTRATION_ID_KEY					= "push.registration.id";
     public final static String PUSH_REGISTRATION_PROVIDER_KEY			= "push.registration.provider";
     public final static String PUSH_REGISTRATION_SENDERID_KEY			= "push.registration.sender_id";
@@ -142,6 +138,8 @@ public final class ParameterKeys
     public final static String LIB_PREVIOUSVERSION_KEY					= "app.version.previous";
 
     public final static String SHARED_PREFS_STORAGE_VERSION				= "app.shared_prefs.version";
+
+    public final static String DATA_COLLECTION_CONFIG_KEY				    = "data.privacy.config";
 
 }
 //@formatter:on

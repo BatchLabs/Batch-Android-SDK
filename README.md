@@ -7,7 +7,7 @@ The Batch Android SDK allows you to build meaningful communication experience in
 Our [📕 setup documentation](https://doc.batch.com/ios/prerequisites) details the steps to take for an easy and successful integration.
 
 # Prerequisites
-The Batch Android SDK requires Android Studio 4 and Android API 15.
+The Batch Android SDK requires Android 5.0 (Lollipop / API Level 21).
 
 # Documentation
 - [Setup guide](https://doc.batch.com/android/prerequisites): start your implementation here!

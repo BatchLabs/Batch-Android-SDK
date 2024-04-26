@@ -93,18 +93,14 @@ class AttributesSendWebservice extends BatchQueryWebservice implements TaskRunna
     public void run() {
         try {
             Logger.internal(TAG, "Attributes send webservice started");
-            webserviceMetrics.onWebserviceStarted(this);
-
             /*
              * Read response
              */
             JSONObject response = null;
             try {
                 response = getStandardResponseBodyIfValid();
-                webserviceMetrics.onWebserviceFinished(this, true);
             } catch (WebserviceError error) {
                 Logger.internal(error.getReason().toString(), error.getCause());
-                webserviceMetrics.onWebserviceFinished(this, false);
 
                 switch (error.getReason()) {
                     case NETWORK_ERROR:

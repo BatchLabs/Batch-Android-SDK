@@ -28,7 +28,6 @@ class InboxNotificationContentParsingTest {
         Assert.assertEquals("foo", content.body)
         Assert.assertEquals("bar", content.title)
         Assert.assertTrue(content.isUnread)
-        Assert.assertFalse(content.isDeleted)
         Assert.assertFalse(content.isSilent)
         Assert.assertEquals("https://batch.com", content.pushPayload.deeplink)
         Assert.assertEquals(now, content.date)
@@ -42,7 +41,6 @@ class InboxNotificationContentParsingTest {
         Assert.assertEquals("foo", content.body)
         Assert.assertNull(content.title)
         Assert.assertFalse(content.isUnread)
-        Assert.assertFalse(content.isDeleted)
         Assert.assertFalse(content.isSilent)
         Assert.assertEquals(BatchNotificationSource.CAMPAIGN, content.source)
     }

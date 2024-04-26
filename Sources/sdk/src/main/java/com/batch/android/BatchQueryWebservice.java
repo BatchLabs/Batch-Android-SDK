@@ -2,7 +2,6 @@ package com.batch.android;
 
 import android.content.Context;
 import com.batch.android.core.Logger;
-import com.batch.android.di.providers.WebserviceMetricsProvider;
 import com.batch.android.json.JSONArray;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
@@ -40,8 +39,6 @@ abstract class BatchQueryWebservice extends BatchWebservice {
      */
     private List<Response> responses;
 
-    protected WebserviceMetrics webserviceMetrics;
-
     // ------------------------------------------->
 
     /**
@@ -54,7 +51,6 @@ abstract class BatchQueryWebservice extends BatchWebservice {
     protected BatchQueryWebservice(Context context, RequestType type, String baseURLFormat, String... parameters)
         throws MalformedURLException {
         super(context, type, baseURLFormat, parameters);
-        this.webserviceMetrics = WebserviceMetricsProvider.get();
     }
 
     // ------------------------------------------->
@@ -122,11 +118,6 @@ abstract class BatchQueryWebservice extends BatchWebservice {
          * Register parameters if any
          */
         handleParameters(jsonResponse);
-
-        /*
-         * Register server id (i)
-         */
-        handleServerID(jsonResponse);
 
         /*
          * Parse response to retrieve responses for queries

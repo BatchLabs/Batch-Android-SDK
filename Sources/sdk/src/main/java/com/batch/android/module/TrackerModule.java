@@ -2,6 +2,7 @@ package com.batch.android.module;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import com.batch.android.BatchPushRegistration;
 import com.batch.android.FailReason;
 import com.batch.android.WebserviceLauncher;
 import com.batch.android.core.Logger;
@@ -29,16 +30,15 @@ import com.batch.android.localcampaigns.signal.EventTrackedSignal;
 import com.batch.android.processor.Module;
 import com.batch.android.processor.Provide;
 import com.batch.android.processor.Singleton;
-import com.batch.android.push.Registration;
 import com.batch.android.runtime.State;
 import com.batch.android.tracker.TrackerDatasource;
-import com.batch.android.tracker.TrackerMode;
 import com.batch.android.webservice.listener.TrackerWebserviceListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -61,17 +61,17 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
     /**
      * Memory event queue that buffers them before saving them in SQLite
      */
-    private Queue<Event> memoryStorage = new ConcurrentLinkedQueue<>();
+    private final Queue<Event> memoryStorage = new ConcurrentLinkedQueue<>();
 
     /**
      * Executor responsible for persisting the data in the Queue to SQLite
      */
-    private ExecutorService flushExecutor = Executors.newSingleThreadExecutor(new NamedThreadFactory());
+    private final ExecutorService flushExecutor = Executors.newSingleThreadExecutor(new NamedThreadFactory());
 
     /**
      * Boolean that tells if the flushExecutor is working
      */
-    private AtomicBoolean isFlushing = new AtomicBoolean(false);
+    private final AtomicBoolean isFlushing = new AtomicBoolean(false);
 
     /**
      * Event sender instance
@@ -86,10 +86,10 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
     /**
      * Modules
      */
-    private OptOutModule optOutModule;
-    private LocalCampaignsModule localCampaignsModule;
-    private CampaignManager campaignManager;
-    private PushModule pushModule;
+    private final OptOutModule optOutModule;
+    private final LocalCampaignsModule localCampaignsModule;
+    private final CampaignManager campaignManager;
+    private final PushModule pushModule;
 
     // -------------------------------------------->
 
@@ -122,48 +122,46 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
 
     @Override
     public int getState() {
-        return getMode().getValue();
+        return 1;
     }
 
     @Override
     public void batchWillStart() {
-        TrackerMode mode = getMode();
-
-        if (mode != TrackerMode.OFF) {
-            try {
-                batchSendQuantity =
-                    Integer.parseInt(
-                        ParametersProvider
-                            .get(RuntimeManagerProvider.get().getContext())
-                            .get(ParameterKeys.EVENT_TRACKER_BATCH_QUANTITY)
-                    );
-
-                //Start the event tracker.
-                datasource = new TrackerDatasource(RuntimeManagerProvider.get().getContext().getApplicationContext());
-                int overflowEventsDeleted = datasource.deleteOverflowEvents(
-                    Integer.parseInt(
-                        ParametersProvider
-                            .get(RuntimeManagerProvider.get().getContext())
-                            .get(ParameterKeys.EVENT_TRACKER_EVENTS_LIMIT)
-                    )
+        try {
+            batchSendQuantity =
+                Integer.parseInt(
+                    ParametersProvider
+                        .get(RuntimeManagerProvider.get().getContext())
+                        .get(ParameterKeys.EVENT_TRACKER_BATCH_QUANTITY)
                 );
-                datasource.resetEventStatus();
 
-                Logger.internal(TAG, "Deleted " + overflowEventsDeleted + " overflow events");
-
-                // Not reconstructed everytime to keep track of the state and only if we are in ON mode
-                if (mode == TrackerMode.ON && sender == null) {
-                    sender = new EventSender(RuntimeManagerProvider.get(), this);
-                }
-            } catch (Exception e) {
-                Logger.error(TAG, "Error while starting tracker module", e);
+            //Start the event tracker.
+            Context context = RuntimeManagerProvider.get().getContext();
+            if (context == null) {
+                throw new NullPointerException("Context cannot be null");
             }
+
+            int eventsToDeleteLimit = Integer.parseInt(
+                ParametersProvider.get(context).get(ParameterKeys.EVENT_TRACKER_EVENTS_LIMIT)
+            );
+
+            datasource = new TrackerDatasource(context.getApplicationContext());
+            int overflowEventsDeleted = datasource.deleteOverflowEvents(eventsToDeleteLimit);
+            Logger.internal(TAG, "Deleted " + overflowEventsDeleted + " overflow events");
+            datasource.resetEventStatus();
+
+            // Not reconstructed everytime to keep track of the state and only if we are in ON mode
+            if (sender == null) {
+                sender = new EventSender(RuntimeManagerProvider.get(), this);
+            }
+        } catch (Exception e) {
+            Logger.error(TAG, "Error while starting tracker module", e);
         }
     }
 
     @Override
     public void batchDidStart() {
-        // If it got events before it was started, they will be immediatly written to SQLite and sent as new.
+        // If it got events before it was started, they will be immediately written to SQLite and sent as new.
         if (!memoryStorage.isEmpty()) {
             flush();
         }
@@ -183,7 +181,7 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
     /**
      * Track an event by its name
      *
-     * @param name
+     * @param name The name of the event
      */
     public void track(String name) {
         track(name, null);
@@ -192,8 +190,8 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
     /**
      * Track an event by its name with additional parameters
      *
-     * @param name
-     * @param parameters
+     * @param name The name of the event
+     * @param parameters The parameters of the event
      */
     public void track(String name, JSONObject parameters) {
         track(name, new Date().getTime(), parameters);
@@ -202,9 +200,9 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
     /**
      * Track en event by its name, timestamp and with additional parameters
      *
-     * @param name
-     * @param timestamp
-     * @param parameters
+     * @param name The name of the event
+     * @param timestamp The timestamp of the event
+     * @param parameters The parameters of the event
      */
     public void track(String name, long timestamp, JSONObject parameters) {
         if (Boolean.TRUE.equals(optOutModule.isOptedOut())) {
@@ -212,7 +210,7 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
         }
 
         if (Parameters.ENABLE_DEV_LOGS && parameters != null) {
-            Logger.internal(TAG, "Tracking event " + name + " with parameters " + parameters.toString());
+            Logger.internal(TAG, "Tracking event " + name + " with parameters " + parameters);
         } else {
             Logger.internal(TAG, "Tracking event " + name);
         }
@@ -227,9 +225,9 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
     /**
      * Track a collapsible event by its name, timestamp and with additional parameters
      *
-     * @param name
-     * @param timestamp
-     * @param parameters
+     * @param name The name of the event
+     * @param timestamp The timestamp of the event
+     * @param parameters The parameters of the event
      */
     public void trackCollapsible(String name, long timestamp, JSONObject parameters) {
         if (Boolean.TRUE.equals(optOutModule.isOptedOut())) {
@@ -240,25 +238,24 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
         memoryStorage.add(new CollapsibleEvent(RuntimeManagerProvider.get().getContext(), timestamp, name, parameters));
         flush();
 
-        // TODO: Don't do that if we're off
         localCampaignsModule.sendSignal(new EventTrackedSignal(name, parameters));
     }
 
     /**
      * Track an event by its name and timestamp
      *
-     * @param name
-     * @param timestamp
+     * @param name The name of the event
+     * @param timestamp The timestamp of the event
      */
     public void track(String name, long timestamp) {
         track(name, timestamp, null);
     }
 
     /**
-     * Track local campaign vien
+     * Track local campaign view
      *
-     * @param campaignID
-     * @param eventData
+     * @param campaignID The campaign identifier
+     * @param eventData The data of the event
      */
     public void trackCampaignView(@NonNull String campaignID, @NonNull JSONObject eventData) {
         ViewTracker vt = campaignManager.getViewTracker();
@@ -289,8 +286,8 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
     /**
      * Track the opt-in event
      *
-     * @param context
-     * @throws JSONException
+     * @param context Android's context
+     * @throws JSONException Serialization exception
      */
     void trackOptInEvent(final Context context) throws JSONException {
         track(InternalEvents.OPT_IN, makeOptBaseEventData(context));
@@ -299,9 +296,9 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
     /**
      * Track the opt-out event
      *
-     * @param context
-     * @param name
-     * @return
+     * @param context Android's context
+     * @param name The name of the event
+     * @return A promise resolving when the request has finished
      */
     Promise<Void> trackOptOutEvent(final Context context, String name) {
         // iOS has debouncing, but is it really useful?
@@ -356,20 +353,15 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
             data.put("cus", customID);
         }
 
-        String attributionID = params.get(ParameterKeys.ATTRIBUTION_ID);
-        if (attributionID != null) {
-            data.put("idv", attributionID);
-        }
-
-        Registration reg = pushModule.getRegistration(context);
+        BatchPushRegistration reg = pushModule.getRegistration(context);
         if (reg != null) {
-            data.put("tok", reg.registrationID);
-            data.put("provider", reg.provider);
-            if (reg.senderID != null) {
-                data.put("senderid", reg.senderID);
+            data.put("tok", reg.getToken());
+            data.put("provider", reg.getProvider());
+            if (reg.getSenderID() != null) {
+                data.put("senderid", reg.getSenderID());
             }
-            if (reg.gcpProjectID != null) {
-                data.put("gcpproject", reg.gcpProjectID);
+            if (reg.getGcpProjectID() != null) {
+                data.put("gcpproject", reg.getGcpProjectID());
             }
         }
         return data;
@@ -441,34 +433,6 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
             });
     }
 
-    // ------------------------------------------------>
-
-    /**
-     * Retrieve the current mode of the module
-     *
-     * @return mode of the module, fallback on ON
-     */
-    private TrackerMode getMode() {
-        TrackerMode mode = null;
-
-        try {
-            mode =
-                TrackerMode.fromValue(
-                    Integer.parseInt(
-                        ParametersProvider
-                            .get(RuntimeManagerProvider.get().getContext())
-                            .get(ParameterKeys.EVENT_TRACKER_STATE)
-                    )
-                );
-        } catch (Exception e) {
-            Logger.internal(TAG, "Error while reading tracker mode", e);
-        }
-
-        return mode != null ? mode : TrackerMode.ON;
-    }
-
-    // ------------------------------------------------>
-
     @Override
     public void onEventsSendSuccess(final List<Event> events) {
         Logger.internal(TAG, "onEventsSendSuccess");
@@ -482,8 +446,8 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
                     for (Event event : events) {
                         ids.add(event.getId());
                     }
-
-                    datasource.deleteEvents(ids.toArray(new String[ids.size()]));
+                    String[] idsArray = new String[ids.size()];
+                    datasource.deleteEvents(ids.toArray(idsArray));
 
                     if (events.size() == batchSendQuantity) { // If we just sent the max number of event in a raw, there's probably more
                         sender.hasNewEvents();
@@ -511,12 +475,14 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
                         }
                     }
 
+                    String[] newIdsArray = new String[newIds.size()];
                     if (!newIds.isEmpty()) {
-                        datasource.updateEventsToNew(newIds.toArray(new String[newIds.size()]));
+                        datasource.updateEventsToNew(newIds.toArray(newIdsArray));
                     }
 
+                    String[] oldIdsArray = new String[oldIds.size()];
                     if (!oldIds.isEmpty()) {
-                        datasource.updateEventsToOld(oldIds.toArray(new String[oldIds.size()]));
+                        datasource.updateEventsToOld(oldIds.toArray(oldIdsArray));
                     }
                 }
             });

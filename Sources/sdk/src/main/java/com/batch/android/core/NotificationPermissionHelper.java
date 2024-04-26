@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import com.batch.android.BatchNotificationChannelsManagerPrivateHelper;
 import com.batch.android.BatchPermissionActivity;
+import com.batch.android.BatchPermissionListener;
 import com.batch.android.di.providers.BatchNotificationChannelsManagerProvider;
 import com.batch.android.di.providers.LocalBroadcastManagerProvider;
 
@@ -20,6 +21,16 @@ public class NotificationPermissionHelper extends BroadcastReceiver {
     private static final String BASE_TARGET_LOG_MESSAGE = "App is targeting Android ";
 
     public static final String PERMISSION_NOTIFICATION = "android.permission.POST_NOTIFICATIONS";
+
+    /**
+     * Public notification permission callback
+     */
+    @Nullable
+    private final BatchPermissionListener listener;
+
+    public NotificationPermissionHelper(@Nullable BatchPermissionListener listener) {
+        this.listener = listener;
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public boolean isNotificationPermissionGranted(Context context) {
@@ -44,11 +55,17 @@ public class NotificationPermissionHelper extends BroadcastReceiver {
     ) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             // Not running on Android 13, no need for permission.
+            if (listener != null) {
+                listener.onPermissionRequested(true);
+            }
             return;
         }
 
         if (isNotificationPermissionGranted(context)) {
             Logger.internal(TAG, "Notifications are already enabled, not requesting permission.");
+            if (listener != null) {
+                listener.onPermissionRequested(true);
+            }
             return;
         }
 
@@ -87,7 +104,7 @@ public class NotificationPermissionHelper extends BroadcastReceiver {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public boolean isPermissionAlreadyAskedFromOlderSDK(@NonNull Context context) {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        return manager.getNotificationChannels().size() > 0;
+        return !manager.getNotificationChannels().isEmpty();
     }
 
     /**
@@ -106,15 +123,19 @@ public class NotificationPermissionHelper extends BroadcastReceiver {
 
     /**
      * Broadcast receiver to handle the permission result
-     * @param context context
-     * @param intent broadcasted
+     * @param context Context
+     * @param intent Broadcasted intent from BatchPermissionActivity
      */
     @Override
     public void onReceive(Context context, Intent intent) {
         String permission = intent.getStringExtra(BatchPermissionActivity.EXTRA_PERMISSION);
         // Ensure receiver is called for the right permission
         if (PERMISSION_NOTIFICATION.equals(permission)) {
-            // Permission result is accessible from extra's intent at BatchPermissionActivity.EXTRA_RESULT
+            // Notify user whether the permission is granted or not
+            boolean granted = intent.getBooleanExtra(BatchPermissionActivity.EXTRA_RESULT, false);
+            if (listener != null) {
+                listener.onPermissionRequested(granted);
+            }
             NotificationAuthorizationStatus.checkForNotificationAuthorizationChange(context);
             // Unregister receiver as it is registered when permission is requested
             LocalBroadcastManagerProvider.get(context).unregisterReceiver(this);

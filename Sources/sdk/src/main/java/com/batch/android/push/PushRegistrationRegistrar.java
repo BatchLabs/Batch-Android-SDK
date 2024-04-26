@@ -12,8 +12,8 @@ public interface PushRegistrationRegistrar {
     /**
      * Instantiate the push registration provider
      *
-     * @param context
-     * @return
+     * @param context Android's context
+     * @return A push registration provider
      */
     PushRegistrationProvider getPushRegistrationProvider(Context context);
 }

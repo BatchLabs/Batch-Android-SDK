@@ -33,6 +33,12 @@ public class AttributesSendResponseDeserializer extends ResponseDeserializer {
         if (json.hasNonNull("ver")) {
             response.setVersion(json.getLong("ver"));
         }
+        if (json.hasNonNull("project_key")) {
+            String projectKey = json.getString("project_key");
+            if (!projectKey.isEmpty()) {
+                response.setProjectKey(projectKey);
+            }
+        }
         return response;
     }
 }

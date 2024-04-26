@@ -11,7 +11,7 @@ public class TestActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Batch.setConfig(new Config("TEST_API_KEY"));
+        Batch.start("TEST_API_KEY");
         Batch.onCreate(this);
     }
 

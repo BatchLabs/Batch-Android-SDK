@@ -4,7 +4,6 @@ import android.os.Build;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -16,21 +15,15 @@ import javax.net.ssl.SSLSocketFactory;
 
 public class TLSSocketFactory extends SSLSocketFactory {
 
-    private static List<String> enabledProtocols;
+    private static final List<String> enabledProtocols;
 
-    private SSLSocketFactory internalSSLSocketFactory;
-    private String[] protocols;
+    private final SSLSocketFactory internalSSLSocketFactory;
+    private final String[] protocols;
 
     static {
         enabledProtocols = new ArrayList<>();
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT_WATCH) {
-            enabledProtocols.add("TLSv1");
-            enabledProtocols.add("TLSv1.1");
-            enabledProtocols.add("TLSv1.2");
-        } else if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-            enabledProtocols.add("TLSv1.2");
-        } else {
-            enabledProtocols.add("TLSv1.2");
+        enabledProtocols.add("TLSv1.2");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             enabledProtocols.add("TLSv1.3");
         }
     }
@@ -67,13 +60,12 @@ public class TLSSocketFactory extends SSLSocketFactory {
     }
 
     @Override
-    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
+    public Socket createSocket(String host, int port) throws IOException {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port));
     }
 
     @Override
-    public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
-        throws IOException, UnknownHostException {
+    public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port, localHost, localPort));
     }
 

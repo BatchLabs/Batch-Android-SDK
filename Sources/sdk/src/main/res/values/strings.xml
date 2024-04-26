@@ -12,7 +12,6 @@
 
     <string name="com_batchsdk_identifier_debug_fragment_sdk_version">Batch SDK Version</string>
     <string name="com_batchsdk_identifier_debug_fragment_install_id">Installation ID</string>
-    <string name="com_batchsdk_identifier_debug_fragment_advertising_id">Advertising ID</string>
     <string name="com_batchsdk_identifier_debug_fragment_push_token">Push Token</string>
 
     <string name="com_batchsdk_user_data_debug_fragment_user_id">Custom User ID</string>

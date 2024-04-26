@@ -182,9 +182,7 @@ public class ModalContentPanGestureDetector
         ObjectAnimator animator = ObjectAnimator.ofPropertyValuesHolder(targetView, pvtX, pvtY, pvsX, pvsY);
         animator.setInterpolator(new OvershootInterpolator());
         animator.setDuration(ANIMATION_DURATION);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            animator.setAutoCancel(true);
-        }
+        animator.setAutoCancel(true);
         animator.start();
         cancellationAnimations = new Object[] { animator };
     }

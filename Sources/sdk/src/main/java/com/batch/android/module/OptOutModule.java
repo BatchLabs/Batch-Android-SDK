@@ -3,8 +3,6 @@ package com.batch.android.module;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
 import android.os.Handler;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -23,6 +21,7 @@ import com.batch.android.event.InternalEvents;
 import com.batch.android.json.JSONException;
 import com.batch.android.processor.Module;
 import com.batch.android.processor.Singleton;
+import com.batch.android.util.MetaDataUtils;
 
 /**
  * Batch's Opt Out Module.
@@ -45,8 +44,6 @@ public class OptOutModule extends BatchModule {
     private static final String OPTED_OUT_FROM_BATCHSDK_KEY = "app.batch.opted_out";
 
     private static final String SHOULD_SEND_OPTIN_EVENT_KEY = "app.batch.send_optin_event";
-
-    private static final String MANIFEST_OPT_OUT_BY_DEFAULT_KEY = "batch_opted_out_by_default";
 
     private Boolean isOptedOut = null;
 
@@ -72,7 +69,7 @@ public class OptOutModule extends BatchModule {
             if (prefs.contains(OPTED_OUT_FROM_BATCHSDK_KEY)) {
                 isOptedOut = prefs.getBoolean(OPTED_OUT_FROM_BATCHSDK_KEY, false);
             } else {
-                isOptedOut = getManifestBoolean(context, MANIFEST_OPT_OUT_BY_DEFAULT_KEY, false);
+                isOptedOut = MetaDataUtils.getBooleanMetaData(context, MetaDataUtils.MANIFEST_OPT_OUT_BY_DEFAULT_KEY);
                 prefs.edit().putBoolean(OPTED_OUT_FROM_BATCHSDK_KEY, isOptedOut).apply();
                 if (isOptedOut) {
                     Logger.info(
@@ -191,7 +188,6 @@ public class OptOutModule extends BatchModule {
 
         Parameters parameters = ParametersProvider.get(context);
         parameters.remove(ParameterKeys.CUSTOM_ID);
-        parameters.remove(ParameterKeys.ATTRIBUTION_ID);
         parameters.remove(ParameterKeys.INSTALL_ID_KEY);
         parameters.remove(ParameterKeys.INSTALL_TIMESTAMP_KEY);
         parameters.remove(ParameterKeys.PUSH_APP_VERSION_KEY);
@@ -200,23 +196,6 @@ public class OptOutModule extends BatchModule {
         // Old keys
         parameters.remove("push.token");
         parameters.remove("push.token.provider");
-    }
-
-    private boolean getManifestBoolean(Context context, String key, boolean fallback) {
-        try {
-            final Bundle metaData = context
-                .getPackageManager()
-                .getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA)
-                .metaData;
-
-            if (metaData == null) {
-                return fallback;
-            }
-
-            return metaData.getBoolean(key, fallback);
-        } catch (PackageManager.NameNotFoundException e) {
-            return fallback;
-        }
     }
 
     //region: BatchModule

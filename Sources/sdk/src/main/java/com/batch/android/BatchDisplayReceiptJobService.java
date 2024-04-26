@@ -14,7 +14,6 @@ import java.lang.ref.WeakReference;
  * JobService implementation of Batch Display Receipt
  */
 
-@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class BatchDisplayReceiptJobService extends JobService {
 
     private static final String TAG = "BatchDisplayReceiptJobService";

@@ -102,9 +102,7 @@ public class InboxFetcherInternalTest {
         notifications = fetcher.getPublicFetchedNotifications();
         notification = notifications.get(1);
 
-        Assert.assertFalse(notification.isDeleted());
         fetcher.markAsDeleted(notification);
-        Assert.assertTrue(notification.isDeleted());
 
         notifications = fetcher.getPublicFetchedNotifications();
         Assert.assertEquals(5, notifications.size());

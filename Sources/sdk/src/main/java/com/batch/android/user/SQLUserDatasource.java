@@ -499,43 +499,7 @@ public final class SQLUserDatasource implements UserDatasource {
 
     // endregion
 
-    // region Debug
-
-    @Override
-    public String printDebugDump() {
-        StringBuilder debugBuilder = new StringBuilder();
-        debugBuilder.append("Attributes: {");
-        for (Map.Entry<String, UserAttribute> entry : getAttributes().entrySet()) {
-            debugBuilder.append("\n\t");
-            debugBuilder.append(entry.getKey());
-            debugBuilder.append(": ");
-            debugBuilder.append(entry.getValue().toString());
-        }
-        debugBuilder.append("\n}\nTag collections: {");
-        for (Map.Entry<String, Set<String>> tagCollection : getTagCollections().entrySet()) {
-            debugBuilder.append("\n\t");
-            debugBuilder.append(tagCollection.getKey());
-            debugBuilder.append(": [");
-
-            for (String tag : tagCollection.getValue()) {
-                debugBuilder.append("\n\t\t");
-                debugBuilder.append(tag);
-            }
-
-            debugBuilder.append("\n\t]");
-        }
-        debugBuilder.append("\n}");
-
-        String debugString = debugBuilder.toString();
-
-        Logger.info(TAG, "Debug User Data dump:\n" + debugString);
-        return debugString;
-    }
-
-    //
-
     // region Exception helpers
-
     private void logAndThrow(String msg, Throwable t) throws UserDatabaseException {
         Logger.internal(UserModule.TAG, msg, t);
         throw new UserDatabaseException(msg);

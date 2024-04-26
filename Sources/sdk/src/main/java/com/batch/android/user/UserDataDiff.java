@@ -180,7 +180,8 @@ public class UserDataDiff {
 
             if (!attributes.isEmpty()) {
                 Map<String, Object> serverAttributesRepresentation = UserAttribute.getServerMapRepresentation(
-                    attributes
+                    attributes,
+                    true
                 );
                 for (Map.Entry<String, Object> attribute : serverAttributesRepresentation.entrySet()) {
                     result.put(attribute.getKey(), attribute.getValue());

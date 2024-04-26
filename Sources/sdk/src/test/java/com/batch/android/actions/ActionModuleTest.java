@@ -16,7 +16,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.MediumTest;
 import com.batch.android.Batch;
 import com.batch.android.BatchTagCollectionsFetchListener;
-import com.batch.android.Config;
 import com.batch.android.UserAction;
 import com.batch.android.UserActionRunnable;
 import com.batch.android.UserActionSource;
@@ -42,11 +41,9 @@ public class ActionModuleTest extends DITest {
     @Before
     public void setUp() {
         ShadowLog.stream = System.out;
-
         context = ApplicationProvider.getApplicationContext();
-
         RuntimeManagerProvider.get().setContext(context);
-        Batch.setConfig(new Config(apiKey));
+        Batch.start(apiKey);
     }
 
     @Test

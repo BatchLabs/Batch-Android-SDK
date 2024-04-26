@@ -2,7 +2,6 @@ package com.batch.android.di;
 
 import android.content.Context;
 import com.batch.android.Batch;
-import com.batch.android.Config;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.runtime.State;
 import org.junit.After;
@@ -24,9 +23,8 @@ public class DITest {
     }
 
     protected void simulateBatchStart(Context context) {
-        Batch.setConfig(new Config("FAKE_API_KEY"));
-
-        RuntimeManagerProvider.get().changeState(state -> State.READY);
+        Batch.start("FAKE_API_KEY");
+        RuntimeManagerProvider.get().changeState((state, config) -> State.READY);
         RuntimeManagerProvider.get().setContext(context);
     }
 }

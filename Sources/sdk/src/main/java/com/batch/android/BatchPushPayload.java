@@ -295,18 +295,6 @@ public class BatchPushPayload implements PushUserActionSource {
     }
 
     /**
-     * Get the notification priority
-     * <p>
-     * This integer value is the same one as priorities defined in {@link androidx.core.app.NotificationCompat}
-     *
-     * @deprecated Since Android 8.0, "priority" became "importance", and is now set on the channel itself. You should infer the priority from the channel, using {@link #getChannel()}
-     */
-    @Deprecated
-    public int getPriority() {
-        return internalPushData.getPriority().toSupportPriority();
-    }
-
-    /**
      * Get the notification group name. Meant to be used with {@link androidx.core.app.NotificationCompat.Builder#setGroup(String)}
      *
      * @return Group name string, null if none

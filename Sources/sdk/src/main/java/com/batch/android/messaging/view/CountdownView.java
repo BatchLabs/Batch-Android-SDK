@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.graphics.drawable.ClipDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
-import android.os.Build;
 import android.os.Parcelable;
 import android.view.Gravity;
 import android.view.animation.AnimationUtils;
@@ -75,12 +74,7 @@ public class CountdownView extends ProgressBar implements Styleable {
         } else {
             setProgress((int) ((((float) animationEndDate - currentAnimationTime) / duration) * MAX_PROGRESS));
         }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            postInvalidateOnAnimation();
-        } else {
-            postInvalidate();
-        }
+        postInvalidateOnAnimation();
     }
 
     @Override

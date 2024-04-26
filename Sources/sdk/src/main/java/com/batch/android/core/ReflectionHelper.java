@@ -85,27 +85,5 @@ public class ReflectionHelper {
             }
         }
     }
-
-    //endregion
-
-    //region Google Play Services
-
-    public static boolean isGMSGoogleCloudMessagingPresent() {
-        try {
-            Class.forName("com.google.android.gms.gcm.GoogleCloudMessaging");
-            return true;
-        } catch (Throwable ex) {
-            return false;
-        }
-    }
-
-    public static boolean isGMSInstanceIDPresent() {
-        try {
-            Class.forName("com.google.android.gms.iid.InstanceID");
-            return true;
-        } catch (Throwable ex) {
-            return false;
-        }
-    }
     //endregion
 }

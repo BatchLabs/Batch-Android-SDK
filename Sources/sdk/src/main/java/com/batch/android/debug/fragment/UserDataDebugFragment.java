@@ -16,6 +16,7 @@ import com.batch.android.BatchTagCollectionsFetchListener;
 import com.batch.android.BatchUserAttribute;
 import com.batch.android.R;
 import com.batch.android.debug.adapter.CollectionAdapter;
+import com.batch.android.di.providers.UserModuleProvider;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -46,7 +47,7 @@ public class UserDataDebugFragment extends Fragment {
     private void loadAttributes() {
         if (attributeAdapter == null) {
             attributeAdapter =
-                new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, android.R.id.text1);
+                new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, android.R.id.text1);
         } else {
             attributeAdapter.clear();
             attributeAdapter.notifyDataSetChanged();
@@ -54,7 +55,7 @@ public class UserDataDebugFragment extends Fragment {
         attributeList.setAdapter(attributeAdapter);
 
         Batch.User.fetchAttributes(
-            getContext(),
+            requireContext(),
             new BatchAttributesFetchListener() {
                 @Override
                 public void onSuccess(@NonNull Map<String, BatchUserAttribute> attributes) {
@@ -76,7 +77,7 @@ public class UserDataDebugFragment extends Fragment {
 
     private void loadCollections() {
         if (collectionAdapter == null) {
-            collectionAdapter = new CollectionAdapter(getContext());
+            collectionAdapter = new CollectionAdapter(requireContext());
         } else {
             collectionAdapter.clear();
             collectionAdapter.notifyDataSetChanged();
@@ -84,7 +85,7 @@ public class UserDataDebugFragment extends Fragment {
         collectionList.setAdapter(collectionAdapter);
 
         Batch.User.fetchTagCollections(
-            getContext(),
+            requireContext(),
             new BatchTagCollectionsFetchListener() {
                 @Override
                 public void onSuccess(@NonNull Map<String, Set<String>> tagCollections) {
@@ -121,7 +122,7 @@ public class UserDataDebugFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        String userId = Batch.User.getIdentifier(getContext());
+        String userId = UserModuleProvider.get().getCustomID(requireContext());
         if (userId == null) {
             customUserId.setText(R.string.com_batchsdk_debug_view_empty);
         } else {

@@ -1,7 +1,8 @@
 package com.batch.android.core;
 
 import android.util.Log;
-import com.batch.android.Batch;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.batch.android.LoggerDelegate;
 import com.batch.android.LoggerLevel;
 
@@ -27,7 +28,15 @@ public final class Logger {
      * Logger delegate (optional)
      * The logger delegate is another logger which receives the same logs as this logger
      */
+    @Nullable
     public static LoggerDelegate loggerDelegate = null;
+
+    /**
+     * Logger level
+     * Level that logger should use
+     */
+    @NonNull
+    public static LoggerLevel loggerLevel = LoggerLevel.INFO;
 
     /**
      * Is the logger in dev mode
@@ -43,8 +52,8 @@ public final class Logger {
 
     // ----------------------------------------->
 
-    public static boolean shouldLogForLevel(LoggerLevel level) {
-        return dev || Batch.getLoggerLevel().canLog(level);
+    public static boolean shouldLogForLevel(@NonNull LoggerLevel level) {
+        return dev || loggerLevel.canLog(level);
     }
 
     /**

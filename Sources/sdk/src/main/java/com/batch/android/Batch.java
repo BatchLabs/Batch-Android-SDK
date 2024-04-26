@@ -1,6 +1,5 @@
 package com.batch.android;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.app.PendingIntent;
@@ -38,12 +37,14 @@ import com.batch.android.debug.FindMyInstallationHelper;
 import com.batch.android.di.providers.ActionModuleProvider;
 import com.batch.android.di.providers.BatchModuleMasterProvider;
 import com.batch.android.di.providers.BatchNotificationChannelsManagerProvider;
+import com.batch.android.di.providers.DataCollectionModuleProvider;
 import com.batch.android.di.providers.EventDispatcherModuleProvider;
 import com.batch.android.di.providers.InboxFetcherInternalProvider;
 import com.batch.android.di.providers.LocalBroadcastManagerProvider;
 import com.batch.android.di.providers.MessagingModuleProvider;
 import com.batch.android.di.providers.OptOutModuleProvider;
 import com.batch.android.di.providers.ParametersProvider;
+import com.batch.android.di.providers.ProfileModuleProvider;
 import com.batch.android.di.providers.PushModuleProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.TaskExecutorProvider;
@@ -56,10 +57,9 @@ import com.batch.android.json.JSONObject;
 import com.batch.android.module.BatchModule;
 import com.batch.android.module.OptOutModule;
 import com.batch.android.module.PushModule;
-import com.batch.android.module.UserModule;
-import com.batch.android.push.Registration;
 import com.batch.android.runtime.RuntimeManager;
 import com.batch.android.runtime.State;
+import com.batch.android.user.InstallDataEditor;
 import com.google.firebase.messaging.RemoteMessage;
 import java.util.ArrayList;
 import java.util.Date;
@@ -68,29 +68,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Entry point of the Batch library
  */
 @PublicSDK
+@SuppressWarnings({ "unused" })
 public final class Batch {
-
-    /**
-     * Batch API key
-     */
-    private static Config config;
 
     /**
      * Install object build on Batch start
      */
+    @Nullable
     private static Install install;
-
-    /**
-     * User object build on Batch start
-     */
-    @SuppressLint("StaticFieldLeak")
-    private static com.batch.android.User user;
 
     /**
      * Broadcast receiver of Batch
@@ -100,24 +90,23 @@ public final class Batch {
      * Temp intent stored to be handled at the next start
      */
     private static Intent newIntent;
+
     /**
      * Helper to handle excluded activities from manifest
      */
+    @NonNull
     private static final ExcludedActivityHelper excludedActivityHelper = new ExcludedActivityHelper();
 
     /**
      * Current session ID (changed at each start)
      */
+    @Nullable
     private static String sessionID;
+
     /**
      * Was the user already warned about being opted-out and attempting a start
      */
     private static boolean didLogOptOutWarning = false;
-
-    /**
-     * Default placement
-     */
-    public static final String DEFAULT_PLACEMENT = "DEFAULT";
 
     /**
      * Notification tag.
@@ -163,180 +152,86 @@ public final class Batch {
      */
     public static final String EXTRA_REGISTRATION_SENDER_ID = "sender_id";
 
-    // ---------------------------------------------------->
-
-    private static BatchModule moduleMaster;
+    /**
+     * One module to rule them all
+     */
+    @NonNull
+    private static final BatchModule moduleMaster;
 
     static {
         moduleMaster = BatchModuleMasterProvider.get();
     }
 
-    // ---------------------------------------------------->
-
     private Batch() {}
 
     /**
-     * Return the api key<br>
-     * If you call this method before calling setConfig, it will return null
-     *
-     * @return API key if available, null otherwise
-     */
-    public static String getAPIKey() {
-        final StringBuilder apikey = new StringBuilder();
-        RuntimeManagerProvider
-            .get()
-            .run(state -> {
-                if (config != null) {
-                    apikey.append(config.apikey);
-                }
-            });
-
-        if (apikey.length() > 0) {
-            return apikey.toString();
-        }
-
-        return null;
-    }
-
-    /**
-     * Get the current user profile.<br>
-     * You should use this method if you want to modify user language/region or provide a custom ID to identify this user (like an account).<br>
-     * <br>
-     * <b>Be carefull</b> : Do not use it if you don't know what you are doing,
-     * giving a bad custom user ID can result in failure into offer delivery and restore<br>
-     * <br>
-     * You must call this method after {@link #onStart(Activity)} otherwise it will return null
-     *
-     * @return instance of BatchUser to set properties, null if you call it before onStart.
-     * @deprecated Please use Batch.User methods instead
-     */
-    @Deprecated
-    public static BatchUserProfile getUserProfile() {
-        try {
-            Context context = RuntimeManagerProvider.get().getContext();
-            if (context != null) {
-                return new BatchUserProfile(context);
-            }
-        } catch (Exception e) {
-            Logger.error(UserModule.TAG, "Error while retrieving BatchUser", e);
-        }
-
-        Logger.warning(UserModule.TAG, "Call to getUserProfile() made before onStart or after onStop. Returns null");
-
-        return null;
-    }
-
-    /**
-     * Set the configuration of Batch.<br>
+     * Set the API Key of Batch.<br>
      * <br>
      * You should call this method before any other, only one time.<br>
-     * Typically on the onCreate of your MainActivity.
+     * Typically on the onCreate of your Application class.
      *
-     * @param config
+     * @param apiKey Your Batch API Key
      */
-    public static void setConfig(final Config config) {
-        RuntimeManagerProvider
-            .get()
-            .changeState(state -> {
-                if (state != State.OFF) {
-                    Logger.error("You cannot update Batch's Configuration after Batch.onStart() has been called.");
-                    return null;
-                }
-
-                Batch.config = config;
-
-                Logger.loggerDelegate = config.loggerDelegate;
-
-                return state;
-            });
+    public static void start(@NonNull final String apiKey) {
+        RuntimeManagerProvider.get().updateConfig(config -> config.setApikey(apiKey));
     }
 
     /**
-     * Can Batch use Advertising ID
-     * <p>
-     * Batch doesn't collects Android Advertising Identifier anymore.
-     * @deprecated This method does nothing, please stop using it
-     * and see {@link BatchUserDataEditor#setAttributionIdentifier(String)
-     * @return Always return false.
-     */
-    @Deprecated
-    public static boolean shouldUseAdvertisingID() {
-        return false;
-    }
-
-    /**
-     * Can Batch use advanced device information
+     * Set data migrations you want to disable.
      *
-     * @return
+     * @param migrations EnumSet of Migrations to disable. See {@link BatchMigration}
      */
-    public static boolean shouldUseAdvancedDeviceInformation() {
-        final AtomicBoolean shouldUse = new AtomicBoolean(true);
-        RuntimeManagerProvider
-            .get()
-            .run(state -> {
-                if (config != null) {
-                    shouldUse.set(config.shouldUseAdvancedDeviceInformation);
-                }
-            });
-
-        return shouldUse.get();
+    public static void disableMigration(@NonNull EnumSet<BatchMigration> migrations) {
+        //noinspection ConstantConditions
+        if (migrations == null) {
+            Logger.error("You cannot use disableMigration with null value.");
+            return;
+        }
+        RuntimeManagerProvider.get().updateConfig(config -> config.setMigrations(BatchMigration.toValue(migrations)));
     }
 
     /**
-     * Can Batch use the PlayServices Instance ID API (if available), or fallback to classic GCM.
+     * Set if Batch should send its logs to an object of yours (default = null)<br>
+     * <br>
+     * Be careful with your implementation: setting this can impact stability and performance<br>
+     * You should only use it if you know what you are doing.
      *
-     * @return
-     * @deprecated Please migrate to FCM
+     * @param delegate An object implementing {@link LoggerDelegate}
      */
-    @Deprecated
-    public static boolean shouldUseGoogleInstanceID() {
-        final AtomicBoolean shouldUse = new AtomicBoolean(true);
-        RuntimeManagerProvider
-            .get()
-            .run(state -> {
-                if (config != null) {
-                    shouldUse.set(config.shouldUseGoogleInstanceID);
-                }
-            });
-
-        return shouldUse.get();
+    public static void setLoggerDelegate(@Nullable LoggerDelegate delegate) {
+        RuntimeManagerProvider.get().updateConfig(config -> config.setLoggerDelegate(delegate));
     }
 
     /**
-     * Should Batch automatically register to push notificaitons
-     * This method is not supported anymore: Batch will always register for push.
+     * Set the log level that Batch should use
      *
-     * @return Always true
-     * @deprecated Please remove this call, as it doesn't do anything anymore
+     * @param level The level of the logger to use
      */
-    @Deprecated
-    public static boolean shouldAutoRegisterForPush() {
-        return true;
+    public static void setLoggerLevel(@NonNull LoggerLevel level) {
+        //noinspection ConstantConditions
+        if (level == null) {
+            Logger.error("You cannot setLoggerLevel with null value");
+            return;
+        }
+        RuntimeManagerProvider.get().updateConfig(config -> config.setLoggerLevel(level));
     }
 
     /**
-     * Get the current logger level
+     * Configure the SDK Automatic Data Collection.
      *
-     * @return
+     * @param editor A callback which will be called with an instance of the data collection config.
+     *               Once your callback ends, Batch will persist the changes.
      */
-    public static LoggerLevel getLoggerLevel() {
-        final AtomicReference<LoggerLevel> levelToUse = new AtomicReference<>(LoggerLevel.ERROR);
-        RuntimeManagerProvider
-            .get()
-            .run(state -> {
-                if (config != null) {
-                    levelToUse.set(config.loggerLevel);
-                }
-            });
-
-        return levelToUse.get();
+    public static void updateAutomaticDataCollection(BatchDataCollectionConfig.Editor editor) {
+        DataCollectionModuleProvider.get().updateDataCollectionConfig(editor);
     }
 
     /**
-     * Get the id of the current session, random uuid used internaly by Batch to identify the app session.
+     * Get the id of the current session, random uuid used internally by Batch to identify the app session.
      *
      * @return session id if any, null otherwise
      */
+    @Nullable
     public static String getSessionID() {
         final StringBuilder sessionID = new StringBuilder();
 
@@ -353,22 +248,6 @@ public final class Batch {
         }
 
         return null;
-    }
-
-    /**
-     * Check if Batch is running in dev mode<br>
-     * NB : if you call this method before {@link Batch#setConfig(Config)}, you'll always have the default value : false
-     *
-     * @return true if Batch is running in dev mode, false if not
-     * @deprecated This method is not needed, since all DEV API Keys start with "DEV".
-     */
-    @Deprecated
-    public static boolean isRunningInDevMode() {
-        final String apiKey = Batch.getAPIKey();
-        if (apiKey != null) {
-            return apiKey.toLowerCase(Locale.US).startsWith("dev");
-        }
-        return false;
     }
 
     /**
@@ -417,9 +296,9 @@ public final class Batch {
      * - Prevent {@link Batch#onStart(Activity)} or {@link Batch#onServiceCreate(Context, boolean)} from doing anything at all
      * - Disable any network capability from the SDK
      * - Disable all In-App campaigns
-     * - Make the Inbox module return an error immediatly when used
-     * - Make the SDK reject any BatchUserProfile or {@link BatchUserDataEditor#save()} calls
-     * - Make the SDK reject calls to {@link Batch.User#trackEvent(String)}, {@link Batch.User#trackTransaction(double)}, {@link Batch.User#trackLocation(Location)} and any related methods
+     * - Make the Inbox module return an error immediately when used
+     * - Make the SDK reject any BatchUserProfile or {@link BatchProfileAttributeEditor#save()} calls
+     * - Make the SDK reject calls to {@link Batch.Profile#trackEvent(String)}, {@link Batch.Profile#trackLocation(Location)} and any related methods
      * <p>
      * Even if you opt in afterwards, data that has been generated while opted out WILL be lost.
      * <p>
@@ -567,7 +446,7 @@ public final class Batch {
          * <p>
          * Warning: This method might expose critical data.
          *
-         * @param context
+         * @param context Android's context
          */
         public static void startDebugActivity(@NonNull Context context) {
             Intent intent = new Intent(context, BatchDebugActivity.class);
@@ -594,6 +473,7 @@ public final class Batch {
          */
         @NonNull
         public static BatchInboxFetcher getFetcher(@NonNull Context context) {
+            //noinspection ConstantConditions
             if (context == null) {
                 throw new IllegalArgumentException("Context cannot be null");
             }
@@ -616,25 +496,11 @@ public final class Batch {
             @NonNull String userIdentifier,
             @NonNull String authenticationKey
         ) {
+            //noinspection ConstantConditions
             if (context == null) {
                 throw new IllegalArgumentException("Context cannot be null");
             }
             return new BatchInboxFetcher(InboxFetcherInternalProvider.get(context, userIdentifier, authenticationKey));
-        }
-
-        /**
-         * Get an inbox fetcher for the specified user identifier.
-         * Batch must be started for all of the fetcher's features to work, but you can call this method before starting Batch (such as in your activity's onCreate)
-         *
-         * @param userIdentifier    User identifier for which you want the notifications
-         * @param authenticationKey Secret authentication key: it should be computed your backend and given to this method
-         * @return an instance of BatchInboxFetcher with the wanted configuration
-         * @deprecated Use getFetcher(Context,String,String), which is more reliable
-         */
-        @Deprecated
-        @NonNull
-        public static BatchInboxFetcher getFetcher(@NonNull String userIdentifier, @NonNull String authenticationKey) {
-            return new BatchInboxFetcher(InboxFetcherInternalProvider.get(null, userIdentifier, authenticationKey));
         }
     }
 
@@ -666,17 +532,6 @@ public final class Batch {
         public static final String PAYLOAD_KEY = "batchPushPayload";
 
         // ------------------------------------------------>
-
-        /**
-         * Set the FCM/GCM Sender Id. You can find more info on how to create it in our documentation.
-         *
-         * @param gcmSenderId Google API sender ID (for example: 670330094152)
-         * @deprecated Please migrate to FCM: https://batch.com/doc/android/advanced/fcm-migration.html
-         */
-        @Deprecated
-        public static void setGCMSenderId(String gcmSenderId) {
-            PushModuleProvider.get().setGCMSenderId(gcmSenderId);
-        }
 
         /**
          * Set a custom small icon resource that push notifications will use.<br>
@@ -713,6 +568,7 @@ public final class Batch {
          * Get the channels manager, allowing you to tweak how notifications will behave regarding
          * the channels feature introduced in Android 8.0 (API 26)
          */
+        @NonNull
         public static BatchNotificationChannelsManager getChannelsManager() {
             return BatchNotificationChannelsManagerProvider.get();
         }
@@ -736,6 +592,7 @@ public final class Batch {
          *
          * @return Type of notifications you previously set. Be careful, as this can be null if you never used setNotificationsType() or if your context is invalid
          */
+        @Nullable
         public static EnumSet<PushNotificationType> getNotificationsType(Context context) {
             return PushModuleProvider.get().getNotificationsType(context);
         }
@@ -760,7 +617,7 @@ public final class Batch {
          * call this method before doing anything else into the {@link BroadcastReceiver#onReceive(Context, Intent)} method.
          * If it returns true, you should not handle the push.
          *
-         * @param intent
+         * @param intent Android's intent that hold the push
          * @return true if the push is for Batch and you shouldn't handle it, false otherwise
          */
         public static boolean isBatchPush(Intent intent) {
@@ -800,7 +657,7 @@ public final class Batch {
          * Set manual display mode for push notifications. <br />
          * <b>If you set manual display mode to true, no notifications will be shown automatically and you'll have to display it by yourself.
          *
-         * @param manualDisplay
+         * @param manualDisplay Whether manual display mode is enabled or not.
          */
         public static void setManualDisplay(boolean manualDisplay) {
             PushModuleProvider.get().setManualDisplay(manualDisplay);
@@ -853,6 +710,7 @@ public final class Batch {
          * @return A PendingIntent instance, wrapping the given Intent.
          */
         @NonNull
+        @SuppressWarnings("ConstantConditions")
         public static PendingIntent makePendingIntent(
             @NonNull Context context,
             @NonNull Intent intent,
@@ -887,6 +745,7 @@ public final class Batch {
          * @return A PendingIntent instance, wrapping the given Intent.
          */
         @NonNull
+        @SuppressWarnings("ConstantConditions")
         public static PendingIntent makePendingIntent(
             @NonNull Context context,
             @NonNull Intent intent,
@@ -919,6 +778,7 @@ public final class Batch {
          * @return A PendingIntent set to open Batch's builtin action activity to open the specified deeplink. Can be null if the deeplink is not valid.
          */
         @Nullable
+        @SuppressWarnings("ConstantConditions")
         public static PendingIntent makePendingIntentForDeeplink(
             @NonNull Context context,
             @NonNull String deeplink,
@@ -951,6 +811,7 @@ public final class Batch {
          * @return A PendingIntent set to open Batch's builtin action activity to open the specified deeplink. Can be null if the deeplink is not valid.
          */
         @Nullable
+        @SuppressWarnings("ConstantConditions")
         public static PendingIntent makePendingIntentForDeeplink(
             @NonNull Context context,
             @NonNull String deeplink,
@@ -985,7 +846,7 @@ public final class Batch {
          * Should the developer handle and display this push, or will Batch display it?
          * Use this method to know if Batch will ignore this push, and that displaying it is your responsibility
          *
-         * @param context
+         * @param context Android's context
          * @param remoteMessage The Firebase message
          * @return true if the push will not be processed by Batch and should be handled, false otherwise
          */
@@ -996,8 +857,8 @@ public final class Batch {
         /**
          * Call this method to display the notification for this intent.
          *
-         * @param context
-         * @param intent
+         * @param context Android's context
+         * @param intent Android's intent
          */
         public static void displayNotification(Context context, Intent intent) {
             PushModuleProvider.get().displayNotification(context, intent, null, false);
@@ -1006,8 +867,8 @@ public final class Batch {
         /**
          * Call this method to display the notification for this intent.
          *
-         * @param context
-         * @param intent
+         * @param context Android's context
+         * @param intent Android's intent
          * @param bypassManualMode If true,  This method will ignore the manual mode value and always display the notification
          */
         public static void displayNotification(Context context, Intent intent, boolean bypassManualMode) {
@@ -1018,8 +879,8 @@ public final class Batch {
          * Call this method to display the notification for this intent.
          * Allows an interceptor to be set for this call, overriding the global one set using {@link Batch.Push#setNotificationInterceptor(BatchNotificationInterceptor)}
          *
-         * @param context
-         * @param intent
+         * @param context Android's context
+         * @param intent Android's intent
          */
         public static void displayNotification(
             @NonNull Context context,
@@ -1033,9 +894,9 @@ public final class Batch {
          * Call this method to display the notification for this intent.
          * Allows an interceptor to be set for this call, overriding the global one set using {@link Batch.Push#setNotificationInterceptor(BatchNotificationInterceptor)}
          *
-         * @param context
-         * @param intent
-         * @param interceptor
+         * @param context Android's context
+         * @param intent Android's intent
+         * @param interceptor An optional notification interceptor
          * @param bypassManualMode If true,  This method will ignore the manual mode value and always display the notification
          */
         public static void displayNotification(
@@ -1079,7 +940,7 @@ public final class Batch {
         /**
          * Call this method when you just displayed a Batch push notification by yourself.
          *
-         * @param context
+         * @param context Android's context
          * @param intent  the gcm push intent
          */
         public static void onNotificationDisplayed(Context context, Intent intent) {
@@ -1089,7 +950,7 @@ public final class Batch {
         /**
          * Call this method when you just displayed a Batch push notification by yourself.
          *
-         * @param context
+         * @param context Android's context
          * @param remoteMessage The Firebase message
          */
         public static void onNotificationDisplayed(Context context, RemoteMessage remoteMessage) {
@@ -1097,16 +958,18 @@ public final class Batch {
         }
 
         /**
-         * Get the last known push token.
-         * The returned token might be outdated and invalid if this method is called
+         * Get the current push registration.
+         * <p>
+         * The returned registration might be outdated and invalid if this method is called
          * too early in your application lifecycle.
          * <p>
          * Batch <b>MUST</b> be started in order to use this method.
          *
-         * @return A push token, null if unavailable.
+         * @return A push registration, null if unavailable.
          */
-        public static String getLastKnownPushToken() {
-            return PushModuleProvider.get().getRegistrationID();
+        @Nullable
+        public static BatchPushRegistration getRegistration() {
+            return PushModuleProvider.get().getRegistration();
         }
 
         /**
@@ -1128,13 +991,34 @@ public final class Batch {
 
         /**
          * Request the notification runtime permission.
+         * <p>
          * Android 13 (API 33) introduced a new runtime permission for notifications called POST_NOTIFICATIONS.
          * Without this permission, apps on Android 13 cannot show notifications.
-         * This method does nothing on Android 12 and lower, or if your application does not target API 33 or higher.
+         * <p>
+         * Note: This method does nothing on Android 12 and lower, or if your application does not target API 33 or higher.
+         * <p>
          * @param context requesting the permission
          */
         public static void requestNotificationPermission(@NonNull Context context) {
-            PushModuleProvider.get().requestNotificationPermission(context);
+            PushModuleProvider.get().requestNotificationPermission(context, null);
+        }
+
+        /**
+         * Request the notification runtime permission.
+         * <p>
+         * Android 13 (API 33) introduced a new runtime permission for notifications called POST_NOTIFICATIONS.
+         * Without this permission, apps on Android 13 cannot show notifications.
+         * <p>
+         * Note: This method does nothing on Android 12 and lower, or if your application does not target API 33 or higher.
+         * <p>
+         * @param context requesting the permission
+         * @param listener Callback notifying whether the permission has been granted or not. Note that the permission will be considered as granted on Android 12 and lower. Listener will not be triggered if your application does not target API 33 or higher.
+         */
+        public static void requestNotificationPermission(
+            @NonNull Context context,
+            @Nullable BatchPermissionListener listener
+        ) {
+            PushModuleProvider.get().requestNotificationPermission(context, listener);
         }
     }
 
@@ -1152,7 +1036,7 @@ public final class Batch {
          * Add an event dispatcher.
          * The Batch SDK must be opt-in for the dispatcher to receive events.
          *
-         * @param dispatcher
+         * @param dispatcher The Batch Event Dispatcher to add
          */
         public static void addDispatcher(BatchEventDispatcher dispatcher) {
             EventDispatcherModuleProvider.get().addEventDispatcher(dispatcher);
@@ -1161,7 +1045,7 @@ public final class Batch {
         /**
          * Remove an event dispatcher.
          *
-         * @param dispatcher
+         * @param dispatcher The Batch Event Dispatcher to remove
          */
         public static boolean removeDispatcher(BatchEventDispatcher dispatcher) {
             return EventDispatcherModuleProvider.get().removeEventDispatcher(dispatcher);
@@ -1169,7 +1053,7 @@ public final class Batch {
 
         /**
          * Represents the type of the dispatched event in {@link BatchEventDispatcher#dispatchEvent(Type, Payload)}.
-         * Declared under Batch.EventDispatcher to avoid ambiguity with {@link BatchEventData}.
+         * Declared under Batch.EventDispatcher to avoid ambiguity with {@link BatchEventAttributes}.
          */
         @PublicSDK
         public enum Type {
@@ -1194,7 +1078,7 @@ public final class Batch {
 
         /**
          * Accessor to the payload of the dispatched event in {@link BatchEventDispatcher#dispatchEvent(Type, Payload)}.
-         * Declared under Batch.EventDispatcher to avoid ambiguity with {@link BatchEventData} and {@link BatchPushPayload}.
+         * Declared under Batch.EventDispatcher to avoid ambiguity with {@link BatchEventAttributes} and {@link BatchPushPayload}.
          */
         @PublicSDK
         public interface Payload {
@@ -1233,14 +1117,14 @@ public final class Batch {
              * - An Open for a push campaign
              * - A CTA click or Global tap containing a deeplink or a custom action for a messaging campaign
              *
-             * @return
+             * @return Whether it is a positive action or not
              */
             boolean isPositiveAction();
 
             /**
              * Get a value from a key within the custom payload associated with the event.
              *
-             * @param key
+             * @param key The key of the value to get
              * @return the corresponding value or null if none is set.
              */
             @Nullable
@@ -1293,71 +1177,50 @@ public final class Batch {
         /**
          * Read the language.
          *
-         * @return The custom language set with {@link BatchUserDataEditor}. Returns null by default.
+         * @return The custom language set with {@link InstallDataEditor}. Returns null by default.
          */
         @Nullable
         public static String getLanguage(@NonNull Context context) {
+            //noinspection ConstantConditions
             if (context == null) {
                 throw new IllegalArgumentException("Context cannot be null");
             }
-
-            return new com.batch.android.User(context).getLanguage();
+            return UserModuleProvider.get().getLanguage(context);
         }
 
         /**
          * Read the region.
          *
-         * @return The custom region set with {@link BatchUserDataEditor}. Returns null by default.
+         * @return The custom region set with {@link InstallDataEditor}. Returns null by default.
          */
         @Nullable
         public static String getRegion(@NonNull Context context) {
+            //noinspection ConstantConditions
             if (context == null) {
                 throw new IllegalArgumentException("Context cannot be null");
             }
-
-            return new com.batch.android.User(context).getRegion();
+            return UserModuleProvider.get().getRegion(context);
         }
 
         /**
          * Read the custom identifier.
          *
-         * @return The custom identifier set with {@link BatchUserDataEditor}. Returns null by default.
+         * @return The custom identifier set with {@link InstallDataEditor}. Returns null by default.
          */
         @Nullable
         public static String getIdentifier(@NonNull Context context) {
+            //noinspection ConstantConditions
             if (context == null) {
                 throw new IllegalArgumentException("Context cannot be null");
             }
 
-            return new com.batch.android.User(context).getCustomID();
-        }
-
-        /**
-         * Get the user data editor. Batch must be started to save it.
-         *
-         * @return A BatchUserDataEditor instance.
-         * @deprecated Use {@link #editor()}
-         */
-        @Deprecated
-        public static BatchUserDataEditor getEditor() {
-            return editor();
-        }
-
-        /**
-         * Get the user data editor. Batch must be started to save it.
-         * Note that you should chain calls to the returned editor.
-         * If you call this method again, you will get another editor that's not aware of changes made elsewhere that have not been saved.
-         *
-         * @return A BatchUserDataEditor instance.
-         */
-        public static BatchUserDataEditor editor() {
-            return new BatchUserDataEditor();
+            return UserModuleProvider.get().getCustomID(context);
         }
 
         /**
          * Read the saved attributes. Reading is asynchronous so as not to interfere with saving operations.
          *
-         * @param context
+         * @param context Android's context
          * @param listener Pass a listener to be notified of the fetch result.
          */
         public static void fetchAttributes(
@@ -1370,7 +1233,7 @@ public final class Batch {
         /**
          * Read the saved tag collections. Reading is asynchronous so as not to interfere with saving operations.
          *
-         * @param context
+         * @param context Android's context
          * @param listener Pass a listener to be notified of the fetch result.
          */
         public static void fetchTagCollections(
@@ -1381,13 +1244,53 @@ public final class Batch {
         }
 
         /**
+         * Clear all tags and attributes set on an installation and their local cache returned by fetchAttributes and
+         * fetchTagCollections. This doesn't affect data set on profiles using Batch.Profile.
+         */
+        public static void clearInstallationData() {
+            UserModuleProvider.get().clearInstallationData();
+        }
+    }
+
+    /**
+     * Batch Profile module
+     */
+    @PublicSDK
+    public static final class Profile {
+
+        private Profile() {}
+
+        /**
+         * Identify the user's installation with an omnichannel profile.
+         *
+         * @param identifier the custom user identifier or null to erase
+         */
+        public static void identify(@Nullable String identifier) {
+            ProfileModuleProvider.get().identify(identifier);
+        }
+
+        /**
+         * Get a profile attribute editor.
+         * <p>
+         * Batch must be started to save it.
+         * Note that you should chain calls to the returned editor.
+         * If you call this method again, you will get another editor that's not aware of changes made elsewhere that have not been saved.
+         *
+         * @return A BatchProfileAttributeEditor instance.
+         */
+        @NonNull
+        public static BatchProfileAttributeEditor editor() {
+            return new BatchProfileAttributeEditor();
+        }
+
+        /**
          * Track an event.
          * You can call this method from any thread. Batch must be started at some point, or events won't be sent to the server.
          *
          * @param event The event name.
          */
         public static void trackEvent(@NonNull String event) {
-            trackEvent(event, null, (BatchEventData) null);
+            ProfileModuleProvider.get().trackPublicEvent(event, null);
         }
 
         /**
@@ -1395,57 +1298,10 @@ public final class Batch {
          * You can call this method from any thread. Batch must be started at some point, or events won't be sent to the server.
          *
          * @param event The event name.
-         * @param label The event label. Can be null.
+         * @param attributes  The event attributes. Can be null.
          */
-        public static void trackEvent(@NonNull String event, String label) {
-            trackEvent(event, label, (BatchEventData) null);
-        }
-
-        /**
-         * Track an event.
-         * You can call this method from any thread. Batch must be started at some point, or events won't be sent to the server.
-         *
-         * @param event The event name.
-         * @param label The event label. Can be null.
-         * @param data  The event data. Can be null.
-         * @deprecated See {@link Batch.User#trackEvent(String, String, BatchEventData)}. Data sent using this method might be truncated if it can't be converted to a {@link BatchEventData} instance.
-         */
-        @Deprecated
-        public static void trackEvent(@NonNull String event, String label, JSONObject data) {
-            BatchEventData convertedData = null;
-            if (data != null) {
-                Logger.info(
-                    UserModule.TAG,
-                    "Tracking events with the legacy data format has been deprecated. The event will be tracked, but some data may be truncated: please migrate to Batch.User.trackEvent(String, String, BatchEventData)"
-                );
-                convertedData = new BatchEventData(data);
-            }
-            // Do not call trackPublicEvent with the JSON data directly: it needs conversion.
-            trackEvent(event, label, convertedData);
-        }
-
-        /**
-         * Track an event.
-         * You can call this method from any thread. Batch must be started at some point, or events won't be sent to the server.
-         *
-         * @param event The event name.
-         * @param label The event label. Can be null.
-         * @param data  The event data. Can be null.
-         */
-        public static void trackEvent(@NonNull String event, String label, BatchEventData data) {
-            try {
-                JSONObject jsonData = null;
-                if (data != null) {
-                    jsonData = data.toInternalJSON();
-                }
-                UserModuleProvider.get().trackPublicEvent(event, label, jsonData);
-            } catch (JSONException e) {
-                Logger.error(
-                    UserModule.TAG,
-                    "Could not process BatchEventData, refusing to track event. This is an internal error: please contact us."
-                );
-                Logger.internal(UserModule.TAG, "Could not convert BatchEventData", e);
-            }
+        public static void trackEvent(@NonNull String event, @Nullable BatchEventAttributes attributes) {
+            ProfileModuleProvider.get().trackPublicEvent(event, attributes);
         }
 
         /**
@@ -1459,49 +1315,6 @@ public final class Batch {
          */
         public static void trackLocation(@NonNull Location location) {
             UserModuleProvider.get().trackLocation(location);
-        }
-
-        /**
-         * Track a transaction.
-         * You can call this method from any thread. Batch must be started at some point, or events won't be sent to the server.
-         *
-         * @param amount Transaction amount.
-         */
-        public static void trackTransaction(double amount) {
-            trackTransaction(amount, null);
-        }
-
-        /**
-         * Track a transaction.
-         * You can call this method from any thread. Batch must be started at some point, or events won't be sent to the server.
-         *
-         * @param amount Transaction amount.
-         * @param data   Transaction data. Can be null.
-         */
-        public static void trackTransaction(double amount, JSONObject data) {
-            try {
-                JSONObject convertedDataJSON = null;
-                if (data != null) {
-                    BatchEventData convertedData = new BatchEventData(data);
-                    convertedDataJSON = convertedData.toInternalJSON();
-                }
-                UserModuleProvider.get().trackTransaction(amount, convertedDataJSON);
-            } catch (JSONException e) {
-                Logger.error(
-                    UserModule.TAG,
-                    "Could not process BatchEventData, refusing to track transaction. This is an internal error: please contact us."
-                );
-                Logger.internal(UserModule.TAG, "Could not convert BatchEventData", e);
-            }
-        }
-
-        /**
-         * Print the currently known attributes and tags for a user to logcat.
-         * <p>
-         * For debug purposes only. Don't rely on the log format, because it can change at any time without warning.
-         */
-        public static void printDebugInformation() {
-            UserModule.printDebugInfo();
         }
     }
 
@@ -1678,7 +1491,7 @@ public final class Batch {
          * Toggle whether mobile landings should be shown directly rather than displaying a notification
          * when the app is in foreground.
          * <p>
-         * Default is true.
+         * Default is false.
          *
          * @param showForegroundLandings True to enable show landings, false to display a notification like when the application is in the background.
          */
@@ -1732,8 +1545,8 @@ public final class Batch {
          *
          * @param context Your activity's context. Can't be null.
          * @param message Message to display. Can't be null.
-         * @throws IllegalArgumentException
-         * @throws BatchMessagingException
+         * @throws IllegalArgumentException If some parameters are null.
+         * @throws BatchMessagingException When loading fail
          */
         @NonNull
         public static DialogFragment loadFragment(@NonNull Context context, @NonNull BatchMessage message)
@@ -1753,8 +1566,8 @@ public final class Batch {
          * @param context Your activity's context. Can't be null.
          * @param message Message to display. Can't be null.
          * @return A Banner instance.
-         * @throws IllegalArgumentException
-         * @throws BatchMessagingException
+         * @throws IllegalArgumentException If some parameters are null.
+         * @throws BatchMessagingException When loading fail
          */
         @NonNull
         public static BatchBannerView loadBanner(@NonNull Context context, @NonNull BatchMessage message)
@@ -1935,7 +1748,7 @@ public final class Batch {
      * <br>
      * Will fail and log an Error if <ul>
      * <li>Given {@code activity} is null</li>
-     * <li>You call it before calling {@link Batch#setConfig(Config)}</li>
+     * <li>You call it before calling {@link Batch#start(String)}</li>
      * <li>Your app doesn't have {@code android.permission.INTERNET} permission</li>
      * </ul>
      *
@@ -1955,7 +1768,7 @@ public final class Batch {
      * <br>
      * Will fail and log an Error if <ul>
      * <li>Given {@code context} is null</li>
-     * <li>You call it before calling {@link Batch#setConfig(Config)}</li>
+     * <li>You call it before calling {@link Batch#start(String)}</li>
      * <li>Your app doesn't have {@code android.permission.INTERNET} permission</li>
      * </ul>
      *
@@ -1981,7 +1794,7 @@ public final class Batch {
      * Method to call on your main activity {@link Activity#onNewIntent(Intent)}<br>
      * Calling this method if Batch is already stopped or not started will do nothing
      *
-     * @param intent
+     * @param intent Android's intent
      */
     public static void onNewIntent(final Activity activity, final Intent intent) {
         newIntent = intent;
@@ -2018,7 +1831,7 @@ public final class Batch {
 
         boolean hasStarted = RuntimeManagerProvider
             .get()
-            .changeState(state -> {
+            .changeState((state, config) -> {
                 if (config == null) {
                     Logger.error(
                         "You must set the configuration before starting Batch. Please call setConfig on onCreate of your Application subclass"
@@ -2226,19 +2039,16 @@ public final class Batch {
                     /*
                      * Get API Key
                      */
-                    if (config.apikey == null) {
-                        Logger.error("API key provided in Config is null, aborting start");
+                    if (config.getApikey() == null) {
+                        Logger.error("API key provided in Batch.start is null, aborting start");
                         return null;
                     }
 
                     /*
-                     * Init device/user/install data
+                     * Init device/install data
                      */
                     if (Batch.install == null) {
                         Batch.install = new Install(applicationContext);
-                    }
-                    if (Batch.user == null) {
-                        Batch.user = new com.batch.android.User(applicationContext);
                     }
 
                     /*
@@ -2320,13 +2130,16 @@ public final class Batch {
                         intentParser.markOpenAsAlreadyTracked();
 
                         try {
-                            BatchPushPayload pushPayload = BatchPushPayload.payloadFromReceiverExtras(
-                                intentParser.getPushBundle()
-                            );
-                            EventDispatcher.Payload payload = new PushEventPayload(pushPayload, true);
-                            EventDispatcherModuleProvider
-                                .get()
-                                .dispatchEvent(EventDispatcher.Type.NOTIFICATION_OPEN, payload);
+                            Bundle pushBundle = intentParser.getPushBundle();
+                            if (pushBundle != null) {
+                                BatchPushPayload pushPayload = BatchPushPayload.payloadFromReceiverExtras(pushBundle);
+                                EventDispatcher.Payload payload = new PushEventPayload(pushPayload, true);
+                                EventDispatcherModuleProvider
+                                    .get()
+                                    .dispatchEvent(EventDispatcher.Type.NOTIFICATION_OPEN, payload);
+                            } else {
+                                Logger.internal("Could not get the push bundle.");
+                            }
                         } catch (BatchPushPayload.ParsingException | IllegalArgumentException e) {
                             Logger.internal("Could not dispatch NOTIFICATION_OPEN", e);
                         }
@@ -2365,12 +2178,13 @@ public final class Batch {
             );
 
             // Log if dev mode to warn the dev
-            final String apiKey = Batch.getAPIKey();
-            if (apiKey != null && apiKey.toLowerCase(Locale.US).startsWith("dev")) {
-                Logger.warning(
-                    "Batch (" + Parameters.SDK_VERSION + ") is running in dev mode (your API key is a dev one)"
-                );
-            }
+            runtimeManager.readConfig(config -> {
+                if (config.getApikey() != null && config.getApikey().toLowerCase(Locale.US).startsWith("dev")) {
+                    Logger.warning(
+                        "Batch (" + Parameters.SDK_VERSION + ") is running in dev mode (your API key is a dev one)"
+                    );
+                }
+            });
 
             final String installID = Batch.User.getInstallationID();
             if (installID != null) {
@@ -2396,7 +2210,7 @@ public final class Batch {
             .get()
             .changeStateIf(
                 State.READY,
-                state -> {
+                (state, config) -> {
                     Logger.internal("onStop called with state " + state);
 
                     if (fromService) {
@@ -2505,7 +2319,7 @@ public final class Batch {
             .get()
             .changeStateIf(
                 State.FINISHING,
-                state -> {
+                (state, config) -> {
                     Logger.internal("doStop, called with state " + state);
 
                     // Call modules
@@ -2542,38 +2356,18 @@ public final class Batch {
     private static void clearCachedInstallData() {
         Logger.internal(OptOutModule.TAG, "Clearing cached install data");
         install = null;
-        user = null;
     }
 
     // --------------------------------------------->
-
-    /**
-     * Return the advertising ID object if available
-     *
-     * @deprecated this method has been deprecated and does nothing.
-     * @return Always return null.
-     */
-    @Deprecated
-    static AdvertisingID getAdvertisingID() {
-        return null;
-    }
 
     /**
      * Return the install object if available
      *
      * @return the install if available, null otherwise
      */
+    @Nullable
     static Install getInstall() {
         return install;
-    }
-
-    /**
-     * Return the user object if available
-     *
-     * @return the user if available, null otherwise
-     */
-    static com.batch.android.User getUser() {
-        return user;
     }
 
     // ----------------------------------------------->
@@ -2584,10 +2378,6 @@ public final class Batch {
     private static void updateVersionManagement() {
         try {
             String currentVersion = Parameters.SDK_VERSION;
-            if (currentVersion == null) {
-                throw new NullPointerException("Unable to retrieve current lib version");
-            }
-
             String savedVersion = ParametersProvider
                 .get(RuntimeManagerProvider.get().getContext())
                 .get(ParameterKeys.LIB_CURRENTVERSION_KEY);
@@ -2596,7 +2386,6 @@ public final class Batch {
                     .get(RuntimeManagerProvider.get().getContext())
                     .set(ParameterKeys.LIB_CURRENTVERSION_KEY, currentVersion, true);
             } else if (!savedVersion.equals(currentVersion)) { // new version
-                manageUpdate(savedVersion, currentVersion);
                 ParametersProvider
                     .get(RuntimeManagerProvider.get().getContext())
                     .set(ParameterKeys.LIB_CURRENTVERSION_KEY, currentVersion, true);
@@ -2608,14 +2397,6 @@ public final class Batch {
             Logger.internal("Error on updateVersionManagement", e);
         }
     }
-
-    /**
-     * Called when the lib has been updated
-     *
-     * @param previousVersion
-     * @param currentVersion
-     */
-    private static void manageUpdate(String previousVersion, String currentVersion) {}
 
     private static class InternalBroadcastReceiver extends BroadcastReceiver {
 

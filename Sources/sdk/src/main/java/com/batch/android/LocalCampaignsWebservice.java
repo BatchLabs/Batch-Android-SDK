@@ -54,7 +54,6 @@ public class LocalCampaignsWebservice extends BatchQueryWebservice implements Ta
     public void run() {
         try {
             Logger.internal(TAG, "local campaigns webservice started");
-            webserviceMetrics.onWebserviceStarted(this);
             MetricRegistry.localCampaignsSyncResponseTime.startTimer();
             /*
              * Read response
@@ -63,7 +62,6 @@ public class LocalCampaignsWebservice extends BatchQueryWebservice implements Ta
             try {
                 response = getStandardResponseBodyIfValid();
                 MetricRegistry.localCampaignsSyncResponseTime.observeDuration();
-                webserviceMetrics.onWebserviceFinished(this, true);
             } catch (WebserviceError error) {
                 Logger.internal(
                     TAG,
@@ -71,7 +69,6 @@ public class LocalCampaignsWebservice extends BatchQueryWebservice implements Ta
                     error.getCause()
                 );
                 MetricRegistry.localCampaignsSyncResponseTime.observeDuration();
-                webserviceMetrics.onWebserviceFinished(this, false);
 
                 switch (error.getReason()) {
                     case NETWORK_ERROR:

@@ -178,11 +178,9 @@ public class ImageFormatView extends FrameLayout implements AsyncImageDownloadTa
         );
 
         // Animate layout changes, such as the resizing of the image container
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            final LayoutTransition lt = new LayoutTransition();
-            lt.enableTransitionType(LayoutTransition.CHANGING);
-            rootContainer.setLayoutTransition(lt);
-        }
+        final LayoutTransition lt = new LayoutTransition();
+        lt.enableTransitionType(LayoutTransition.CHANGING);
+        rootContainer.setLayoutTransition(lt);
 
         addView(rootContainer);
 
@@ -245,9 +243,7 @@ public class ImageFormatView extends FrameLayout implements AsyncImageDownloadTa
         final ProgressBar imageLoader = new ProgressBar(context);
         imageLoader.setId(ViewCompat.generateViewId());
         imageLoader.setIndeterminate(true);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            imageLoader.setIndeterminateTintList(ColorStateList.valueOf(Color.WHITE));
-        }
+        imageLoader.setIndeterminateTintList(ColorStateList.valueOf(Color.WHITE));
 
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -394,7 +390,6 @@ public class ImageFormatView extends FrameLayout implements AsyncImageDownloadTa
     //region System inset handling
 
     @Override
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
     public WindowInsets onApplyWindowInsets(WindowInsets insets) {
         // Apparently, the relative layout does not really like to apply the insets, so convert it as
         // margin

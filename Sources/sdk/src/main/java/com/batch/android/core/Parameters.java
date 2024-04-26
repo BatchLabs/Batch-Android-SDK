@@ -1,6 +1,8 @@
 package com.batch.android.core;
 
 import android.content.Context;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.batch.android.BuildConfig;
 import com.batch.android.di.providers.KVUserPreferencesStorageProvider;
 import com.batch.android.processor.Module;
@@ -172,7 +174,6 @@ public final class Parameters {
         appParameters.put(ParameterKeys.LOCAL_CAMPAIGNS_JIT_WS_CONNECT_TIMEOUT_KEY, 	"1000");
 
         appParameters.put(ParameterKeys.LOCAL_CAMPAIGNS_WS_INITIAL_DELAY, 	"5");
-        appParameters.put(ParameterKeys.EVENT_TRACKER_STATE, 				"2");
         appParameters.put(ParameterKeys.EVENT_TRACKER_INITIAL_DELAY, 		"10000");
         appParameters.put(ParameterKeys.EVENT_TRACKER_MAX_DELAY, 	 		"120000");
         appParameters.put(ParameterKeys.EVENT_TRACKER_BATCH_QUANTITY, 		"20");
@@ -184,8 +185,6 @@ public final class Parameters {
         appParameters.put(ParameterKeys.TASK_EXECUTOR_MAX_POOL, 			"5");
         appParameters.put(ParameterKeys.TASK_EXECUTOR_THREADTTL, 			"1000");
         appParameters.put(ParameterKeys.SCHEME_CODE_PATTERN, 				"^batch[A-Za-z0-9]{4,}://unlock/code/([^/\\?]+)");
-        appParameters.put(ParameterKeys.WEBSERVICE_IDS_PARAMETERS, 			"lvl,mlvl,dla,dre,dtz,osv,da,apv,apc,bid,di,i,idv,cus,lda,fda,did,sdk,brv,plv,s,nkd");
-        appParameters.put(ParameterKeys.WEBSERVICE_IDS_ADVANCED_PARAMETERS, "dty,brd,ntn,ntc,son,sop,sco");
     }
 
     //@formatter:on
@@ -202,7 +201,7 @@ public final class Parameters {
     /**
      * Application context
      */
-    protected Context applicationContext;
+    private final Context applicationContext;
 
     /**
      * Cache parameters, lost at app close
@@ -212,7 +211,7 @@ public final class Parameters {
     // ------------------------------------------->
 
     /**
-     * @param context
+     * @param context The Android's context
      */
     public Parameters(Context context) {
         if (context == null) {
@@ -231,7 +230,7 @@ public final class Parameters {
     /**
      * Get parameter value
      *
-     * @param key
+     * @param key The key of the parameter
      * @return value if found, null otherwise
      */
     public String get(String key) {
@@ -251,25 +250,20 @@ public final class Parameters {
             return userValue;
         }
 
-        String appValue = appParameters.get(key);
-        if (appValue != null) {
-            return appValue;
-        }
-
-        return null;
+        return appParameters.get(key);
     }
 
     /**
      * Get parameter value.
      *
-     * @param key
-     * @param failure
+     * @param key The key of the parameter
+     * @param fallback The fallback if no value found
      * @return value if found, failure otherwise.
      */
-    public String get(String key, String failure) {
+    public String get(String key, String fallback) {
         String value = get(key);
         if (value == null || value.length() == 0) {
-            return failure;
+            return fallback;
         }
 
         return value;
@@ -278,11 +272,11 @@ public final class Parameters {
     /**
      * Set the parameter
      *
-     * @param key
-     * @param value
+     * @param key The key of the parameter
+     * @param value the value of the parameter
      * @param save  if true, the value will be here at next app launch, it will be lost otherwise
      */
-    public void set(String key, String value, boolean save) {
+    public void set(@NonNull String key, @NonNull String value, boolean save) {
         if (key == null) {
             throw new NullPointerException("Null key");
         }
@@ -301,9 +295,35 @@ public final class Parameters {
     }
 
     /**
+     * Set the parameter or remove it if null
+     *
+     * @param key The key of the parameter
+     * @param value the value of the parameter
+     * @param save  if true, the value will be here at next app launch, it will be lost otherwise
+     */
+    public void setOrRemove(@NonNull String key, @Nullable String value, boolean save) {
+        if (key == null) {
+            throw new NullPointerException("Null key");
+        }
+
+        if (value == null) {
+            this.remove(key);
+            return;
+        }
+
+        synchronized (cacheParameters) {
+            cacheParameters.put(key, value);
+        }
+
+        if (save) {
+            KVUserPreferencesStorageProvider.get(applicationContext).persist(PARAMETERS_KEY_PREFIX + key, value);
+        }
+    }
+
+    /**
      * Remove the value of the given parameter
      *
-     * @param key
+     * @param key The key of the parameter to remove
      */
     public void remove(String key) {
         if (key == null) {

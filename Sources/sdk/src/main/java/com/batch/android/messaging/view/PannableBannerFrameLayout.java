@@ -319,9 +319,7 @@ public class PannableBannerFrameLayout extends FrameLayout implements GestureDet
         ObjectAnimator animator = ObjectAnimator.ofFloat(this, "translationY", getTranslationY(), 0);
         animator.setInterpolator(new OvershootInterpolator());
         animator.setDuration(cancellationAnimationDuration);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            animator.setAutoCancel(true);
-        }
+        animator.setAutoCancel(true);
         animator.start();
         cancellationAnimation = animator;
     }

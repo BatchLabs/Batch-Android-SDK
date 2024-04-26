@@ -623,28 +623,6 @@ public class InternalPushData {
         HIGH,
         MAX;
 
-        @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-        public int toAndroidPriority() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                return 0;
-            }
-
-            switch (this) {
-                case UNDEFINED:
-                case DEFAULT:
-                default:
-                    return Notification.PRIORITY_DEFAULT;
-                case MIN:
-                    return Notification.PRIORITY_MIN;
-                case LOW:
-                    return Notification.PRIORITY_LOW;
-                case HIGH:
-                    return Notification.PRIORITY_HIGH;
-                case MAX:
-                    return Notification.PRIORITY_MAX;
-            }
-        }
-
         public int toSupportPriority() {
             switch (this) {
                 case UNDEFINED:

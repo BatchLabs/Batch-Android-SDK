@@ -56,12 +56,7 @@ public class AnimatedCloseButton extends CloseButton {
         } else {
             countdownProgress = ((float) animationEndDate - currentAnimationTime) / duration;
         }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            postInvalidateOnAnimation();
-        } else {
-            postInvalidate();
-        }
+        postInvalidateOnAnimation();
     }
 
     @Override

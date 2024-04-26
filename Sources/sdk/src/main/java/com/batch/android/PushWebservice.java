@@ -7,7 +7,6 @@ import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskRunnable;
 import com.batch.android.json.JSONObject;
-import com.batch.android.push.Registration;
 import com.batch.android.query.PushQuery;
 import com.batch.android.query.Query;
 import com.batch.android.query.QueryType;
@@ -29,17 +28,20 @@ class PushWebservice extends BatchQueryWebservice implements TaskRunnable {
     /**
      * The registration information
      */
-    private Registration registration;
+    private final BatchPushRegistration registration;
 
     /**
      * Listener of this WS
      */
-    private PushWebserviceListener listener;
+    private final PushWebserviceListener listener;
 
     // ------------------------------------------>
 
-    protected PushWebservice(Context context, @NonNull Registration registration, PushWebserviceListener listener)
-        throws MalformedURLException {
+    protected PushWebservice(
+        Context context,
+        @NonNull BatchPushRegistration registration,
+        PushWebserviceListener listener
+    ) throws MalformedURLException {
         super(context, RequestType.POST, Parameters.PUSH_WS_URL);
         if (registration == null) {
             throw new NullPointerException("registration==null");
@@ -68,7 +70,6 @@ class PushWebservice extends BatchQueryWebservice implements TaskRunnable {
     public void run() {
         try {
             Logger.internal(TAG, "push webservice started");
-            webserviceMetrics.onWebserviceStarted(this);
 
             /*
              * Read response
@@ -76,10 +77,8 @@ class PushWebservice extends BatchQueryWebservice implements TaskRunnable {
             JSONObject response = null;
             try {
                 response = getStandardResponseBodyIfValid();
-                webserviceMetrics.onWebserviceFinished(this, true);
             } catch (WebserviceError error) {
                 Logger.internal(TAG, "Error on PushWebservice : " + error.getReason().toString(), error.getCause());
-                webserviceMetrics.onWebserviceFinished(this, false);
 
                 switch (error.getReason()) {
                     case NETWORK_ERROR:

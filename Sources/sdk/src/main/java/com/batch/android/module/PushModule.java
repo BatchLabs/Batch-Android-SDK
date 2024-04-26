@@ -23,9 +23,11 @@ import androidx.annotation.Nullable;
 import com.batch.android.Batch;
 import com.batch.android.BatchActionActivity;
 import com.batch.android.BatchNotificationInterceptor;
+import com.batch.android.BatchPermissionListener;
 import com.batch.android.BatchPushHelper;
 import com.batch.android.BatchPushNotificationPresenter;
 import com.batch.android.BatchPushPayload;
+import com.batch.android.BatchPushRegistration;
 import com.batch.android.BatchPushService;
 import com.batch.android.IntentParser;
 import com.batch.android.PushNotificationType;
@@ -46,13 +48,13 @@ import com.batch.android.processor.Module;
 import com.batch.android.processor.Provide;
 import com.batch.android.processor.Singleton;
 import com.batch.android.push.PushRegistrationProviderFactory;
-import com.batch.android.push.Registration;
 import com.batch.android.runtime.State;
 import com.google.firebase.messaging.RemoteMessage;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Push Module of Batch
@@ -279,42 +281,32 @@ public class PushModule extends BatchModule {
     }
 
     /**
-     * Return the push token if available
+     * Return the push registration if available
      *
      * @return token if available, null otherwise
      */
-    public String getRegistrationID() {
-        final StringBuilder registrationIDBuilder = new StringBuilder();
-
+    @Nullable
+    public BatchPushRegistration getRegistration() {
+        AtomicReference<BatchPushRegistration> registration = new AtomicReference<>();
         RuntimeManagerProvider
             .get()
             .run(state -> {
                 if (state != State.OFF) { // We need a context to get the token
-                    final Registration registration = getRegistration(RuntimeManagerProvider.get().getContext());
-                    if (registration != null) {
-                        registrationIDBuilder.append(registration.registrationID);
+                    Context context = RuntimeManagerProvider.get().getContext();
+                    if (context != null) {
+                        registration.set(getRegistration(context));
                     }
                 }
             });
-
-        if (registrationIDBuilder.length() > 0) {
-            return registrationIDBuilder.toString();
-        }
-
-        return null;
+        return registration.get();
     }
 
     /**
      * Get the persisted registration
      */
-    public Registration getRegistration(@NonNull Context context) {
+    public BatchPushRegistration getRegistration(@NonNull Context context) {
         try {
             final Parameters parameters = ParametersProvider.get(context);
-            if (parameters == null) {
-                Logger.internal(TAG, "Could not fetch registration: failed to read parameters");
-                return null;
-            }
-
             final String registrationID = parameters.get(ParameterKeys.PUSH_REGISTRATION_ID_KEY);
             if (registrationID == null) {
                 return null;
@@ -328,7 +320,7 @@ public class PushModule extends BatchModule {
             String senderID = parameters.get(ParameterKeys.PUSH_REGISTRATION_SENDERID_KEY);
             String gcpProjectID = parameters.get(ParameterKeys.PUSH_REGISTRATION_GCPPROJECTID_KEY);
 
-            return new Registration(registrationProvider, registrationID, senderID, gcpProjectID);
+            return new BatchPushRegistration(registrationProvider, registrationID, senderID, gcpProjectID);
         } catch (Exception e) {
             Logger.internal(TAG, "Error while retrieving registration id", e);
             return null;
@@ -341,6 +333,7 @@ public class PushModule extends BatchModule {
      *
      * @return Type of notifications you previously set. Be careful, as this can be null if you never used setNotificationsType() or if your context is invalid
      */
+    @Nullable
     public EnumSet<PushNotificationType> getNotificationsType(Context context) {
         if (context == null) {
             return null;
@@ -384,18 +377,16 @@ public class PushModule extends BatchModule {
             final AtomicBoolean handled = new AtomicBoolean(false);
             final int value = PushNotificationType.toValue(types);
 
-            if (RuntimeManagerProvider.get() != null) {
-                RuntimeManagerProvider
-                    .get()
-                    .run(state -> {
-                        if (state != State.OFF) {
-                            ParametersProvider
-                                .get(RuntimeManagerProvider.get().getContext())
-                                .set(ParameterKeys.PUSH_NOTIF_TYPE, Integer.toString(value), true);
-                            handled.set(true);
-                        }
-                    });
-            }
+            RuntimeManagerProvider
+                .get()
+                .run(state -> {
+                    if (state != State.OFF) {
+                        ParametersProvider
+                            .get(RuntimeManagerProvider.get().getContext())
+                            .set(ParameterKeys.PUSH_NOTIF_TYPE, Integer.toString(value), true);
+                        handled.set(true);
+                    }
+                });
 
             if (!handled.get()) {
                 tempNotifType = types;
@@ -807,7 +798,7 @@ public class PushModule extends BatchModule {
                             return;
                         }
 
-                        final Registration registration = new Registration(
+                        final BatchPushRegistration registration = new BatchPushRegistration(
                             provider.getShortname(),
                             registrationID,
                             provider.getSenderID(),
@@ -827,14 +818,14 @@ public class PushModule extends BatchModule {
     /**
      * Injects a registration ID into Batch, either from a builtin provider or the user's
      */
-    private void emitRegistration(@NonNull Context context, @NonNull final Registration registration) {
+    private void emitRegistration(@NonNull Context context, @NonNull final BatchPushRegistration registration) {
         final Context appContext = context.getApplicationContext();
 
         // Broadcast a Batch-emitted registration intent
         final Intent i = new Intent(Batch.ACTION_REGISTRATION_IDENTIFIER_OBTAINED);
-        i.putExtra(Batch.EXTRA_REGISTRATION_PROVIDER_NAME, registration.provider);
-        i.putExtra(Batch.EXTRA_REGISTRATION_IDENTIFIER, registration.registrationID);
-        i.putExtra(Batch.EXTRA_REGISTRATION_SENDER_ID, registration.senderID);
+        i.putExtra(Batch.EXTRA_REGISTRATION_PROVIDER_NAME, registration.getProvider());
+        i.putExtra(Batch.EXTRA_REGISTRATION_IDENTIFIER, registration.getToken());
+        i.putExtra(Batch.EXTRA_REGISTRATION_SENDER_ID, registration.getSenderID());
         i.setPackage(appContext.getPackageName());
         appContext.sendBroadcast(i, Batch.getBroadcastPermissionName(appContext));
 
@@ -857,20 +848,24 @@ public class PushModule extends BatchModule {
 
                         parameters.set(ParameterKeys.PUSH_APP_VERSION_KEY, getAppVersion(), true);
 
-                        parameters.set(ParameterKeys.PUSH_REGISTRATION_PROVIDER_KEY, registration.provider, true);
+                        parameters.set(ParameterKeys.PUSH_REGISTRATION_PROVIDER_KEY, registration.getProvider(), true);
 
-                        parameters.set(ParameterKeys.PUSH_REGISTRATION_ID_KEY, registration.registrationID, true);
+                        parameters.set(ParameterKeys.PUSH_REGISTRATION_ID_KEY, registration.getToken(), true);
 
-                        if (registration.senderID != null) {
-                            parameters.set(ParameterKeys.PUSH_REGISTRATION_SENDERID_KEY, registration.senderID, true);
+                        if (registration.getSenderID() != null) {
+                            parameters.set(
+                                ParameterKeys.PUSH_REGISTRATION_SENDERID_KEY,
+                                registration.getSenderID(),
+                                true
+                            );
                         } else {
                             parameters.remove(ParameterKeys.PUSH_REGISTRATION_SENDERID_KEY);
                         }
 
-                        if (registration.gcpProjectID != null) {
+                        if (registration.getGcpProjectID() != null) {
                             parameters.set(
                                 ParameterKeys.PUSH_REGISTRATION_GCPPROJECTID_KEY,
-                                registration.gcpProjectID,
+                                registration.getGcpProjectID(),
                                 true
                             );
                         } else {
@@ -878,10 +873,10 @@ public class PushModule extends BatchModule {
                         }
 
                         if (
-                            !registration.registrationID.equals(currentRegistrationID) ||
-                            !registration.provider.equals(currentRegistrationProvider) ||
-                            !TextUtils.equals(registration.senderID, currentSenderID) ||
-                            !TextUtils.equals(registration.gcpProjectID, currentGCPProjectID)
+                            !registration.getToken().equals(currentRegistrationID) ||
+                            !registration.getProvider().equals(currentRegistrationProvider) ||
+                            !TextUtils.equals(registration.getSenderID(), currentSenderID) ||
+                            !TextUtils.equals(registration.getGcpProjectID(), currentGCPProjectID)
                         ) {
                             WebserviceLauncher.launchPushWebservice(RuntimeManagerProvider.get(), registration);
                         }
@@ -932,8 +927,8 @@ public class PushModule extends BatchModule {
         return false;
     }
 
-    private void printRegistration(@NonNull Registration registration) {
-        Logger.info(TAG, "Registration ID/Push Token (" + registration.provider + "): " + registration.registrationID);
+    private void printRegistration(@NonNull BatchPushRegistration registration) {
+        Logger.info(TAG, "Registration ID/Push Token (" + registration.getProvider() + "): " + registration.getToken());
     }
 
     /**
@@ -941,12 +936,13 @@ public class PushModule extends BatchModule {
      * Required for Android 13 (api 33)
      * Do nothing if app target is lower than 13
      * @param context requesting the permission
+     * @param listener callback with permission result
      */
-    public void requestNotificationPermission(@NonNull Context context) {
+    public void requestNotificationPermission(@NonNull Context context, @Nullable BatchPermissionListener listener) {
         if (context == null) {
             throw new IllegalArgumentException("Context can't be null");
         }
-        NotificationPermissionHelper helper = new NotificationPermissionHelper();
+        NotificationPermissionHelper helper = new NotificationPermissionHelper(listener);
         helper.requestPermission(context, false, null);
     }
 
@@ -993,14 +989,17 @@ public class PushModule extends BatchModule {
         }
     }
 
+    /**
+     *
+     * @return
+     */
+    @Nullable
     private synchronized PushRegistrationProvider getRegistrationProvider() {
         if (!didSetupRegistrationProvider) {
             Context context = RuntimeManagerProvider.get().getContext();
             if (context != null) {
                 didSetupRegistrationProvider = true;
-                registrationProvider =
-                    new PushRegistrationProviderFactory(context, Batch.shouldUseGoogleInstanceID(), gcmSenderId)
-                        .getRegistrationProvider();
+                registrationProvider = new PushRegistrationProviderFactory(context).getRegistrationProvider();
 
                 if (registrationProvider == null) {
                     Logger.error(TAG, "Could not register for notifications.");

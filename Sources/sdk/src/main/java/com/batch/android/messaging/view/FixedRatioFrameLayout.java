@@ -30,7 +30,6 @@ public class FixedRatioFrameLayout extends FrameLayout {
         super(context, attrs, defStyleAttr);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public FixedRatioFrameLayout(
         @NonNull Context context,
         @Nullable AttributeSet attrs,

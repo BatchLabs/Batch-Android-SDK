@@ -31,21 +31,6 @@
         android:paddingBottom="16dp"
         style="@style/com_batchsdk_TextAppearance.Debug.Body" />
 
-
-    <TextView
-        android:text="@string/com_batchsdk_identifier_debug_fragment_advertising_id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        style="@style/com_batchsdk_TextAppearance.Debug.Headline" />
-
-    <TextView
-        android:id="@+id/com_batchsdk_identifier_debug_fragment_advertising_id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingBottom="16dp"
-        style="@style/com_batchsdk_TextAppearance.Debug.Body" />
-
-
     <TextView
         android:text="@string/com_batchsdk_identifier_debug_fragment_push_token"
         android:layout_width="wrap_content"

@@ -1,17 +1,14 @@
 package com.batch.android;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -48,7 +45,7 @@ public class BatchPushMessageReceiver extends WakefulBroadcastReceiver {
         if (isFCMMessage(intent)) {
             final String messageID = getGoogleMessageID(intent);
             if (isDuplicateMessage(messageID)) {
-                Logger.info(TAG, "Got a duplicate message_id from FCM, ignoring.");
+                Logger.info(TAG, "Got a duplicate message_id from FCM: " + messageID + " , ignoring.");
                 return;
             }
             if (presentNotification(context, intent)) {

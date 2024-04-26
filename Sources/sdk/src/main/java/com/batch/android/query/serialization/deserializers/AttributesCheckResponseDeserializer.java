@@ -36,6 +36,12 @@ public class AttributesCheckResponseDeserializer extends ResponseDeserializer {
         if (json.has("t") && !json.isNull("t")) {
             response.setTime(json.getLong("t"));
         }
+        if (json.hasNonNull("project_key")) {
+            String projectKey = json.getString("project_key");
+            if (!projectKey.isEmpty()) {
+                response.setProjectKey(projectKey);
+            }
+        }
         return response;
     }
 }

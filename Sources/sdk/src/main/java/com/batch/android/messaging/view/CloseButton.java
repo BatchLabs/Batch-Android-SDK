@@ -77,30 +77,27 @@ public class CloseButton extends View implements Styleable {
         init();
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public CloseButton(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         init();
     }
 
     public void init() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            setOutlineProvider(
-                new ViewOutlineProvider() {
-                    @Override
-                    public void getOutline(View view, Outline outline) {
-                        outline.setOval(
-                            getPadding(),
-                            getPadding(),
-                            view.getWidth() - getPadding(),
-                            view.getHeight() - getPadding()
-                        );
-                    }
+        setOutlineProvider(
+            new ViewOutlineProvider() {
+                @Override
+                public void getOutline(View view, Outline outline) {
+                    outline.setOval(
+                        getPadding(),
+                        getPadding(),
+                        view.getWidth() - getPadding(),
+                        view.getHeight() - getPadding()
+                    );
                 }
-            );
+            }
+        );
 
-            setClipToOutline(true);
-        }
+        setClipToOutline(true);
 
         refreshPaint();
         //TODO: How to translate this?
@@ -346,18 +343,14 @@ public class CloseButton extends View implements Styleable {
                     setGlyphWidth((int) (density * val.intValue()));
                 }
             } else if ("elevation".equalsIgnoreCase(rule.getKey())) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Float val = StyleHelper.optFloat(rule.getValue());
-                    if (val != null) {
-                        setElevation(StyleHelper.dpToPixels(res, val));
-                    }
+                Float val = StyleHelper.optFloat(rule.getValue());
+                if (val != null) {
+                    setElevation(StyleHelper.dpToPixels(res, val));
                 }
             } else if ("z-index".equalsIgnoreCase(rule.getKey())) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Float val = StyleHelper.optFloat(rule.getValue());
-                    if (val != null) {
-                        setZ(StyleHelper.dpToPixels(res, val));
-                    }
+                Float val = StyleHelper.optFloat(rule.getValue());
+                if (val != null) {
+                    setZ(StyleHelper.dpToPixels(res, val));
                 }
             }
         }
@@ -389,7 +382,6 @@ public class CloseButton extends View implements Styleable {
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void drawableHotspotChanged(float x, float y) {
         super.drawableHotspotChanged(x, y);

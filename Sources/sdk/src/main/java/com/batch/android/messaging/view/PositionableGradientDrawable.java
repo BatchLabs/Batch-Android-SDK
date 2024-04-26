@@ -534,18 +534,7 @@ public class PositionableGradientDrawable extends Drawable {
 
             float rad = mStrokePaint.getStrokeWidth();
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                canvas.saveLayer(mRect.left - rad, mRect.top - rad, mRect.right + rad, mRect.bottom + rad, mLayerPaint);
-            } else {
-                canvas.saveLayer(
-                    mRect.left - rad,
-                    mRect.top - rad,
-                    mRect.right + rad,
-                    mRect.bottom + rad,
-                    mLayerPaint,
-                    Canvas.ALL_SAVE_FLAG
-                );
-            }
+            canvas.saveLayer(mRect.left - rad, mRect.top - rad, mRect.right + rad, mRect.bottom + rad, mLayerPaint);
 
             // don't perform the filter in our individual paints
             // since the layer will do it for us
@@ -1047,9 +1036,6 @@ public class PositionableGradientDrawable extends Drawable {
 
     @Override
     public void getOutline(Outline outline) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            return;
-        }
         final GradientState st = mGradientState;
         final Rect bounds = getBounds();
         // only report non-zero alpha if shape being drawn is opaque

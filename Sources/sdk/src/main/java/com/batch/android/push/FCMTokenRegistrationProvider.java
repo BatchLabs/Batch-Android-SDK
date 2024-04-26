@@ -1,7 +1,5 @@
 package com.batch.android.push;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import androidx.annotation.Nullable;
 import com.batch.android.core.Logger;
 import com.batch.android.module.PushModule;
@@ -12,8 +10,8 @@ import java.util.concurrent.TimeUnit;
 
 public class FCMTokenRegistrationProvider extends FCMAbstractRegistrationProvider {
 
-    FCMTokenRegistrationProvider(Context context) {
-        super(context);
+    FCMTokenRegistrationProvider() {
+        super();
     }
 
     @Override
@@ -23,22 +21,12 @@ public class FCMTokenRegistrationProvider extends FCMAbstractRegistrationProvide
 
     @Nullable
     @Override
-    @SuppressLint("MissingFirebaseInstanceTokenRefresh")
     public String getRegistration() {
         try {
             if (senderID == null) {
                 return null;
             }
             FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
-            if (firebaseMessaging == null) {
-                Logger.error(
-                    PushModule.TAG,
-                    "Could not register for FCM Push using FCM's Token APIs:" +
-                    " Could not get the FirebaseMessaging instance." +
-                    " Is your Firebase project configured and initialized?"
-                );
-                return null;
-            }
             Task<String> getTokenTask = firebaseMessaging.getToken();
             Tasks.await(getTokenTask, 30000L, TimeUnit.MILLISECONDS);
             if (!getTokenTask.isSuccessful()) {

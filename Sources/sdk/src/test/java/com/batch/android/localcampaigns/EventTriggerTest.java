@@ -69,7 +69,7 @@ public class EventTriggerTest extends DITest {
         CampaignManagerProvider.get().updateCampaignList(Collections.singletonList(campaign));
 
         // Track the event which is linked to the Local Campaign
-        Batch.User.trackEvent(EVENT_NAME_TEST);
+        Batch.Profile.trackEvent(EVENT_NAME_TEST);
 
         Mockito
             .verify(LocalCampaignsModuleProvider.get())
@@ -95,7 +95,7 @@ public class EventTriggerTest extends DITest {
         LocalCampaignsModuleProvider.get().onLocalCampaignsWebserviceFinished();
 
         // Track the event which is linked to the Local Campaign
-        Batch.User.trackEvent(EVENT_NAME_TEST);
+        Batch.Profile.trackEvent(EVENT_NAME_TEST);
 
         Thread.sleep(2000);
 

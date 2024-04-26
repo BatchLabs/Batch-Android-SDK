@@ -20,11 +20,7 @@
     public *;
 }
 
--keepnames class com.batch.android.BatchPushReceiver
-
 -keepnames class com.batch.android.BatchPushService
-
--keepnames class com.batch.android.BatchPushInstanceIDService
 
 -keep class com.batch.android.msgpack.core.buffer.MessageBuffer {}
 

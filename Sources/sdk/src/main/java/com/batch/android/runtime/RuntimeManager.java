@@ -3,11 +3,8 @@ package com.batch.android.runtime;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 import com.batch.android.core.Logger;
 import com.batch.android.debug.FindMyInstallationHelper;
 import com.batch.android.processor.Module;
@@ -30,19 +27,14 @@ public class RuntimeManager {
     /**
      * Application context
      */
+    @Nullable
     private Context context;
-    /**
-     * Handler stored to execute actions on main thread
-     */
-    private Handler handler = new Handler(Looper.getMainLooper());
-
-    // ---- Context tracking variables ----
 
     /**
      * RefCount incremented/decremented by onServiceCreate/onServiceDestroy calls.
      * May be replaced by a Context list later.
      */
-    private AtomicInteger serviceRefCount = new AtomicInteger(0);
+    private final AtomicInteger serviceRefCount = new AtomicInteger(0);
     /**
      * Date of when Batch was last started by a service WITH userActivity = true (or an Activity)
      * Used for automatic 24h start in activities/services
@@ -66,8 +58,6 @@ public class RuntimeManager {
      */
     private SessionManager sessionManager;
 
-    // ------------------------------------
-
     /**
      * Date of the last stop without finishing
      */
@@ -80,26 +70,66 @@ public class RuntimeManager {
     /**
      * Lock used to modify/get the {@link #state}
      */
-    private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     /**
      * Read lock
      */
-    private ReadLock r = lock.readLock();
+    private final ReadLock r = lock.readLock();
     /**
      * Write lock
      */
-    private WriteLock w = lock.writeLock();
+    private final WriteLock w = lock.writeLock();
+
+    /**
+     * Batch Configuration
+     */
+    @NonNull
+    private final Config config = new Config();
 
     /**
      * Debug helper class to copy the installation id to the clipboard
      */
+    @NonNull
     private final FindMyInstallationHelper installationIdHelper = new FindMyInstallationHelper();
 
-    // ------------------------------------->
-
+    /**
+     * Constructor
+     */
     public RuntimeManager() {}
 
-    // -------------------------------------->
+    /**
+     * Execute an action to read the batch configuration
+     * You should never use this method to update the configuration.
+     * To do that use {@link #updateConfig(ConfigAction)}
+     *
+     * @param action action that will read the config.
+     */
+    public void readConfig(@NonNull ConfigAction action) {
+        r.lock();
+        try {
+            action.run(config.copy());
+        } finally {
+            r.unlock();
+        }
+    }
+
+    /**
+     * Execute an action to update the batch configuration.
+     * Configuration can only be update if the sdk is not started.
+     *
+     * @param action action that will modify the config
+     */
+    public void updateConfig(@NonNull ConfigAction action) {
+        w.lock();
+        try {
+            if (state != State.OFF) {
+                return;
+            }
+            action.run(this.config);
+        } finally {
+            w.unlock();
+        }
+    }
 
     /**
      * Execute an action to modify the state
@@ -110,7 +140,7 @@ public class RuntimeManager {
     public boolean changeState(ChangeStateAction action) {
         w.lock();
         try {
-            State newState = action.run(state);
+            State newState = action.run(state, config);
             if (newState != null) {
                 state = newState;
                 return true;
@@ -125,8 +155,8 @@ public class RuntimeManager {
     /**
      * Execute an action to modify the state if the current state equals the wanted one
      *
-     * @param wantedState
-     * @param action
+     * @param wantedState The state we want
+     * @param action The action to modify the state
      * @return true if the state has been set, false otherwise
      */
     public boolean changeStateIf(State wantedState, ChangeStateAction action) {
@@ -136,7 +166,7 @@ public class RuntimeManager {
                 return false;
             }
 
-            State newState = action.run(state);
+            State newState = action.run(state, config);
             if (newState != null) {
                 state = newState;
                 return true;
@@ -147,8 +177,6 @@ public class RuntimeManager {
             w.unlock();
         }
     }
-
-    // ------------------------------------>
 
     /**
      * Execute an action with read lock
@@ -167,31 +195,27 @@ public class RuntimeManager {
     /**
      * Execute an action with read lock if the current state equals the wanted state
      *
-     * @param wantedState
-     * @param action
-     * @return true if the action has been run, false otherwise
+     * @param wantedState The state we want
+     * @param action      The action to to read state
      */
-    public boolean runIf(State wantedState, StateAction action) {
+    public void runIf(State wantedState, StateAction action) {
         r.lock();
         try {
             if (state != wantedState) {
-                return false;
+                return;
             }
 
             action.run(state);
-            return true;
         } finally {
             r.unlock();
         }
     }
 
-    // -------------------------------------->
-
     /**
      * Run this action if Batch is ready
      *
-     * @param action
-     * @return true if the action has been runned, false otherwise
+     * @param action The action to
+     * @return true if the action has been run, false otherwise
      */
     public boolean runIfReady(final Runnable action) {
         return runIf(State.READY, action);
@@ -200,9 +224,9 @@ public class RuntimeManager {
     /**
      * Run this action if Batch is at the given wanted state
      *
-     * @param wantedState
-     * @param action
-     * @return true if the action has been runned, false otherwise
+     * @param wantedState The state we want
+     * @param action The action to run
+     * @return true if the action has been run, false otherwise
      */
     public boolean runIf(State wantedState, final Runnable action) {
         r.lock();
@@ -254,7 +278,7 @@ public class RuntimeManager {
      * Set the activity, you should <b>NEVER</b> call this method outside of a changeState method<br>
      * <b>This method is NOT thread safe</b>
      *
-     * @param activity
+     * @param activity Android's activity
      */
     public void setActivity(Activity activity) {
         this.activity = activity;
@@ -304,7 +328,7 @@ public class RuntimeManager {
     public boolean isRetainedByService() {
         int refCount = this.serviceRefCount.get();
 
-        // Fix negative refcounts
+        // Fix negative ref counts
         if (refCount < 0) {
             Logger.error(
                 TAG,
@@ -351,7 +375,7 @@ public class RuntimeManager {
      * Set the context, you should <b>NEVER</b> call this method outside of a changeState method<br>
      * <b>This method is NOT thread safe</b>
      *
-     * @param context
+     * @param context Android's context
      */
     public void setContext(Context context) {
         if (context != null) { // Just in case we got an activity
@@ -435,10 +459,5 @@ public class RuntimeManager {
 
     public SessionManager getSessionManager() {
         return sessionManager;
-    }
-
-    @VisibleForTesting
-    public void clearSessionManager() {
-        sessionManager = null;
     }
 }

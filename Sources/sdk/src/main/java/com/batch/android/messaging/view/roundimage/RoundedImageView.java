@@ -544,11 +544,9 @@ public class RoundedImageView extends ImageView implements Styleable {
                     setAlpha(val);
                 }
             } else if ("elevation".equalsIgnoreCase(rule.getKey())) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Float val = StyleHelper.optFloat(rule.getValue());
-                    if (val != null) {
-                        setElevation(val);
-                    }
+                Float val = StyleHelper.optFloat(rule.getValue());
+                if (val != null) {
+                    setElevation(val);
                 }
             } else if ("scale".equalsIgnoreCase(rule.getKey())) {
                 final String value = rule.getValue();
@@ -558,11 +556,9 @@ public class RoundedImageView extends ImageView implements Styleable {
                     setScaleType(ScaleType.FIT_CENTER);
                 }
             } else if ("z-index".equalsIgnoreCase(rule.getKey())) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Float val = StyleHelper.optFloat(rule.getValue());
-                    if (val != null) {
-                        setZ(StyleHelper.dpToPixels(getResources(), val));
-                    }
+                Float val = StyleHelper.optFloat(rule.getValue());
+                if (val != null) {
+                    setZ(StyleHelper.dpToPixels(getResources(), val));
                 }
             } else if ("rounded-corners".equalsIgnoreCase(rule.getKey())) {
                 final String value = rule.getValue();

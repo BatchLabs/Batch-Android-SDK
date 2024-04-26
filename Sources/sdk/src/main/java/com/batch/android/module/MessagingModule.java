@@ -93,7 +93,7 @@ public class MessagingModule extends BatchModule {
 
     //region: Instance variables
 
-    private boolean showForegroundLandings = true;
+    private boolean showForegroundLandings = false;
 
     private boolean automaticMode = true;
 

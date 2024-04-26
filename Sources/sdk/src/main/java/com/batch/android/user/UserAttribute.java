@@ -11,12 +11,15 @@ public class UserAttribute {
     public Object value;
     public AttributeType type;
 
-    public UserAttribute(@NonNull Object value, @NonNull AttributeType type) {
+    public UserAttribute(@Nullable Object value, @NonNull AttributeType type) {
         this.value = value;
         this.type = type;
     }
 
-    public static Map<String, Object> getServerMapRepresentation(Map<String, UserAttribute> attributes) {
+    public static Map<String, Object> getServerMapRepresentation(
+        Map<String, UserAttribute> attributes,
+        boolean isPrefixed
+    ) {
         final Map<String, Object> representation = new HashMap<>();
         if (attributes == null) {
             return representation;
@@ -28,10 +31,13 @@ public class UserAttribute {
             if (convertedValue instanceof Date) {
                 convertedValue = ((Date) convertedValue).getTime();
             }
-
-            representation.put(entry.getKey().substring(2) + "." + entry.getValue().type.getTypeChar(), convertedValue);
+            AttributeType attributeType = entry.getValue().type;
+            representation.put(
+                (isPrefixed ? entry.getKey().substring(2) : entry.getKey()) +
+                (attributeType != AttributeType.DELETED ? "." + entry.getValue().type.getTypeChar() : ""),
+                convertedValue
+            );
         }
-
         return representation;
     }
 
@@ -50,6 +56,7 @@ public class UserAttribute {
         return this.type == castedObj.type && this.value.equals(castedObj.value);
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "type:" + type.getTypeChar() + "' value: '" + value.toString() + "'";

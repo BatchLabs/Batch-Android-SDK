@@ -1,5 +1,6 @@
 package com.batch.android;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.json.JSONObject;
 import org.mockito.ArgumentMatcher;
@@ -29,5 +30,11 @@ public class JSONObjectMockitoMatcher implements ArgumentMatcher<JSONObject> {
 
     public static JSONObject eq(@Nullable JSONObject expected) {
         return Mockito.argThat(new JSONObjectMockitoMatcher(expected));
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "JSONObjectMockitoMatcher{" + "expected=" + expected + '}';
     }
 }

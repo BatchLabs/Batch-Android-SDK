@@ -1,5 +1,6 @@
 package com.batch.android.query.response;
 
+import androidx.annotation.Nullable;
 import com.batch.android.query.AttributesCheckQuery;
 import com.batch.android.query.QueryType;
 
@@ -13,6 +14,8 @@ public class AttributesCheckResponse extends Response {
     public long version = -1L;
 
     public Long time = null;
+
+    private String projectKey;
 
     public AttributesCheckResponse(String queryID) {
         super(QueryType.ATTRIBUTES_CHECK, queryID);
@@ -34,6 +37,11 @@ public class AttributesCheckResponse extends Response {
         }
 
         return Action.UNKNOWN;
+    }
+
+    @Nullable
+    public String getProjectKey() {
+        return projectKey;
     }
 
     public enum Action {
@@ -62,5 +70,9 @@ public class AttributesCheckResponse extends Response {
 
     public void setTime(Long time) {
         this.time = time;
+    }
+
+    public void setProjectKey(String projectKey) {
+        this.projectKey = projectKey;
     }
 }

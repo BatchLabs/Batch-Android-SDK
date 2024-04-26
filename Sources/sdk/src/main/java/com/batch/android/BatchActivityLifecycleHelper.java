@@ -13,7 +13,6 @@ import com.batch.android.annotation.PublicSDK;
  * Important note: While this removes the need for most lifecycle activities, you still <b>MUST</b> add Batch.onNewIntent(this, intent) in all your activities
  *
  */
-@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 @SuppressWarnings("unused")
 @PublicSDK
 public class BatchActivityLifecycleHelper implements Application.ActivityLifecycleCallbacks {

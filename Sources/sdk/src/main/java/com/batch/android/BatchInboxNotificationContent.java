@@ -1,6 +1,5 @@
 package com.batch.android;
 
-import android.app.Activity;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -10,12 +9,7 @@ import com.batch.android.di.providers.MessagingModuleProvider;
 import com.batch.android.di.providers.OptOutModuleProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.inbox.InboxNotificationContentInternal;
-import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
-import com.batch.android.messaging.PayloadParser;
-import com.batch.android.messaging.PayloadParsingException;
-import com.batch.android.messaging.model.BannerMessage;
-import com.batch.android.messaging.model.Message;
 import com.batch.android.module.MessagingModule;
 import java.util.Date;
 import java.util.HashMap;
@@ -70,17 +64,6 @@ public class BatchInboxNotificationContent {
 
     public boolean isUnread() {
         return internalContent.isUnread;
-    }
-
-    /**
-     * Flag indicating whether this notification is deleted or not.
-     *
-     * @return true if notification is deleted
-     * @deprecated You should refresh your copy of the data with getFetchedNotifications() after using markAsDeleted.
-     */
-    @Deprecated
-    public boolean isDeleted() {
-        return internalContent.isDeleted;
     }
 
     @NonNull

@@ -157,11 +157,6 @@ public class APENFormat extends BaseFormat implements NotificationFormat {
 
     public void applyExtraBuilderConfiguration(@NonNull NotificationCompat.Builder builder) {}
 
-    @SuppressLint("AnnotateVersionCheck")
-    public static boolean isSupported() {
-        return android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
-    }
-
     @VisibleForTesting
     LayoutType getLayoutType() {
         return layoutType;

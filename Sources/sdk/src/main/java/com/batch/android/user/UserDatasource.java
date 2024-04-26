@@ -3,7 +3,6 @@ package com.batch.android.user;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import java.net.URI;
-import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,6 +48,4 @@ public interface UserDatasource {
 
     @Nullable
     HashMap<String, UserAttribute> getAttributes();
-
-    String printDebugDump();
 }

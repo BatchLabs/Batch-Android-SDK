@@ -1,10 +1,8 @@
 package com.batch.android.messaging.view;
 
 import android.content.Context;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.widget.ScrollView;
-import androidx.annotation.RequiresApi;
 
 /**
  * A {@link ScrollView} that supports setting a maximum height
@@ -25,8 +23,6 @@ public class MaximumHeightScrollView extends ScrollView {
         super(context, attrs, defStyleAttr);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    @SuppressWarnings("unused")
     public MaximumHeightScrollView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }

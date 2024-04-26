@@ -4,7 +4,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.Batch;
-import com.batch.android.BatchEventData;
+import com.batch.android.BatchEventAttributes;
 import com.batch.android.UserActionRunnable;
 import com.batch.android.UserActionSource;
 import com.batch.android.core.Logger;
@@ -15,7 +15,9 @@ import com.batch.android.module.ActionModule;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class UserEventBuiltinActionRunnable implements UserActionRunnable {
@@ -60,20 +62,24 @@ public class UserEventBuiltinActionRunnable implements UserActionRunnable {
                 return;
             }
 
+            BatchEventAttributes data = new BatchEventAttributes();
             String label = json.reallyOptString("l", null);
+            if (label != null) {
+                data.put(BatchEventAttributes.LABEL_KEY, label);
+            }
 
-            BatchEventData data = new BatchEventData();
-
-            JSONArray tags = json.optJSONArray("t");
-            if (tags != null && tags.length() > 0) {
-                for (int i = 0; i < tags.length(); i++) {
-                    String tag = tags.optString(i, null);
+            JSONArray jsonTags = json.optJSONArray("t");
+            if (jsonTags != null && jsonTags.length() > 0) {
+                List<String> tags = new ArrayList<>();
+                for (int i = 0; i < jsonTags.length(); i++) {
+                    String tag = jsonTags.optString(i, null);
                     if (tag != null && tag.length() > 0) {
-                        data.addTag(tag);
+                        tags.add(tag);
                     } else {
                         Logger.internal(TAG, "Could not add tag in event action : tag value is null or invalid");
                     }
                 }
+                data.putStringList(BatchEventAttributes.TAGS_KEY, tags);
             }
 
             JSONObject argsData = json.optJSONObject("a");
@@ -103,7 +109,7 @@ public class UserEventBuiltinActionRunnable implements UserActionRunnable {
                 }
             }
 
-            Batch.User.trackEvent(event, label, data);
+            Batch.Profile.trackEvent(event, data);
         } catch (JSONException e) {
             Logger.internal(TAG, "Json object failure : " + e.getLocalizedMessage());
         }

@@ -111,7 +111,7 @@ public class DisplayReceiptModule extends BatchModule {
             dma = 0;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && dmi >= 0) {
+        if (dmi >= 0) {
             try {
                 JobScheduler scheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
                 if (scheduler == null) {

@@ -6,7 +6,6 @@ import android.content.res.ColorStateList;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
-import android.os.Build;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Pair;
@@ -21,7 +20,6 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import com.batch.android.R;
 import com.batch.android.core.ReflectionHelper;
 import com.batch.android.messaging.AsyncImageDownloadTask;
@@ -208,9 +206,7 @@ public class UniversalRootView extends PercentRelativeLayout implements Separate
         contentLayout.setAlignItems(FlexboxLayout.ALIGN_ITEMS_CENTER);
         contentLayout.setJustifyContent(FlexboxLayout.JUSTIFY_CONTENT_CENTER);
         contentLayout.applyStyleRules(contentStyleRules);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            contentLayout.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
-        }
+        contentLayout.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
 
         originalContentPaddingTop = contentLayout.getPaddingTop();
 
@@ -354,9 +350,7 @@ public class UniversalRootView extends PercentRelativeLayout implements Separate
             heroImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             if (!TextUtils.isEmpty(message.heroDescription)) {
                 heroImageView.setContentDescription(message.heroDescription);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    heroImageView.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
-                }
+                heroImageView.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
             }
             views.add(new Pair<>(heroImageView, new DOMNode("image", "image")));
 
@@ -380,12 +374,10 @@ public class UniversalRootView extends PercentRelativeLayout implements Separate
 
                 heroLoader = new ProgressBar(context);
                 heroLoader.setIndeterminate(true);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    if (darkProgressBar) {
-                        heroLoader.setIndeterminateTintList(ColorStateList.valueOf(Color.BLACK));
-                    } else {
-                        heroLoader.setIndeterminateTintList(ColorStateList.valueOf(Color.WHITE));
-                    }
+                if (darkProgressBar) {
+                    heroLoader.setIndeterminateTintList(ColorStateList.valueOf(Color.BLACK));
+                } else {
+                    heroLoader.setIndeterminateTintList(ColorStateList.valueOf(Color.WHITE));
                 }
                 final FrameLayout.LayoutParams progressLayoutParams = new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -589,7 +581,6 @@ public class UniversalRootView extends PercentRelativeLayout implements Separate
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
     @Override
     public WindowInsets onApplyWindowInsets(WindowInsets insets) {
         topInset = insets.getSystemWindowInsetTop();

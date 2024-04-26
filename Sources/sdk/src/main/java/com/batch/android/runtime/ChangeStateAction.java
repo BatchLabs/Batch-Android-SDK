@@ -8,8 +8,9 @@ public interface ChangeStateAction {
     /**
      * Action to run
      *
-     * @param state current state
+     * @param state The current state
+     * @param config The current configuration
      * @return the new state to set, if null will do nothing
      */
-    State run(State state);
+    State run(State state, Config config);
 }

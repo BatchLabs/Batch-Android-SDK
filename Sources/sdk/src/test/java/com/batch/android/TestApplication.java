@@ -7,6 +7,6 @@ public class TestApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Batch.setConfig(new com.batch.android.Config("FAKE_API_KEY"));
+        Batch.start("FAKE_API_KEY");
     }
 }

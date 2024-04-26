@@ -1,6 +1,12 @@
 package com.batch.android.webservice.listener.impl;
 
+import android.content.Context;
 import com.batch.android.FailReason;
+import com.batch.android.core.ParameterKeys;
+import com.batch.android.core.Parameters;
+import com.batch.android.di.providers.ParametersProvider;
+import com.batch.android.di.providers.ProfileModuleProvider;
+import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.UserModuleProvider;
 import com.batch.android.query.response.AttributesCheckResponse;
 import com.batch.android.webservice.listener.AttributesCheckWebserviceListener;
@@ -63,6 +69,18 @@ public class AttributesCheckWebserviceListenerImpl implements AttributesCheckWeb
 
         if (!foundValidAction) {
             UserModuleProvider.get().startCheckWS(DEFAULT_RECHECK_TIME);
+        }
+
+        // Detecting whether project has changed
+        Context context = RuntimeManagerProvider.get().getContext();
+        String projectKey = response.getProjectKey();
+        if (projectKey != null && context != null) {
+            Parameters parameters = ParametersProvider.get(context);
+            String currentProjectKey = parameters.get(ParameterKeys.PROJECT_KEY);
+            if (!projectKey.equals(currentProjectKey)) {
+                parameters.set(ParameterKeys.PROJECT_KEY, projectKey, true);
+                ProfileModuleProvider.get().onProjectChanged(currentProjectKey, projectKey);
+            }
         }
     }
 

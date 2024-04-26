@@ -27,7 +27,7 @@ public class NotificationPermissionActionRunnable implements UserActionRunnable 
             Logger.error(TAG, "Tried to perform a notif. permission request action, but no context was available");
             return;
         }
-        final NotificationPermissionHelper notificationPermissionHelper = new NotificationPermissionHelper();
+        final NotificationPermissionHelper notificationPermissionHelper = new NotificationPermissionHelper(null);
         notificationPermissionHelper.requestPermission(context, true, null);
     }
 }

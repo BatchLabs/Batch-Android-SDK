@@ -187,6 +187,21 @@ public class DatasourceTest {
         }
     }
 
+    @Test
+    public void testEventsOrder() {
+        datasource.addEvent(new Event(appContext, new Date().getTime(), "_FIRST", null));
+        datasource.addEvent(new Event(appContext, new Date().getTime(), "E.SECOND", null));
+        datasource.addEvent(new Event(appContext, new Date().getTime(), "THIRD", null));
+        datasource.addEvent(new Event(appContext, new Date().getTime(), "_FOURTH", null));
+
+        List<Event> events = datasource.extractEventsToSend(20);
+        assertEquals(4, events.size());
+        assertEquals("_FIRST", events.get(0).getName());
+        assertEquals("E.SECOND", events.get(1).getName());
+        assertEquals("THIRD", events.get(2).getName());
+        assertEquals("_FOURTH", events.get(3).getName());
+    }
+
     // -------------------------------------->
 
     /**

@@ -7,7 +7,6 @@ import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskRunnable;
 import com.batch.android.di.providers.PushModuleProvider;
 import com.batch.android.json.JSONObject;
-import com.batch.android.push.Registration;
 import com.batch.android.query.PushQuery;
 import com.batch.android.query.Query;
 import com.batch.android.query.QueryType;
@@ -81,7 +80,7 @@ class StartWebservice extends BatchQueryWebservice implements TaskRunnable {
         queries.add(new StartQuery(applicationContext, fromPush, pushId, userActivity));
 
         // Add push query if we have a push token
-        Registration registration = PushModuleProvider.get().getRegistration(applicationContext);
+        BatchPushRegistration registration = PushModuleProvider.get().getRegistration(applicationContext);
         if (registration != null) {
             queries.add(new PushQuery(applicationContext, registration));
         }
@@ -93,7 +92,6 @@ class StartWebservice extends BatchQueryWebservice implements TaskRunnable {
     public void run() {
         try {
             Logger.internal(TAG, "start webservice started");
-            webserviceMetrics.onWebserviceStarted(this);
 
             /*
              * Read response
@@ -101,10 +99,8 @@ class StartWebservice extends BatchQueryWebservice implements TaskRunnable {
             JSONObject response = null;
             try {
                 response = getStandardResponseBodyIfValid();
-                webserviceMetrics.onWebserviceFinished(this, true);
             } catch (WebserviceError error) {
                 Logger.internal(TAG, "Error on StartWebservice : " + error.getReason().toString(), error.getCause());
-                webserviceMetrics.onWebserviceFinished(this, false);
 
                 switch (error.getReason()) {
                     case NETWORK_ERROR:

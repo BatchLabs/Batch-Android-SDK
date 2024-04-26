@@ -1,7 +1,6 @@
 package com.batch.android.messaging.view.styled;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -44,7 +43,6 @@ public class TextView extends android.widget.TextView implements Styleable {
         super(context, attrs, defStyleAttr);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public TextView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
@@ -113,11 +111,9 @@ public class TextView extends android.widget.TextView implements Styleable {
                     );
                 }
             } else if ("letter-spacing".equalsIgnoreCase(rule.getKey())) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Float spacing = StyleHelper.optFloat(rule.getValue());
-                    if (spacing != null) {
-                        targetTextView.setLetterSpacing(spacing);
-                    }
+                Float spacing = StyleHelper.optFloat(rule.getValue());
+                if (spacing != null) {
+                    targetTextView.setLetterSpacing(spacing);
                 }
             } else if ("line-height".equalsIgnoreCase(rule.getKey())) {
                 Float height = StyleHelper.optFloat(rule.getValue());
@@ -176,14 +172,10 @@ public class TextView extends android.widget.TextView implements Styleable {
         targetTextView.setTypeface(computedTypeface);
 
         if (lineSpacingMultiply != 0 || lineSpacingAdd != 0) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                targetTextView.setLineSpacing(
-                    lineSpacingAdd != 0 ? lineSpacingAdd : targetTextView.getLineSpacingExtra(),
-                    lineSpacingMultiply != 0 ? lineSpacingMultiply : targetTextView.getLineSpacingMultiplier()
-                );
-            } else {
-                targetTextView.setLineSpacing(lineSpacingAdd, lineSpacingMultiply);
-            }
+            targetTextView.setLineSpacing(
+                lineSpacingAdd != 0 ? lineSpacingAdd : targetTextView.getLineSpacingExtra(),
+                lineSpacingMultiply != 0 ? lineSpacingMultiply : targetTextView.getLineSpacingMultiplier()
+            );
         }
     }
 

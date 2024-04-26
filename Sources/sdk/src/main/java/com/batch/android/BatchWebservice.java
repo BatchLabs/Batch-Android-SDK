@@ -2,24 +2,26 @@ package com.batch.android;
 
 import android.content.Context;
 import android.text.TextUtils;
-import com.batch.android.WebserviceMetrics.Metric;
 import com.batch.android.core.Logger;
 import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.Parameters;
-import com.batch.android.core.SystemParameterHelper;
 import com.batch.android.core.Webservice;
 import com.batch.android.core.WebserviceErrorCause;
+import com.batch.android.core.systemparameters.SystemParameter;
+import com.batch.android.core.systemparameters.SystemParameterHelper;
+import com.batch.android.core.systemparameters.SystemParameterRegistry;
 import com.batch.android.di.providers.ParametersProvider;
-import com.batch.android.di.providers.WebserviceMetricsProvider;
+import com.batch.android.di.providers.SystemParameterRegistryProvider;
+import com.batch.android.di.providers.UserModuleProvider;
 import com.batch.android.json.JSONArray;
 import com.batch.android.json.JSONObject;
+import com.batch.android.module.UserModule;
 import com.batch.android.post.JSONPostDataProvider;
 import com.batch.android.post.PostDataProvider;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Batch webservice that extends {@link Webservice} and can access {@link SystemParameterHelper}.<br>
@@ -50,7 +52,7 @@ public abstract class BatchWebservice extends Webservice {
     protected BatchWebservice(Context context, RequestType type, String baseURLFormat, String... parameters)
         throws MalformedURLException {
         super(context, type, baseURLFormat, addBatchApiKey(parameters));
-        // Add property parameters if needeed
+        // Add property parameters if needed
         addPropertyParameters();
     }
 
@@ -124,9 +126,9 @@ public abstract class BatchWebservice extends Webservice {
          * Add user data if any
          */
         try {
-            User user = new User(applicationContext);
-            String language = user.getLanguage();
-            String region = user.getRegion();
+            UserModule userModule = UserModuleProvider.get();
+            String language = userModule.getLanguage(applicationContext);
+            String region = userModule.getRegion(applicationContext);
 
             if (!TextUtils.isEmpty(language) || !TextUtils.isEmpty(region)) {
                 JSONObject upr = new JSONObject();
@@ -139,38 +141,12 @@ public abstract class BatchWebservice extends Webservice {
                     upr.put("ure", region);
                 }
 
-                upr.put("upv", user.getVersion());
+                upr.put("upv", userModule.getVersion(applicationContext));
                 body.put("upr", upr);
             }
         } catch (Exception e) {
             Logger.internal(TAG, "Error while adding upr to body", e);
         }
-
-        /*
-         * Add metrics if any
-         */
-        try {
-            Map<String, Metric> metrics = WebserviceMetricsProvider.get().getMetrics();
-            if (metrics != null && !metrics.isEmpty()) {
-                JSONArray metricsJSON = new JSONArray();
-
-                for (String wsShortName : metrics.keySet()) {
-                    Metric metric = metrics.get(wsShortName);
-
-                    JSONObject metricJSON = new JSONObject();
-                    metricJSON.put("u", wsShortName);
-                    metricJSON.put("s", metric.success);
-                    metricJSON.put("t", metric.time);
-
-                    metricsJSON.put(metricJSON);
-                }
-
-                body.put("metrics", metricsJSON);
-            }
-        } catch (Exception e) {
-            Logger.internal(TAG, "Error while adding metrics to the body", e);
-        }
-
         return new JSONPostDataProvider(body);
     }
 
@@ -191,30 +167,36 @@ public abstract class BatchWebservice extends Webservice {
     private void addPropertyParameters() {
         try {
             String parameterKey = getPropertyParameterKey();
-            if (parameterKey != null && parameterKey.length() > 0) {
+            if (parameterKey != null && !parameterKey.isEmpty()) {
                 // Retrieve value from the given key.
                 String value = ParametersProvider.get(applicationContext).get(parameterKey);
-                if (value == null || value.length() == 0) {
+                if (value == null || value.isEmpty()) {
                     return;
                 }
 
                 // Build the list.
                 List<String> list = new ArrayList<>(Arrays.asList(value.split(",")));
-                if (list == null || list.size() == 0) {
+                if (list.isEmpty()) {
                     return;
                 }
 
                 // Add available data.
+                SystemParameterRegistry systemParameterRegistry = SystemParameterRegistryProvider.get(
+                    applicationContext
+                );
                 for (String string : list) {
                     // Parameters
                     String data = ParametersProvider.get(applicationContext).get(string);
 
                     // System parameters
-                    if (data == null || data.length() == 0) {
-                        data = SystemParameterHelper.getValue(string, applicationContext);
+                    if (data == null || data.isEmpty()) {
+                        SystemParameter parameter = systemParameterRegistry.getSystemParamByShortname(string);
+                        if (parameter != null) {
+                            data = parameter.getValue();
+                        }
                     }
 
-                    if (data == null || data.length() == 0) {
+                    if (data == null || data.isEmpty()) {
                         Logger.internal(TAG, "Unable to find parameter value for key " + string);
                         continue;
                     }
@@ -273,25 +255,6 @@ public abstract class BatchWebservice extends Webservice {
             }
         } catch (Exception e) {
             Logger.internal(TAG, "Error while reading parameters into WS response", e);
-        }
-    }
-
-    /**
-     * Read server id from ws response
-     *
-     * @param body
-     */
-    protected void handleServerID(JSONObject body) {
-        if (body == null) {
-            throw new NullPointerException("Null body json");
-        }
-
-        try {
-            if (body.has("i") && !body.isNull("i")) {
-                ParametersProvider.get(applicationContext).set(ParameterKeys.SERVER_ID_KEY, body.getString("i"), true);
-            }
-        } catch (Exception e) {
-            Logger.internal(TAG, "Error while reading server id into WS response", e);
         }
     }
 

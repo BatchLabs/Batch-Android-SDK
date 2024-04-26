@@ -30,8 +30,8 @@ public abstract class CacheHelper {
     /**
      * Get the display receipt directory
      *
-     * @param context
-     * @return
+     * @param context Android's context
+     * @return The display receipt cache directory
      */
     @Nullable
     private static File getCacheDir(@NonNull Context context) {
@@ -65,6 +65,11 @@ public abstract class CacheHelper {
 
     @Nullable
     public static byte[] read(@NonNull File inputFile) {
+        return CacheHelper.readFileBytes(inputFile);
+    }
+
+    @Nullable
+    private static byte[] readFileBytes(@NonNull File inputFile) {
         int size = (int) inputFile.length();
         if (size > 0L) {
             byte[] bytes = new byte[size];
@@ -93,13 +98,16 @@ public abstract class CacheHelper {
     }
 
     public static boolean write(File outputFile, byte[] data) {
+        return CacheHelper.writeData(outputFile, data);
+    }
+
+    private static boolean writeData(File outputFile, byte[] data) {
         try (OutputStream out = new FileOutputStream(outputFile, false)) {
             out.write(data);
         } catch (Exception e) {
             Logger.internal(TAG, "Could not write receipt", e);
             return false;
         }
-
         Logger.internal(TAG, "Successfully wrote " + outputFile.getAbsolutePath());
         return true;
     }
@@ -107,8 +115,8 @@ public abstract class CacheHelper {
     /**
      * Recursively delete all files in a directory, then delete the directory itself
      *
-     * @param dir
-     * @return
+     * @param dir The directory to delete
+     * @return Whether the directory has been successfully deleted
      */
     private static boolean deleteDirectory(@NonNull File dir) {
         if (dir.exists() && dir.isDirectory()) {
@@ -129,8 +137,8 @@ public abstract class CacheHelper {
     /**
      * Delete cached display receipt
      *
-     * @param context
-     * @return
+     * @param context Android's Context
+     * @return Whether the deleted operation has succeed
      */
     public static boolean deleteAll(@NonNull Context context) {
         File dir = new File(context.getCacheDir(), CACHE_DIR);
@@ -141,9 +149,9 @@ public abstract class CacheHelper {
      * Return a sorted list of File matching available cached display receipt.
      * Don't load the cached file in memory, only list them.
      *
-     * @param context
+     * @param context Android's context
      * @param debug   If true return all cached files in any order
-     * @return
+     * @return The cached files or null
      */
     @Nullable
     public static List<File> getCachedFiles(@NonNull Context context, boolean debug) {
@@ -151,7 +159,6 @@ public abstract class CacheHelper {
         if (cacheDir == null) {
             return null;
         }
-
         File[] files = cacheDir.listFiles();
         if (files != null) {
             List<File> output;

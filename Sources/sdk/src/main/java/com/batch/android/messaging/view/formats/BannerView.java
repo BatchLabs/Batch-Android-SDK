@@ -181,9 +181,7 @@ public class BannerView
         layout.applyStyleRules(contentStyleRules);
         layout.setClipChildren(false);
         layout.setClipToPadding(false);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            layout.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
-        }
+        layout.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
 
         VerticalEdge contentPinnedEdge = getPinnedVerticalEdge(contentStyleRules);
 

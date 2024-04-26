@@ -78,6 +78,11 @@ public class BatchPushNotificationPresenter {
      */
     private static final int DEFAULT_NO_NOTIFICATION = -100;
 
+    /**
+     * FCM Message ID Key
+     */
+    private static final String GOOGLE_MESSAGE_ID_KEY = "google.message_id";
+
     static void displayForPush(Context context, Bundle extras) throws NotificationInterceptorRuntimeException {
         if (extras != null && !extras.isEmpty()) {
             BatchPushPayload payload;
@@ -91,6 +96,9 @@ public class BatchPushNotificationPresenter {
             if (payload == null) {
                 return;
             }
+
+            String googleMessageId = extras.getString(GOOGLE_MESSAGE_ID_KEY);
+            Logger.info(TAG, "Batch push received with google message_id: " + googleMessageId);
 
             InternalPushData internalPushData = payload.getInternalData();
             if (internalPushData == null) {
@@ -113,31 +121,7 @@ public class BatchPushNotificationPresenter {
                 Logger.internal(TAG, "Ignoring push cause manual display is activated");
                 return;
             }
-
-            // If the push is about geofencing, we have to refresh geofences
-            //TODO: add this to shouldDisplayPush
-            /*if (internalPushData.isLocalCampainsRefresh()) {
-                _handleLocalCampaignsSilentPush(context);
-            }*/
-
             presentNotification(context, extras, payload, pushModule.getNotificationInterceptor());
-        }
-    }
-
-    /**
-     * Internal method
-     */
-    private static void _handleLocalCampaignsSilentPush(Context context) {
-        Context appContext = context.getApplicationContext();
-
-        // TODO Retry if an Exception is caught or if we fall in onError
-        // TODO Save campaigns
-        try {
-            TaskExecutorProvider
-                .get(context)
-                .submit(new LocalCampaignsWebservice(appContext, LocalCampaignsWebserviceListenerImplProvider.get()));
-        } catch (Exception ex) {
-            Logger.internal(TAG, "Can't refresh local campaigns. " + ex.toString());
         }
     }
 
@@ -200,7 +184,7 @@ public class BatchPushNotificationPresenter {
         /*
          * Get title
          */
-        if (title == null || title.length() == 0) {
+        if (title == null || title.isEmpty()) {
             try {
                 // Default message title.
                 title = context.getPackageManager().getApplicationLabel(appInfo).toString();
@@ -282,7 +266,7 @@ public class BatchPushNotificationPresenter {
          */
         Bitmap bigPicture = null;
         try {
-            if (Build.VERSION.SDK_INT >= 16 && batchData.hasCustomBigImage()) {
+            if (batchData.hasCustomBigImage()) {
                 String cacheID = PushImageCache.buildIdentifierForURL(batchData.getCustomBigImageURL());
                 Bitmap customBigPicture = PushImageCache.getImageFromCache(context, cacheID);
                 if (customBigPicture == null) { // if cache is null, download it
@@ -324,7 +308,7 @@ public class BatchPushNotificationPresenter {
             color = PushModuleProvider.get().getNotificationColor();
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && color == PushModule.NO_COLOR) {
+        if (color == PushModule.NO_COLOR) {
             color = getAppPrimaryColor(context);
         }
 
@@ -449,14 +433,10 @@ public class BatchPushNotificationPresenter {
         InternalPushData.Format notificationFormat = batchData.getNotificationFormat();
         NotificationFormat notificationFormatImpl = null;
         if (notificationFormat == InternalPushData.Format.APEN) {
-            if (APENFormat.isSupported()) {
-                notificationFormatImpl = new APENFormat(title, alert, largeIcon, bigPicture);
-                Logger.internal(TAG, "Using APEN (ex-news) format");
-                if (!ReflectionHelper.optOutOfSmartReply(builder)) {
-                    Logger.internal(TAG, "Cannot opt out of Smart Reply");
-                }
-            } else {
-                Logger.internal(TAG, "News format has been requested but is unsupported");
+            notificationFormatImpl = new APENFormat(title, alert, largeIcon, bigPicture);
+            Logger.internal(TAG, "Using APEN (ex-news) format");
+            if (!ReflectionHelper.optOutOfSmartReply(builder)) {
+                Logger.internal(TAG, "Cannot opt out of Smart Reply");
             }
         }
 
@@ -691,7 +671,6 @@ public class BatchPushNotificationPresenter {
         return null;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private static int getAppPrimaryColor(Context context) {
         TypedValue typedValue = new TypedValue();
         ContextThemeWrapper cw = new ContextThemeWrapper(context, context.getApplicationInfo().theme);

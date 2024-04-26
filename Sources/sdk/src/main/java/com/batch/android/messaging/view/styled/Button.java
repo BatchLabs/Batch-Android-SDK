@@ -30,11 +30,9 @@ public class Button extends AppCompatButton implements Styleable {
         for (Map.Entry<String, String> rule : rules.entrySet()) {
             if ("elevation".equalsIgnoreCase(rule.getKey())) {
                 // The base CSS got rid of the elevation, but buttons add another!
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Float val = StyleHelper.optFloat(rule.getValue());
-                    if (val != null && val == 0) {
-                        setStateListAnimator(null);
-                    }
+                Float val = StyleHelper.optFloat(rule.getValue());
+                if (val != null && val == 0) {
+                    setStateListAnimator(null);
                 }
             }
         }

@@ -118,12 +118,11 @@ public class WebFormatView extends FrameLayout {
         webSettings.setSupportZoom(false);
         webSettings.setDefaultTextEncodingName("utf-8");
         webSettings.setSupportMultipleWindows(true);
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
-            // Work around an issue where android could show "ERR_CACHE_MISS"
-            // In a perfect world we would like to make use of the browser cache
-            // but as those messages are usually one shot, it doesn't really matter.
-            webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
-        }
+
+        // Work around an issue where android could show "ERR_CACHE_MISS"
+        // In a perfect world we would like to make use of the browser cache
+        // but as those messages are usually one shot, it doesn't really matter.
+        webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
         webView.addJavascriptInterface(jsInterface, "_batchAndroidBridge");
         webView.setWebChromeClient(
@@ -143,17 +142,22 @@ public class WebFormatView extends FrameLayout {
                         // view.getHitTestResult() returns the source of the image
                         // rather than the url.
                         if (result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
-                            Message href = view.getHandler().obtainMessage();
-                            view.requestFocusNodeHref(href);
-                            Bundle data = href.getData();
-                            if (data != null) {
-                                String imageUrl = data.getString("url");
-                                if (imageUrl != null && !imageUrl.isEmpty()) {
-                                    url = imageUrl;
+                            Handler handler = view.getHandler();
+                            if (handler != null) {
+                                Message href = handler.obtainMessage();
+                                view.requestFocusNodeHref(href);
+                                Bundle data = href.getData();
+                                if (data != null) {
+                                    String imageUrl = data.getString("url");
+                                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                                        url = imageUrl;
+                                    }
                                 }
                             }
                         }
-                        actionListener.onOpenDeeplinkAction(url, null, null);
+                        if (url != null) {
+                            actionListener.onOpenDeeplinkAction(url, null, null);
+                        }
                     }
                     return super.onCreateWindow(view, isDialog, isUserGesture, resultMsg);
                 }
@@ -293,11 +297,7 @@ public class WebFormatView extends FrameLayout {
                 ) {
                     super.onReceivedError(view, errorCode, description, failingUrl);
                     // Only needed when API lvl < 21
-                    if (
-                        Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP &&
-                        !mainFrameFinished &&
-                        (failingUrl != null && failingUrl.equals(view.getUrl()))
-                    ) {
+                    if (!mainFrameFinished && (failingUrl != null && failingUrl.equals(view.getUrl()))) {
                         handleWebViewError(description, errorCode);
                     }
                 }
@@ -505,12 +505,10 @@ public class WebFormatView extends FrameLayout {
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (darkProgressBar) {
-                webViewLoader.setIndeterminateTintList(ColorStateList.valueOf(Color.BLACK));
-            } else {
-                webViewLoader.setIndeterminateTintList(ColorStateList.valueOf(Color.WHITE));
-            }
+        if (darkProgressBar) {
+            webViewLoader.setIndeterminateTintList(ColorStateList.valueOf(Color.BLACK));
+        } else {
+            webViewLoader.setIndeterminateTintList(ColorStateList.valueOf(Color.WHITE));
         }
 
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
@@ -563,7 +561,6 @@ public class WebFormatView extends FrameLayout {
     //region System inset handling
 
     @Override
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
     public WindowInsets onApplyWindowInsets(WindowInsets insets) {
         // Apparently, the relative layout does not really like to apply the insets, so convert it as
         // margin

@@ -81,7 +81,6 @@ class AttributesCheckWebservice extends BatchQueryWebservice implements TaskRunn
     public void run() {
         try {
             Logger.internal(TAG, "Attributes check webservice started");
-            webserviceMetrics.onWebserviceStarted(this);
 
             /*
              * Read response
@@ -89,10 +88,8 @@ class AttributesCheckWebservice extends BatchQueryWebservice implements TaskRunn
             JSONObject response = null;
             try {
                 response = getStandardResponseBodyIfValid();
-                webserviceMetrics.onWebserviceFinished(this, true);
             } catch (WebserviceError error) {
                 Logger.internal(TAG, error.getReason().toString(), error.getCause());
-                webserviceMetrics.onWebserviceFinished(this, false);
 
                 switch (error.getReason()) {
                     case NETWORK_ERROR:

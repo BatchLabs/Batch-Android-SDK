@@ -1,6 +1,5 @@
 package com.batch.android.push;
 
-import android.content.Context;
 import android.text.TextUtils;
 import androidx.annotation.Nullable;
 import com.batch.android.PushRegistrationProvider;
@@ -14,21 +13,13 @@ public abstract class FCMAbstractRegistrationProvider implements PushRegistratio
     protected String senderID = null;
     protected String fcmProjectID = null;
 
-    FCMAbstractRegistrationProvider(Context context) {
-        loadProjectInformation(context);
+    FCMAbstractRegistrationProvider() {
+        loadProjectInformation();
     }
 
-    public void loadProjectInformation(Context context) {
+    public void loadProjectInformation() {
         try {
             FirebaseApp fbApp = FirebaseApp.getInstance();
-            if (fbApp == null) {
-                Logger.error(
-                    PushModule.TAG,
-                    "Could not register for FCM Push: Could not get a Firebase instance. Is your Firebase project configured?"
-                );
-                return;
-            }
-
             String senderID = fbApp.getOptions().getGcmSenderId();
             if (TextUtils.isEmpty(senderID)) {
                 Logger.error(
@@ -37,7 +28,6 @@ public abstract class FCMAbstractRegistrationProvider implements PushRegistratio
                 );
                 return;
             }
-
             this.senderID = senderID;
             this.fcmProjectID = fbApp.getOptions().getProjectId();
 
@@ -62,13 +52,13 @@ public abstract class FCMAbstractRegistrationProvider implements PushRegistratio
     }
 
     @Override
-    public void checkServiceAvailability() throws PushRegistrationProviderAvailabilityException {
+    public void checkServiceAvailability() {
         // We do nothing here because FCM is checked in the factory
     }
 
     @Override
     public void checkLibraryAvailability() throws PushRegistrationProviderAvailabilityException {
-        Logger.internal(PushModule.TAG, "Checking FCM librairies availability");
+        Logger.internal(PushModule.TAG, "Checking FCM libraries availability");
 
         if (!isFirebaseCorePresent()) {
             throw new PushRegistrationProviderAvailabilityException(
@@ -98,6 +88,7 @@ public abstract class FCMAbstractRegistrationProvider implements PushRegistratio
         }
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isFirebaseMessagingPresent() {
         try {
             Class.forName("com.google.firebase.messaging.FirebaseMessaging");

@@ -116,19 +116,16 @@ public class WebViewTemplateFragment
         this.webView.saveState(outState);
     }
 
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         final Dialog dialog = super.onCreateDialog(savedInstanceState);
         final Window window = dialog.getWindow();
-        if (showStatusbar) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && statusbarBackgroundTranslucent) {
+        if (showStatusbar && window != null) {
+            if (statusbarBackgroundTranslucent) {
                 window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
             }
-            if (
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
-                statusbarBackgroundColor != null &&
-                statusbarBackgroundColor != Color.TRANSPARENT
-            ) {
+            if (statusbarBackgroundColor != null && statusbarBackgroundColor != Color.TRANSPARENT) {
                 window.setStatusBarColor(statusbarBackgroundColor);
             }
         }

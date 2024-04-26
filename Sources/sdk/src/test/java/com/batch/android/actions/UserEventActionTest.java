@@ -1,20 +1,20 @@
 package com.batch.android.actions;
 
-import static android.os.Build.VERSION_CODES.JELLY_BEAN_MR2;
-import static android.os.Build.VERSION_CODES.P;
 import static org.mockito.ArgumentMatchers.eq;
 
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.MediumTest;
+import com.batch.android.BatchEventAttributes;
 import com.batch.android.di.DITest;
 import com.batch.android.di.DITestUtils;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.module.ActionModule;
-import com.batch.android.module.UserModule;
+import com.batch.android.module.ProfileModule;
+import java.util.Date;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,7 +22,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLog;
 
 @RunWith(AndroidJUnit4.class)
@@ -31,6 +30,8 @@ public class UserEventActionTest extends DITest {
 
     private Context context;
 
+    private ProfileModule profileModule;
+
     @Before
     public void setUp() {
         ShadowLog.stream = System.out;
@@ -38,112 +39,110 @@ public class UserEventActionTest extends DITest {
         context = ApplicationProvider.getApplicationContext();
 
         RuntimeManagerProvider.get().setContext(context);
+
+        profileModule = DITestUtils.mockSingletonDependency(ProfileModule.class, null);
     }
 
     @Test
     public void testTrackEventAction() throws JSONException {
         ActionModule actionModule = new ActionModule();
-        UserModule userModule = DITestUtils.mockSingletonDependency(UserModule.class, null);
 
         PowerMockito
             .doNothing()
-            .when(userModule)
-            .trackPublicEvent(Mockito.anyString(), Mockito.anyString(), Mockito.any(JSONObject.class));
+            .when(profileModule)
+            .trackPublicEvent(Mockito.anyString(), Mockito.any(BatchEventAttributes.class));
 
-        ArgumentCaptor<JSONObject> eventDataCaptor = ArgumentCaptor.forClass(JSONObject.class);
+        ArgumentCaptor<BatchEventAttributes> eventDataCaptor = ArgumentCaptor.forClass(BatchEventAttributes.class);
 
         String eventJSON = "{'e':'event_test', 'l':'label_test'}";
         actionModule.performAction(context, "batch.user.event", new JSONObject(eventJSON), null);
-        Mockito.verify(userModule).trackPublicEvent(eq("event_test"), eq("label_test"), eventDataCaptor.capture());
+        Mockito.verify(profileModule).trackPublicEvent(eq("event_test"), eventDataCaptor.capture());
 
-        JSONObject eventData = eventDataCaptor.getValue();
+        BatchEventAttributes eventData = eventDataCaptor.getValue();
         Assert.assertNotNull(eventData);
-        Assert.assertNotNull(eventData.getJSONObject("attributes"));
-        Assert.assertTrue(eventData.getJSONObject("attributes").keySet().isEmpty());
-        Assert.assertNotNull(eventData.getJSONArray("tags"));
-        Assert.assertEquals(0, eventData.getJSONArray("tags").length());
+        Assert.assertNotNull(eventData.getAttributes());
+        Assert.assertNotNull(eventData.getLabel());
+        Assert.assertEquals("label_test", eventData.getLabel());
+        Assert.assertTrue(eventData.getAttributes().isEmpty());
+        Assert.assertNull(eventData.getTags());
     }
 
     @Test
     public void testTrackEventWithoutLabelAction() throws JSONException {
         ActionModule actionModule = new ActionModule();
-        UserModule userModule = DITestUtils.mockSingletonDependency(UserModule.class, null);
 
         PowerMockito
             .doNothing()
-            .when(userModule)
-            .trackPublicEvent(Mockito.anyString(), Mockito.anyString(), Mockito.any(JSONObject.class));
+            .when(profileModule)
+            .trackPublicEvent(Mockito.anyString(), Mockito.any(BatchEventAttributes.class));
 
-        ArgumentCaptor<JSONObject> eventDataCaptor = ArgumentCaptor.forClass(JSONObject.class);
+        ArgumentCaptor<BatchEventAttributes> eventDataCaptor = ArgumentCaptor.forClass(BatchEventAttributes.class);
 
         String eventJSON = "{'e':'event_test'}";
         actionModule.performAction(context, "batch.user.event", new JSONObject(eventJSON), null);
-        Mockito.verify(userModule).trackPublicEvent(eq("event_test"), eq(null), eventDataCaptor.capture());
+        Mockito.verify(profileModule).trackPublicEvent(eq("event_test"), eventDataCaptor.capture());
 
-        JSONObject eventData = eventDataCaptor.getValue();
-        Assert.assertNotNull(eventData);
-        Assert.assertNotNull(eventData.getJSONObject("attributes"));
-        Assert.assertTrue(eventData.getJSONObject("attributes").keySet().isEmpty());
-        Assert.assertNotNull(eventData.getJSONArray("tags"));
-        Assert.assertEquals(0, eventData.getJSONArray("tags").length());
+        BatchEventAttributes eventData = eventDataCaptor.getValue();
+        Assert.assertNotNull(eventData.getAttributes());
+        Assert.assertNull(eventData.getLabel());
+        Assert.assertNull(eventData.getTags());
     }
 
     @Test
     public void testTrackEventWithTagsAction() throws JSONException {
         ActionModule actionModule = new ActionModule();
-        UserModule userModule = DITestUtils.mockSingletonDependency(UserModule.class, null);
 
         PowerMockito
             .doNothing()
-            .when(userModule)
-            .trackPublicEvent(Mockito.anyString(), Mockito.anyString(), Mockito.any(JSONObject.class));
+            .when(profileModule)
+            .trackPublicEvent(Mockito.anyString(), Mockito.any(BatchEventAttributes.class));
 
-        ArgumentCaptor<JSONObject> eventDataCaptor = ArgumentCaptor.forClass(JSONObject.class);
+        ArgumentCaptor<BatchEventAttributes> eventDataCaptor = ArgumentCaptor.forClass(BatchEventAttributes.class);
 
         String eventJSON = "{'e':'event_test', 'l':'label_test', 't':['tag1', 'tag2', 'tag3']}";
         actionModule.performAction(context, "batch.user.event", new JSONObject(eventJSON), null);
-        Mockito.verify(userModule).trackPublicEvent(eq("event_test"), eq("label_test"), eventDataCaptor.capture());
+        Mockito.verify(profileModule).trackPublicEvent(eq("event_test"), eventDataCaptor.capture());
 
-        JSONObject eventData = eventDataCaptor.getValue();
+        BatchEventAttributes eventData = eventDataCaptor.getValue();
         Assert.assertNotNull(eventData);
-        Assert.assertNotNull(eventData.getJSONObject("attributes"));
-        Assert.assertTrue(eventData.getJSONObject("attributes").keySet().isEmpty());
-        Assert.assertNotNull(eventData.getJSONArray("tags"));
-        Assert.assertEquals(3, eventData.getJSONArray("tags").length());
-        Assert.assertEquals("tag1", eventData.getJSONArray("tags").optString(0));
-        Assert.assertEquals("tag2", eventData.getJSONArray("tags").optString(1));
-        Assert.assertEquals("tag3", eventData.getJSONArray("tags").optString(2));
+        Assert.assertNotNull(eventData.getAttributes());
+        Assert.assertNotNull(eventData.getTags());
+        Assert.assertEquals(3, eventData.getTags().size());
+        Assert.assertEquals("label_test", eventData.getLabel());
+        Assert.assertTrue(eventData.getTags().contains("tag1"));
+        Assert.assertTrue(eventData.getTags().contains("tag2"));
+        Assert.assertTrue(eventData.getTags().contains("tag3"));
     }
 
     @Test
-    @Config(sdk = { JELLY_BEAN_MR2, P })
     public void testTrackEventWithAttrAction() throws JSONException {
         ActionModule actionModule = new ActionModule();
-        UserModule userModule = DITestUtils.mockSingletonDependency(UserModule.class, null);
 
         PowerMockito
             .doNothing()
-            .when(userModule)
-            .trackPublicEvent(Mockito.anyString(), Mockito.anyString(), Mockito.any(JSONObject.class));
+            .when(profileModule)
+            .trackPublicEvent(Mockito.anyString(), Mockito.any(BatchEventAttributes.class));
 
-        ArgumentCaptor<JSONObject> eventDataCaptor = ArgumentCaptor.forClass(JSONObject.class);
+        ArgumentCaptor<BatchEventAttributes> eventDataCaptor = ArgumentCaptor.forClass(BatchEventAttributes.class);
 
         String eventJSON =
             "{'e':'event_test', 'l':'label_test', 'a':{'bool':true, 'int':64, 'double': 68987.256, 'string':'tototo', 'date': '2020-08-09T12:12:23.943Z'}}}";
         actionModule.performAction(context, "batch.user.event", new JSONObject(eventJSON), null);
-        Mockito.verify(userModule).trackPublicEvent(eq("event_test"), eq("label_test"), eventDataCaptor.capture());
+        Mockito.verify(profileModule).trackPublicEvent(eq("event_test"), eventDataCaptor.capture());
 
-        JSONObject eventData = eventDataCaptor.getValue();
+        BatchEventAttributes eventData = eventDataCaptor.getValue();
         Assert.assertNotNull(eventData);
 
-        Assert.assertNotNull(eventData.getJSONObject("attributes"));
-        Assert.assertTrue(eventData.getJSONObject("attributes").optBoolean("bool.b"));
-        Assert.assertEquals(64, eventData.getJSONObject("attributes").optInt("int.i"));
-        Assert.assertEquals(68987.256, eventData.getJSONObject("attributes").optDouble("double.f"), 0);
-        Assert.assertEquals("tototo", eventData.getJSONObject("attributes").optString("string.s"));
-        Assert.assertEquals(1596975143943L, eventData.getJSONObject("attributes").optLong("date.t"));
+        Assert.assertNotNull(eventData.getAttributes());
+        Assert.assertNotNull(eventData.getLabel());
+        Assert.assertEquals("label_test", eventData.getLabel());
+        Assert.assertEquals(5, eventData.getAttributes().size());
+        Assert.assertTrue((Boolean) eventData.getAttributes().get("bool").value);
+        Assert.assertEquals(64, eventData.getAttributes().get("int").value);
+        Assert.assertEquals(68987.256, eventData.getAttributes().get("double").value);
+        Assert.assertEquals("tototo", eventData.getAttributes().get("string").value);
+        Assert.assertEquals(1596975143943L, eventData.getAttributes().get("date").value);
 
-        Assert.assertNotNull(eventData.getJSONArray("tags"));
-        Assert.assertEquals(0, eventData.getJSONArray("tags").length());
+        Assert.assertNull(eventData.getTags());
     }
 }

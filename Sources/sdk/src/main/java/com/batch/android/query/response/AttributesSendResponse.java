@@ -8,9 +8,11 @@ import com.batch.android.query.QueryType;
  */
 public class AttributesSendResponse extends Response {
 
-    public String transactionID;
+    private String transactionID;
 
-    public long version = -1L;
+    private long version = -1L;
+
+    private String projectKey;
 
     public AttributesSendResponse(String queryID) {
         super(QueryType.ATTRIBUTES, queryID);
@@ -22,5 +24,21 @@ public class AttributesSendResponse extends Response {
 
     public void setVersion(long version) {
         this.version = version;
+    }
+
+    public String getTransactionID() {
+        return transactionID;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public String getProjectKey() {
+        return projectKey;
+    }
+
+    public void setProjectKey(String projectKey) {
+        this.projectKey = projectKey;
     }
 }

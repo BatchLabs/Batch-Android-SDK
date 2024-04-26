@@ -7,8 +7,8 @@ import android.content.IntentFilter;
 import android.location.Location;
 import android.os.SystemClock;
 import android.text.TextUtils;
-import androidx.annotation.VisibleForTesting;
-import com.batch.android.BatchUserDataEditor;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.batch.android.WebserviceLauncher;
 import com.batch.android.core.Logger;
 import com.batch.android.core.NamedThreadFactory;
@@ -26,12 +26,14 @@ import com.batch.android.json.JSONObject;
 import com.batch.android.processor.Module;
 import com.batch.android.processor.Provide;
 import com.batch.android.processor.Singleton;
+import com.batch.android.user.InstallDataEditor;
 import com.batch.android.user.SQLUserDatasource;
 import com.batch.android.user.UserAttribute;
 import com.batch.android.user.UserDataDiff;
 import com.batch.android.user.UserDatabaseException;
 import com.batch.android.user.UserOperation;
 import com.batch.android.user.UserOperationQueue;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,10 +57,7 @@ public final class UserModule extends BatchModule {
     public static final String TAG = "User";
     public static final String PARAMETER_KEY_LABEL = "label";
     public static final String PARAMETER_KEY_DATA = "data";
-    public static final String PARAMETER_KEY_AMOUNT = "amount";
-
     private static final Pattern EVENT_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{1,30}$");
-
     private static final long LOCATION_UPDATE_MINIMUM_TIME_MS = 30000;
     private static final long CIPHER_FALLBACK_RESET_TIME_MS = 172800000L;
 
@@ -69,14 +68,10 @@ public final class UserModule extends BatchModule {
     }
 
     private final List<UserOperationQueue> operationQueues = new LinkedList<>();
-
     private BroadcastReceiver localBroadcastReceiver;
-
-    private AtomicBoolean checkScheduled = new AtomicBoolean(false);
-
+    private final AtomicBoolean checkScheduled = new AtomicBoolean(false);
     private long lastLocationTrackTimestamp = 0;
-
-    private TrackerModule trackerModule;
+    private final TrackerModule trackerModule;
 
     private UserModule(TrackerModule trackerModule) {
         this.trackerModule = trackerModule;
@@ -127,7 +122,7 @@ public final class UserModule extends BatchModule {
                         @Override
                         public void onReceive(Context context, Intent intent) {
                             if (OptOutModule.INTENT_OPTED_IN.equalsIgnoreCase(intent.getAction())) {
-                                userOptedIn(context);
+                                userOptedIn();
                             }
                         }
                     };
@@ -140,6 +135,123 @@ public final class UserModule extends BatchModule {
     }
 
     // endregion
+
+    // region Getter & Setter
+    /**
+     * Set the new language
+     *
+     * @param context Android's context
+     * @param language The User's language, null to remove
+     */
+    public void setLanguage(@NonNull Context context, @Nullable String language) {
+        if (language != null) {
+            ParametersProvider.get(context).set(ParameterKeys.USER_PROFILE_LANGUAGE_KEY, language, true);
+        } else {
+            ParametersProvider.get(context).remove(ParameterKeys.USER_PROFILE_LANGUAGE_KEY);
+        }
+    }
+
+    /**
+     * Get the User's language
+     *
+     * @param context Android's context
+     * @return the User's language if any, null otherwise
+     */
+    @Nullable
+    public String getLanguage(@NonNull Context context) {
+        return ParametersProvider.get(context).get(ParameterKeys.USER_PROFILE_LANGUAGE_KEY);
+    }
+
+    /**
+     * Set the User's region
+     *
+     * @param context Android's context
+     * @param region the User's region, null to remove
+     */
+    public void setRegion(@NonNull Context context, @Nullable String region) {
+        if (region != null) {
+            ParametersProvider.get(context).set(ParameterKeys.USER_PROFILE_REGION_KEY, region, true);
+        } else {
+            ParametersProvider.get(context).remove(ParameterKeys.USER_PROFILE_REGION_KEY);
+        }
+    }
+
+    /**
+     * Get the User's region
+     * @param context Android's context
+     * @return the User's region if any, null otherwise
+     */
+    @Nullable
+    public String getRegion(@NonNull Context context) {
+        return ParametersProvider.get(context).get(ParameterKeys.USER_PROFILE_REGION_KEY);
+    }
+
+    /**
+     * Set the User's custom identifier
+     * @param context Android's context
+     * @param customID the User's custom identifier , null to remove
+     */
+    public void setCustomID(@NonNull Context context, @Nullable String customID) {
+        if (customID != null) {
+            ParametersProvider.get(context).set(ParameterKeys.CUSTOM_ID, customID, true);
+        } else {
+            ParametersProvider.get(context).remove(ParameterKeys.CUSTOM_ID);
+        }
+    }
+
+    /**
+     * Get the custom ID if any, null otherwise
+     * @param context Android's context
+     * @return the custom ID if any, null otherwise
+     */
+    public String getCustomID(@NonNull Context context) {
+        return ParametersProvider.get(context).get(ParameterKeys.CUSTOM_ID);
+    }
+
+    /**
+     * Get the data version
+     * @param context Android's context
+     * @return the data version
+     */
+    public long getVersion(@NonNull Context context) {
+        String version = ParametersProvider.get(context).get(ParameterKeys.USER_DATA_VERSION);
+        if (version == null) {
+            return 1;
+        }
+
+        try {
+            return Long.parseLong(version);
+        } catch (Exception e) {
+            return 1;
+        }
+    }
+
+    /**
+     * Get the data version and increment it
+     *
+     * @param context Android's context
+     */
+    public synchronized void incrementVersion(@NonNull Context context) {
+        long newVersion = getVersion(context) + 1;
+        ParametersProvider.get(context).set(ParameterKeys.USER_DATA_VERSION, Long.toString(newVersion), true);
+    }
+
+    /**
+     * Clear all installation data (attributes + tags)
+     */
+    public void clearInstallationData() {
+        addOperationQueueAndSubmit(
+            0,
+            new UserOperationQueue(
+                Collections.singletonList(datasource -> {
+                    datasource.clearAttributes();
+                    datasource.clearTags();
+                })
+            )
+        );
+    }
+
+    //endregion
 
     // region Webservices
 
@@ -179,7 +291,7 @@ public final class UserModule extends BatchModule {
                 WebserviceLauncher.launchAttributesSendWebservice(
                     RuntimeManagerProvider.get(),
                     changeset,
-                    UserAttribute.getServerMapRepresentation(datasource.getAttributes()),
+                    UserAttribute.getServerMapRepresentation(datasource.getAttributes(), true),
                     datasource.getTagCollections()
                 );
             }
@@ -317,56 +429,6 @@ public final class UserModule extends BatchModule {
 
     // endregion
 
-    // region Event tracking
-
-    /**
-     * Track a public event
-     *
-     * @param event Event name
-     * @param label Event label
-     * @param data  Event data, expected to already be converted from BatchEventData.
-     */
-    public void trackPublicEvent(String event, String label, JSONObject data) {
-        JSONObject params;
-
-        try {
-            if (data != null) {
-                params = new JSONObject(data);
-            } else {
-                params = new JSONObject();
-            }
-
-            if (label != null) {
-                if (label.length() > 200) {
-                    Logger.internal(
-                        TAG,
-                        "Event label is longer than 200 characters and has been removed from the event"
-                    );
-                } else if (label.length() > 0) {
-                    params.put(PARAMETER_KEY_LABEL, label);
-                }
-            }
-        } catch (JSONException e) {
-            Logger.internal(TAG, "Could not add public event data", e);
-            params = null;
-        }
-
-        _trackEvent(event, params);
-    }
-
-    @VisibleForTesting
-    protected boolean _trackEvent(String name, JSONObject params) {
-        boolean nameValidated = !TextUtils.isEmpty(name) && EVENT_NAME_PATTERN.matcher(name).matches();
-
-        if (!nameValidated) {
-            Logger.error(TAG, "Invalid event name ('" + name + "'). Not tracking.");
-            return false;
-        }
-
-        trackerModule.track("E." + name.toUpperCase(Locale.US), params);
-        return true;
-    }
-
     public void trackLocation(Location location) {
         if (location == null) {
             return;
@@ -410,47 +472,26 @@ public final class UserModule extends BatchModule {
         }
     }
 
-    public void trackTransaction(double amount, JSONObject data) {
-        try {
-            final JSONObject params = new JSONObject();
-
-            params.put(PARAMETER_KEY_AMOUNT, amount);
-
-            if (data != null) {
-                params.put(PARAMETER_KEY_DATA, data.toString());
-            }
-
-            trackerModule.track("T", params);
-        } catch (JSONException e) {
-            Logger.error(TAG, "Failed to track transaction", e);
-        }
-    }
-
     //endregion
 
-    // region Apply queue
-
+    // region User operations
     public static void submitOnApplyQueue(long msDelay, Runnable r) {
         if (!applyQueue.isShutdown()) {
             applyQueue.schedule(r, msDelay, TimeUnit.MILLISECONDS);
         } else {
             Logger.error(
-                BatchUserDataEditor.TAG,
+                InstallDataEditor.TAG,
                 "Could not perform User Data operation. Is this installation currently opted out from Batch?"
             );
         }
     }
-
-    // endregion
-
-    // region User operations
 
     public void addOperationQueueAndSubmit(long msDelay, UserOperationQueue queue) {
         synchronized (operationQueues) {
             operationQueues.add(queue);
         }
         if (!RuntimeManagerProvider.get().isReady()) {
-            Logger.internal(BatchUserDataEditor.TAG, "Batch is not started, enqueuing user operations");
+            Logger.internal(InstallDataEditor.TAG, "Batch is not started, enqueuing user operations");
             return;
         }
         // Delay is used to prevent bad use of BatchUserEditor.save() method and trying to batch as much as possible user data transactions.
@@ -466,7 +507,7 @@ public final class UserModule extends BatchModule {
                 List<UserOperation> operations = new LinkedList<>();
                 if (operationQueues.size() >= 3) {
                     Logger.warning(
-                        BatchUserDataEditor.TAG,
+                        InstallDataEditor.TAG,
                         "It looks like you are using many instances of BatchUserDataEditor. Please check our documentation to ensure you are using this api correctly: https://doc.batch.com/android/custom-data/custom-attributes#methods"
                     );
                 }
@@ -498,11 +539,6 @@ public final class UserModule extends BatchModule {
         }
 
         final SQLUserDatasource datasource = SQLUserDatasourceProvider.get(context);
-
-        if (datasource == null) {
-            throw new SaveException("Datasource error while applying.");
-        }
-
         long changeset = Long.parseLong(ParametersProvider.get(context).get(ParameterKeys.USER_DATA_CHANGESET, "0"));
         changeset++;
 
@@ -526,7 +562,7 @@ public final class UserModule extends BatchModule {
                 try {
                     datasource.rollbackTransaction();
                 } catch (UserDatabaseException e1) {
-                    Logger.internal(BatchUserDataEditor.TAG, "Save - Error while rolling back transaction.", e1);
+                    Logger.internal(InstallDataEditor.TAG, "Save - Error while rolling back transaction.", e1);
                 }
 
                 throw new SaveException(
@@ -562,19 +598,19 @@ public final class UserModule extends BatchModule {
                         .get()
                         .track(InternalEvents.INSTALL_DATA_CHANGED, diff.toEventParameters(changeset));
                 } catch (JSONException e2) {
-                    Logger.internal(BatchUserDataEditor.TAG, "Could not serialize install data diff");
+                    Logger.internal(InstallDataEditor.TAG, "Could not serialize install data diff");
                     TrackerModuleProvider.get().track(InternalEvents.INSTALL_DATA_CHANGED_TRACK_FAILURE);
                 }
 
-                Logger.internal(BatchUserDataEditor.TAG, "Changeset bumped");
+                Logger.internal(InstallDataEditor.TAG, "Changeset bumped");
             } else {
-                Logger.internal(BatchUserDataEditor.TAG, "Changeset not bumped");
+                Logger.internal(InstallDataEditor.TAG, "Changeset not bumped");
             }
         } catch (UserDatabaseException e) {
             try {
                 datasource.rollbackTransaction();
             } catch (UserDatabaseException e1) {
-                Logger.internal(BatchUserDataEditor.TAG, "Error while rolling back transaction.", e1);
+                Logger.internal(InstallDataEditor.TAG, "Error while rolling back transaction.", e1);
             }
 
             throw new SaveException(
@@ -589,10 +625,6 @@ public final class UserModule extends BatchModule {
 
         public String internalErrorMessage;
 
-        public SaveException(String message) {
-            super(message);
-        }
-
         public SaveException(String message, String internalErrorMessage) {
             super(message);
             this.internalErrorMessage = internalErrorMessage;
@@ -604,30 +636,9 @@ public final class UserModule extends BatchModule {
         }
 
         public void log() {
-            Logger.error(BatchUserDataEditor.TAG, getMessage());
-            Logger.internal(BatchUserDataEditor.TAG, internalErrorMessage, getCause());
+            Logger.error(InstallDataEditor.TAG, getMessage());
+            Logger.internal(InstallDataEditor.TAG, internalErrorMessage, getCause());
         }
-    }
-
-    // endregion
-
-    // region Debug
-
-    public static void printDebugInfo() {
-        submitOnApplyQueue(
-            0,
-            () -> {
-                final Context context = RuntimeManagerProvider.get().getContext();
-                if (context != null) {
-                    SQLUserDatasourceProvider.get(context).printDebugDump();
-                } else {
-                    Logger.error(
-                        BatchUserDataEditor.TAG,
-                        "Error while printing User Data Debug information: Batch must be started."
-                    );
-                }
-            }
-        );
     }
 
     // endregion
@@ -654,11 +665,10 @@ public final class UserModule extends BatchModule {
         );
     }
 
-    public static void userOptedIn(Context context) {
+    public static void userOptedIn() {
         if (applyQueue.isShutdown()) {
             applyQueue = makeApplyQueue();
         }
     }
     // endregion
-
 }

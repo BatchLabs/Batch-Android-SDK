@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import com.batch.android.Batch;
 import com.batch.android.core.InternalPushData;
 import com.batch.android.core.Logger;
+import com.batch.android.core.NamedThreadFactory;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.processor.Module;
@@ -31,17 +32,13 @@ public final class InboxDatasource {
     private static final String TAG = "InboxDatasource";
 
     /**
-     * Saved app context
-     */
-    private Context context;
-    /**
      * The SQLLite DB
      */
     private SQLiteDatabase database;
     /**
      * The DB Helper
      */
-    private InboxDatabaseHelper databaseHelper;
+    private final InboxDatabaseHelper databaseHelper;
 
     // -------------------------------------------->
 
@@ -49,9 +46,11 @@ public final class InboxDatasource {
         if (context == null) {
             throw new NullPointerException("context==null");
         }
+        databaseHelper = new InboxDatabaseHelper(context.getApplicationContext());
+        open();
+    }
 
-        this.context = context.getApplicationContext();
-        databaseHelper = new InboxDatabaseHelper(this.context);
+    private void open() {
         database = databaseHelper.getWritableDatabase();
     }
 
@@ -61,7 +60,7 @@ public final class InboxDatasource {
     public void wipeData() {
         if (database == null) {
             Logger.internal(TAG, "Attempted to wipe data on a closed database");
-            database = databaseHelper.getWritableDatabase();
+            open();
         }
 
         database.delete(InboxDatabaseHelper.TABLE_NOTIFICATIONS, null, null);
@@ -173,8 +172,9 @@ public final class InboxDatasource {
      * Try to get the fetcher ID from the SQLite
      * Create and insert it if it doesn't exist
      *
-     * @param type
-     * @param identifier
+     * @param type The fetcher type
+     * @param identifier The user identifier
+     * @return The fetcher identifier
      */
     public long getFetcherID(FetcherType type, String identifier) {
         if (TextUtils.isEmpty(identifier)) {
@@ -183,7 +183,7 @@ public final class InboxDatasource {
 
         if (database == null) {
             Logger.internal(TAG, "Attempted to get/insert a fetcher to a closed database");
-            database = databaseHelper.getWritableDatabase();
+            open();
         }
 
         final ContentValues values = new ContentValues();
@@ -231,9 +231,9 @@ public final class InboxDatasource {
     /**
      * Look in database for cached notifications
      *
-     * @param cursor
-     * @param fetcherId
-     * @return
+     * @param cursor The cursor
+     * @param fetcherId The fetcher identifier
+     * @return A list of candidate notifications
      */
     public List<InboxCandidateNotificationInternal> getCandidateNotifications(
         @Nullable String cursor,
@@ -366,7 +366,7 @@ public final class InboxDatasource {
     protected boolean insert(InboxNotificationContentInternal notification, long fetcherId) {
         if (database == null) {
             Logger.internal(TAG, "Attempted to insert a notification to a closed database");
-            database = databaseHelper.getWritableDatabase();
+            open();
         }
 
         if (notification == null) {

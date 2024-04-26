@@ -1,14 +1,14 @@
 package com.batch.android.query;
 
 import android.content.Context;
+import com.batch.android.BatchPushRegistration;
 import com.batch.android.core.NotificationAuthorizationStatus;
 import com.batch.android.di.providers.BatchNotificationChannelsManagerProvider;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
-import com.batch.android.push.Registration;
 
 /**
- * Query to send pushtoken to server
+ * Query to send push token to server
  *
  */
 public class PushQuery extends Query {
@@ -16,11 +16,11 @@ public class PushQuery extends Query {
     /**
      * Registration information
      */
-    private Registration registration;
+    private BatchPushRegistration registration;
 
     // -------------------------------------------->
 
-    public PushQuery(Context context, Registration registration) {
+    public PushQuery(Context context, BatchPushRegistration registration) {
         super(context, QueryType.PUSH);
         if (registration == null) {
             throw new NullPointerException("registration==null");
@@ -34,11 +34,13 @@ public class PushQuery extends Query {
     @Override
     public JSONObject toJSON() throws JSONException {
         JSONObject obj = super.toJSON();
-
-        obj.put("tok", registration.registrationID);
-        obj.put("provider", registration.provider);
-        obj.put("senderid", registration.senderID != null ? registration.senderID : JSONObject.NULL);
-        obj.put("gcpprojectid", registration.gcpProjectID != null ? registration.gcpProjectID : JSONObject.NULL);
+        obj.put("tok", registration.getToken());
+        obj.put("provider", registration.getProvider());
+        obj.put("senderid", registration.getSenderID() != null ? registration.getSenderID() : JSONObject.NULL);
+        obj.put(
+            "gcpprojectid",
+            registration.getGcpProjectID() != null ? registration.getGcpProjectID() : JSONObject.NULL
+        );
         obj.put("nty", getNotificationType());
 
         return obj;

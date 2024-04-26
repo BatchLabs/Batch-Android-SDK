@@ -35,7 +35,7 @@ public class BatchPushService extends IntentService {
             Logger.internal(TAG, "Error while handing notification", e);
         } finally {
             // Release the wake lock provided by the WakefulBroadcastReceiver.
-            BatchPushReceiver.completeWakefulIntent(intent);
+            BatchPushMessageReceiver.completeWakefulIntent(intent);
         }
     }
 }

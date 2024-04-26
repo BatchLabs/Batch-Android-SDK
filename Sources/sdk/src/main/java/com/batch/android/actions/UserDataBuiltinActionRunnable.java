@@ -4,13 +4,14 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.Batch;
-import com.batch.android.BatchUserDataEditor;
+import com.batch.android.BatchProfileAttributeEditor;
 import com.batch.android.UserActionRunnable;
 import com.batch.android.UserActionSource;
 import com.batch.android.core.Logger;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.module.ActionModule;
+import com.batch.android.user.InstallDataEditor;
 import java.util.Locale;
 
 public class UserDataBuiltinActionRunnable implements UserActionRunnable {
@@ -60,13 +61,13 @@ public class UserDataBuiltinActionRunnable implements UserActionRunnable {
 
             if (action.equals("add")) {
                 Logger.internal(TAG, "Adding tag " + tag + " to collection " + collection);
-                BatchUserDataEditor editor = Batch.User.editor();
-                editor.addTag(collection, tag);
+                BatchProfileAttributeEditor editor = Batch.Profile.editor();
+                editor.addToArray(collection, tag);
                 editor.save();
             } else if (action.equals("remove")) {
                 Logger.internal(TAG, "Removing tag " + tag + " to collection " + collection);
-                BatchUserDataEditor editor = Batch.User.editor();
-                editor.removeTag(collection, tag);
+                BatchProfileAttributeEditor editor = Batch.Profile.editor();
+                editor.removeFromArray(collection, tag);
                 editor.save();
             } else {
                 Logger.internal(TAG, "Could not perform tag edit action: Unknown action");

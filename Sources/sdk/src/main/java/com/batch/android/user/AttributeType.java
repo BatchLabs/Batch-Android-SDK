@@ -16,13 +16,16 @@ public enum AttributeType {
 
     DATE(5, 't'),
 
-    URL(6, 'u');
+    URL(6, 'u'),
+    OBJECT(7, 'o'),
+    STRING_ARRAY(8, 'a'),
+    OBJECT_ARRAY(9, 'a');
 
     // ---------------------------------------->
 
-    private int value;
+    private final int value;
 
-    private char typeChar;
+    private final char typeChar;
 
     AttributeType(int value, char typeChar) {
         this.value = value;
