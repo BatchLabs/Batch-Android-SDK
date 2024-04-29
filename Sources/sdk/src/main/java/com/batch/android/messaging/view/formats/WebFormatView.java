@@ -143,17 +143,22 @@ public class WebFormatView extends FrameLayout {
                         // view.getHitTestResult() returns the source of the image
                         // rather than the url.
                         if (result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
-                            Message href = view.getHandler().obtainMessage();
-                            view.requestFocusNodeHref(href);
-                            Bundle data = href.getData();
-                            if (data != null) {
-                                String imageUrl = data.getString("url");
-                                if (imageUrl != null && !imageUrl.isEmpty()) {
-                                    url = imageUrl;
+                            Handler handler = view.getHandler();
+                            if (handler != null) {
+                                Message href = handler.obtainMessage();
+                                view.requestFocusNodeHref(href);
+                                Bundle data = href.getData();
+                                if (data != null) {
+                                    String imageUrl = data.getString("url");
+                                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                                        url = imageUrl;
+                                    }
                                 }
                             }
                         }
-                        actionListener.onOpenDeeplinkAction(url, null, null);
+                        if (url != null) {
+                            actionListener.onOpenDeeplinkAction(url, null, null);
+                        }
                     }
                     return super.onCreateWindow(view, isDialog, isUserGesture, resultMsg);
                 }

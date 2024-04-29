@@ -11,7 +11,7 @@ object ProjectConsts {
 }
 
 object SDKConsts {
-    const val VERSION = "1.21.1"
+    const val VERSION = "1.21.2"
     const val API_LEVEL = 70
     const val MESSAGING_API_LEVEL = 12
 

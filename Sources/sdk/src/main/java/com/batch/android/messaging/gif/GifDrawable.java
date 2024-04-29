@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
+import com.batch.android.core.Logger;
 import com.batch.android.core.NamedThreadFactory;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -76,11 +77,10 @@ public class GifDrawable extends Drawable implements Animatable {
             gifDecoder.advance();
             FrameInfo nextFrame = new FrameInfo(gifDecoder.getNextFrame(), gifDecoder.getNextDelay());
             Message.obtain(mainThreadHandler, MESSAGE_FRAME_PRODUCED, nextFrame).sendToTarget();
-        } catch (OutOfMemoryError e) {
-            //TODO: Batch log
+        } catch (Exception | OutOfMemoryError e) {
             ranOutOfMemory = true;
             Message.obtain(mainThreadHandler, MESSAGE_RAN_OUT_OF_MEMORY).sendToTarget();
-            Log.e("GIF", "Ran out of memory " + e);
+            Logger.error("Failed producing next gif frame.", e);
         }
     }
 
