@@ -16,7 +16,7 @@ import com.batch.android.user.InstallDataEditor;
 import com.batch.android.user.UserAttribute;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -366,7 +366,7 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
                 );
                 return this;
             }
-            this.profileUpdateOperation.addToList(normalizedKey, Arrays.asList(value));
+            this.profileUpdateOperation.addToList(normalizedKey, new ArrayList<>(Collections.singletonList(value)));
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
             return this;
@@ -427,7 +427,10 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
                 );
                 return this;
             }
-            this.profileUpdateOperation.removeFromList(normalizedKey, new ArrayList<>(Arrays.asList(value)));
+            this.profileUpdateOperation.removeFromList(
+                    normalizedKey,
+                    new ArrayList<>(Collections.singletonList(value))
+                );
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
             return this;
@@ -456,7 +459,7 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
                 );
                 return this;
             }
-            this.profileUpdateOperation.removeFromList(normalizedKey, values);
+            this.profileUpdateOperation.removeFromList(normalizedKey, new ArrayList<>(values));
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
             return this;
