@@ -225,7 +225,7 @@ public class DataCollectionModule extends BatchModule {
             config.isDeviceModelEnabled() != this.dataCollectionConfig.isDeviceModelEnabled()
         ) {
             SystemParameter deviceModelParameter = registry.getSystemParamByShortname(
-                SystemParameterShortName.DEVICE_TYPE.shortName
+                SystemParameterShortName.DEVICE_MODEL.shortName
             );
             if (deviceModelParameter != null) {
                 deviceModelParameter.setAllowed(Boolean.TRUE.equals(config.isDeviceModelEnabled()));

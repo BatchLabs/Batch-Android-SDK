@@ -66,7 +66,7 @@ class DataCollectionModuleTest : DITest() {
                 .track(ArgumentMatchers.eq(InternalEvents.NATIVE_DATA_CHANGED), JSONObjectMockitoMatcher.eq(JSONObject().apply {
                     put("geoip_resolution", true)
                     put("device_brand", "Android")
-                    put("device_type", "robolectric")
+                    put("device_model", "robolectric")
                 }))
 
         // Disable only geoip
@@ -88,7 +88,7 @@ class DataCollectionModuleTest : DITest() {
         Mockito.verify(trackerModule, Mockito.times(1))
                 .track(ArgumentMatchers.eq(InternalEvents.NATIVE_DATA_CHANGED), JSONObjectMockitoMatcher.eq(JSONObject().apply {
                     put("device_brand", JSONObject.NULL)
-                    put("device_type", JSONObject.NULL)
+                    put("device_model", JSONObject.NULL)
                 }))
 
         Mockito.reset(trackerModule)
@@ -106,7 +106,7 @@ class DataCollectionModuleTest : DITest() {
         // Check default disabled param are not is ids
         WebserviceParameterUtils.getWebserviceIdsAsJson(context).apply {
             Assert.assertFalse(has(SystemParameterShortName.DEVICE_BRAND.shortName))
-            Assert.assertFalse(has(SystemParameterShortName.DEVICE_TYPE.shortName))
+            Assert.assertFalse(has(SystemParameterShortName.DEVICE_MODEL.shortName))
             Assert.assertFalse(getJSONObject("data_collection").getBoolean("geoip"))
         }
 
@@ -118,7 +118,7 @@ class DataCollectionModuleTest : DITest() {
         // Check values are in the ids
         WebserviceParameterUtils.getWebserviceIdsAsJson(context).apply {
             Assert.assertEquals("Android", get(SystemParameterShortName.DEVICE_BRAND.shortName))
-            Assert.assertEquals("robolectric", get(SystemParameterShortName.DEVICE_TYPE.shortName))
+            Assert.assertEquals("robolectric", get(SystemParameterShortName.DEVICE_MODEL.shortName))
             Assert.assertTrue(getJSONObject("data_collection").getBoolean("geoip"))
         }
 
@@ -130,7 +130,7 @@ class DataCollectionModuleTest : DITest() {
         // Check disabled param are not is ids
         WebserviceParameterUtils.getWebserviceIdsAsJson(context).apply {
             Assert.assertFalse(has(SystemParameterShortName.DEVICE_BRAND.shortName))
-            Assert.assertFalse(has(SystemParameterShortName.DEVICE_TYPE.shortName))
+            Assert.assertFalse(has(SystemParameterShortName.DEVICE_MODEL.shortName))
             Assert.assertFalse(getJSONObject("data_collection").getBoolean("geoip"))
         }
     }

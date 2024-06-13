@@ -8,7 +8,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import com.batch.android.BatchOptOutResultListener;
 import com.batch.android.core.Logger;
-import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.Parameters;
 import com.batch.android.core.Promise;
 import com.batch.android.di.providers.DisplayReceiptModuleProvider;
@@ -185,17 +184,7 @@ public class OptOutModule extends BatchModule {
         LocalCampaignsModuleProvider.get().wipeData(context);
         DisplayReceiptModuleProvider.get().wipeData(context);
         InboxDatasourceProvider.get(context).wipeData();
-
-        Parameters parameters = ParametersProvider.get(context);
-        parameters.remove(ParameterKeys.CUSTOM_ID);
-        parameters.remove(ParameterKeys.INSTALL_ID_KEY);
-        parameters.remove(ParameterKeys.INSTALL_TIMESTAMP_KEY);
-        parameters.remove(ParameterKeys.PUSH_APP_VERSION_KEY);
-        parameters.remove(ParameterKeys.PUSH_REGISTRATION_PROVIDER_KEY);
-        parameters.remove(ParameterKeys.PUSH_REGISTRATION_ID_KEY);
-        // Old keys
-        parameters.remove("push.token");
-        parameters.remove("push.token.provider");
+        ParametersProvider.get(context).wipeData();
     }
 
     //region: BatchModule

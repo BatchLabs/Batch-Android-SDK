@@ -336,4 +336,14 @@ public final class Parameters {
 
         KVUserPreferencesStorageProvider.get(applicationContext).remove(PARAMETERS_KEY_PREFIX + key);
     }
+
+    /**
+     * Clear all parameters
+     */
+    public void wipeData() {
+        synchronized (cacheParameters) {
+            cacheParameters.clear();
+        }
+        KVUserPreferencesStorageProvider.get(applicationContext).clear();
+    }
 }

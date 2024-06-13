@@ -17,7 +17,7 @@ public enum SystemParameterShortName {
 
     OS_SDK_LEVEL("sdk", "os_sdk_level"),
 
-    DEVICE_TYPE("dty", "device_type"),
+    DEVICE_MODEL("dty", "device_model"),
 
     DEVICE_LANGUAGE("dla", "device_language"),
 

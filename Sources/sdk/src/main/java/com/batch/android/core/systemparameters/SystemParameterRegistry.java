@@ -85,7 +85,7 @@ public class SystemParameterRegistry {
 
         SystemParameter deviceType = new WatchedSystemParameter(
             context,
-            SystemParameterShortName.DEVICE_TYPE,
+            SystemParameterShortName.DEVICE_MODEL,
             SystemParameterHelper::getDeviceModel,
             Boolean.TRUE.equals(DataCollectionModuleProvider.get().getDataCollectionConfig().isDeviceModelEnabled())
         );

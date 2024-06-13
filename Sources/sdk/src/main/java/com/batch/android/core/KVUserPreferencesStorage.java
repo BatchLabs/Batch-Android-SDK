@@ -138,6 +138,14 @@ public class KVUserPreferencesStorage {
     }
 
     /**
+     * Clear all values from the Shared Preferences
+     */
+    @AnyThread
+    public void clear() {
+        preferences.edit().clear().apply();
+    }
+
+    /**
      * Get the Shared Preferences in a Future
      *
      * @param context Android's context
