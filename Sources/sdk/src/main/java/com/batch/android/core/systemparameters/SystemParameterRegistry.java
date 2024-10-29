@@ -4,10 +4,8 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.Batch;
-import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.Webservice;
 import com.batch.android.di.providers.DataCollectionModuleProvider;
-import com.batch.android.di.providers.ParametersProvider;
 import com.batch.android.di.providers.UserModuleProvider;
 import com.batch.android.processor.Module;
 import com.batch.android.processor.Provide;
@@ -58,7 +56,10 @@ public class SystemParameterRegistry {
         SystemParameter deviceInstallDate = new WatchedSystemParameter(
             context,
             SystemParameterShortName.DEVICE_INSTALL_DATE,
-            () -> ParametersProvider.get(context).get(ParameterKeys.INSTALL_TIMESTAMP_KEY)
+            () -> {
+                Long date = SystemParameterHelper.getDeviceInstallDate(context);
+                return date != null ? Webservice.formatDate(new Date(date)) : null;
+            }
         );
 
         SystemParameter bundleName = new WatchedSystemParameter(

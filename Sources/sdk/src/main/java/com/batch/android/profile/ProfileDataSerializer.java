@@ -13,6 +13,8 @@ public class ProfileDataSerializer {
 
     private static final String EMAIL_KEY = "email";
     private static final String EMAIL_MARKETING = "email_marketing";
+    private static final String PHONE_NUMBER_KEY = "phone_number";
+    private static final String SMS_MARKETING = "sms_marketing";
     private static final String LANGUAGE_KEY = "language";
     private static final String REGION_KEY = "region";
     private static final String CUSTOM_ATTRIBUTES_KEY = "custom_attributes";
@@ -33,6 +35,11 @@ public class ProfileDataSerializer {
             serializedProfile.put(EMAIL_KEY, email.getSerializedValue());
         }
 
+        ProfileDeletableAttribute phoneNumber = profileUpdateOperation.getPhoneNumber();
+        if (phoneNumber != null) {
+            serializedProfile.put(PHONE_NUMBER_KEY, phoneNumber.getSerializedValue());
+        }
+
         ProfileDeletableAttribute language = profileUpdateOperation.getLanguage();
         if (language != null) {
             serializedProfile.put(LANGUAGE_KEY, language.getSerializedValue());
@@ -45,6 +52,10 @@ public class ProfileDataSerializer {
 
         if (profileUpdateOperation.getEmailMarketing() != null) {
             serializedProfile.put(EMAIL_MARKETING, profileUpdateOperation.getEmailMarketing().name().toLowerCase());
+        }
+
+        if (profileUpdateOperation.getSMSMarketing() != null) {
+            serializedProfile.put(SMS_MARKETING, profileUpdateOperation.getSMSMarketing().name().toLowerCase());
         }
 
         Map<String, UserAttribute> customAttributes = profileUpdateOperation.getCustomAttributes();

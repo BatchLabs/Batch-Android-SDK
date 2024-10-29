@@ -138,6 +138,63 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
     }
 
     /**
+     * Set the profile phone number.
+     * <p>
+     * Note: This method requires to already have a registered identifier for the user
+     * or to call {@link Batch.Profile#identify(String)} method before this one.
+     * <p>
+     * Example:
+     * <pre>
+     * Batch.Profile.identify("my_custom_user_id")
+     * Batch.Profile.editor().setPhoneNumber("+33123456789").save()
+     * </pre>
+     * @param phoneNumber A valid E.164 formatted string. Must start with a `+` and not be no longer
+     *                    than 15 digits without special characters (eg: "+33123456789"). Null to reset.
+     * @see <a href="https://en.wikipedia.org/wiki/E.164">E.164</a>
+     * @return This object instance, for method chaining.
+     */
+    public BatchProfileAttributeEditor setPhoneNumber(@Nullable String phoneNumber) {
+        Context context = RuntimeManagerProvider.get().getContext();
+        if (context == null) {
+            Logger.error(TAG, "Batch does not have a context yet. Make sure Batch is started beforehand.");
+            return this;
+        }
+
+        // Ensure profile is logged in
+        String customUserID = UserModuleProvider.get().getCustomID(context);
+        if (customUserID == null) {
+            Logger.error(
+                TAG,
+                "You cannot set/reset a phone number to an anonymous profile. Please use the `Batch.Profile.identify` method beforehand."
+            );
+            return this;
+        }
+
+        // Ensure phone number is valid
+        if (ProfileDataHelper.isNotValidPhoneNumber(phoneNumber)) {
+            Logger.error(
+                TAG,
+                "setPhoneNumber called with invalid phone number format. Please make sure that the string starts with a `+` and is no longer than 15 digits."
+            );
+            return this;
+        }
+        this.profileUpdateOperation.setPhoneNumber(phoneNumber);
+        return this;
+    }
+
+    /**
+     * Set the profile SMS marketing subscription state.
+     * <p>
+     * Note that profile's subscription status is automatically set to unsubscribed when they send a STOP message.
+     * @param state State of the subscription
+     * @return This object instance, for method chaining.
+     */
+    public BatchProfileAttributeEditor setSMSMarketingSubscription(@NonNull BatchSMSSubscriptionState state) {
+        this.profileUpdateOperation.setSMSMarketing(state);
+        return this;
+    }
+
+    /**
      * Set a custom profile attribute for a key.
      *
      * @param key Attribute key, can't be null. It should be made of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.

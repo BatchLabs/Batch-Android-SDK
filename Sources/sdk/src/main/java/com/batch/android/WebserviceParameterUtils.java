@@ -4,7 +4,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import com.batch.android.core.systemparameters.SystemParameter;
 import com.batch.android.core.systemparameters.SystemParameterRegistry;
-import com.batch.android.core.systemparameters.SystemParameterShortName;
 import com.batch.android.di.providers.DataCollectionModuleProvider;
 import com.batch.android.di.providers.SystemParameterRegistryProvider;
 import com.batch.android.json.JSONObject;

@@ -2,6 +2,7 @@ package com.batch.android.profile
 
 import androidx.test.filters.SmallTest
 import com.batch.android.BatchEmailSubscriptionState
+import com.batch.android.BatchSMSSubscriptionState
 import com.batch.android.json.JSONArray
 import com.batch.android.json.JSONObject
 import com.batch.android.user.AttributeType
@@ -22,6 +23,8 @@ class ProfileDataSerializerTest {
             setLanguage("fr")
             setRegion("FR")
             setEmailMarketing(BatchEmailSubscriptionState.SUBSCRIBED)
+            setPhoneNumber("+33612345678")
+            setSMSMarketing(BatchSMSSubscriptionState.SUBSCRIBED)
             addAttribute("string_att", UserAttribute("hello", AttributeType.STRING))
             addAttribute("int_att", UserAttribute(3, AttributeType.LONG))
             addAttribute("double_att", UserAttribute(3.6, AttributeType.DOUBLE))
@@ -38,6 +41,8 @@ class ProfileDataSerializerTest {
         Assert.assertEquals("fr", actual.getString("language"))
         Assert.assertEquals("FR", actual.getString("region"))
         Assert.assertEquals("subscribed", actual.getString("email_marketing"))
+        Assert.assertEquals("subscribed", actual.getString("sms_marketing"))
+        Assert.assertEquals("+33612345678", actual.getString("phone_number"))
 
         val actualCustomAttributes = actual.getJSONObject("custom_attributes")
         Assert.assertEquals("hello", actualCustomAttributes.getString("string_att.s"))
@@ -56,6 +61,23 @@ class ProfileDataSerializerTest {
         Assert.assertEquals("i", actualAddPartialAttribute.getString(0))
         Assert.assertEquals("don't", actualAddPartialAttribute.getString(1))
         Assert.assertEquals("know", actualRemovePartialAttribute.getString(0))
+    }
+
+    @Test
+    fun testSerializeWithNullValues() {
+
+        val dataModel = ProfileUpdateOperation().apply {
+            setEmail(null)
+            setLanguage(null)
+            setRegion(null)
+            setPhoneNumber(null)
+        }
+
+        val actual = ProfileDataSerializer.serialize(dataModel)
+        Assert.assertEquals(JSONObject.NULL, actual.get("email"))
+        Assert.assertEquals(JSONObject.NULL, actual.get("language"))
+        Assert.assertEquals(JSONObject.NULL, actual.get("region"))
+        Assert.assertEquals(JSONObject.NULL, actual.get("phone_number"))
     }
 
     @Test

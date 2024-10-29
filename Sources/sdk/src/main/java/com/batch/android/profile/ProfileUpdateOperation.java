@@ -3,6 +3,7 @@ package com.batch.android.profile;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.BatchEmailSubscriptionState;
+import com.batch.android.BatchSMSSubscriptionState;
 import com.batch.android.user.AttributeType;
 import com.batch.android.user.UserAttribute;
 import java.util.ArrayList;
@@ -26,6 +27,18 @@ public class ProfileUpdateOperation {
      */
     @Nullable
     private BatchEmailSubscriptionState emailMarketing;
+
+    /**
+     * Profile related phone number
+     */
+    @Nullable
+    private ProfileDeletableAttribute phoneNumber;
+
+    /**
+     * Profile related SMS marketing subscription state
+     */
+    @Nullable
+    private BatchSMSSubscriptionState smsMarketing;
 
     /**
      * Profile related language
@@ -77,6 +90,40 @@ public class ProfileUpdateOperation {
      */
     public void setEmailMarketing(@NonNull BatchEmailSubscriptionState emailMarketing) {
         this.emailMarketing = emailMarketing;
+    }
+
+    /**
+     * Get the phone number
+     * @return The phone number
+     */
+    @Nullable
+    public ProfileDeletableAttribute getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    /**
+     * Set a phone number
+     * @param phoneNumber The phone number
+     */
+    public void setPhoneNumber(@Nullable String phoneNumber) {
+        this.phoneNumber = new ProfileDeletableAttribute(phoneNumber);
+    }
+
+    /**
+     * Get the SMS marketing subscription state
+     * @return The SMS marketing subscription state
+     */
+    @Nullable
+    public BatchSMSSubscriptionState getSMSMarketing() {
+        return smsMarketing;
+    }
+
+    /**
+     * Set an SMS marketing subscription state
+     * @param smsMarketing The SMS marketing subscription state
+     */
+    public void setSMSMarketing(@NonNull BatchSMSSubscriptionState smsMarketing) {
+        this.smsMarketing = smsMarketing;
     }
 
     /**

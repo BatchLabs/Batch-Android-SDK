@@ -82,6 +82,11 @@ public class BatchDebugActivity extends FragmentActivity implements OnMenuSelect
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Workaround to opt-out the android 15 edge to edge enforcement.
+        // This is a temporary fix since this api will be soon deprecated by google.
+        // But using the view compat to handle inset force us to bump the minimal androidx core version.
+        getTheme().applyStyle(R.style.com_batchsdk_OptOutEdgeToEdgeEnforcement, false);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.com_batchsdk_debug_view);
         if (savedInstanceState == null) {

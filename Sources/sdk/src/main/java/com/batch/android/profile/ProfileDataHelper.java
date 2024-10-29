@@ -5,6 +5,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.core.Logger;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -27,6 +28,11 @@ public class ProfileDataHelper {
     private static final Pattern EMAIL_KEY_PATTERN = Pattern.compile("^[^@\\r\\n\\t]+@[A-z0-9\\-\\.]+\\.[A-z0-9]+$");
 
     /**
+     * Valid phone number pattern
+     */
+    private static final Pattern PHONE_NUMBER_KEY_PATTERN = Pattern.compile("^\\+[0-9]{1,15}$");
+
+    /**
      * Attribute key pattern
      */
     public static final Pattern ATTR_KEY_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{1,30}$");
@@ -46,6 +52,22 @@ public class ProfileDataHelper {
     public static final int ATTR_URL_MAX_LENGTH = 2048;
 
     /**
+     * List of blocklisted custom user identifiers.
+     */
+    private static final List<String> BLOCKLISTED_CUSTOM_USER_IDS = Arrays.asList(
+        "undefined",
+        "null",
+        "nil",
+        "(null)",
+        "[object object]",
+        "true",
+        "false",
+        "nan",
+        "infinity",
+        "-infinity"
+    );
+
+    /**
      * Whether the identifier is NOT a valid custom user identifier
      *
      * @param identifier The custom user identifier.
@@ -57,13 +79,33 @@ public class ProfileDataHelper {
     }
 
     /**
-     * Whether given email is valid
+     * Whether the identifier is blocklisted to avoid unintentional values from plugin conversion.
+     *
+     * @param identifier The custom user identifier.
+     * @return True if blocklisted, false otherwise
+     */
+    public static boolean isBlocklistedCustomUserID(@Nullable String identifier) {
+        return identifier != null && BLOCKLISTED_CUSTOM_USER_IDS.contains(identifier.toLowerCase(Locale.US));
+    }
+
+    /**
+     * Whether the given email is NOT valid
      *
      * @param email the profile's email
-     * @return true if valid, false otherwise
+     * @return true if NOT valid, false otherwise
      */
     public static boolean isNotValidEmail(String email) {
         return email != null && (!EMAIL_KEY_PATTERN.matcher(email).matches() || email.length() > EMAIL_MAX_LENGTH);
+    }
+
+    /**
+     * Whether the given phone number is NOT valid
+     *
+     * @param phoneNumber the profile's phone number
+     * @return true if NOT valid, false otherwise
+     */
+    public static boolean isNotValidPhoneNumber(String phoneNumber) {
+        return phoneNumber != null && (!PHONE_NUMBER_KEY_PATTERN.matcher(phoneNumber).matches());
     }
 
     /**

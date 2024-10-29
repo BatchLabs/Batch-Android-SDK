@@ -6,9 +6,11 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import androidx.annotation.NonNull;
-import com.batch.android.core.Logger;
+import androidx.annotation.Nullable;
+import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.Parameters;
 import com.batch.android.core.Webservice;
+import com.batch.android.di.providers.ParametersProvider;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import java.util.Date;
@@ -29,6 +31,7 @@ public final class SystemParameterHelper {
      * @param applicationContext The application context.
      * @return The application bundle name.
      */
+    @NonNull
     public static String getBundleName(Context applicationContext) {
         return applicationContext.getPackageName();
     }
@@ -38,6 +41,7 @@ public final class SystemParameterHelper {
      *
      * @return timezone or null on failure.
      */
+    @Nullable
     public static String getDeviceTimezone() {
         try {
             return TimeZone.getDefault().getID();
@@ -51,6 +55,7 @@ public final class SystemParameterHelper {
      *
      * @return language
      */
+    @NonNull
     public static String getDeviceLanguage() {
         return Locale.getDefault().toLanguageTag();
     }
@@ -60,6 +65,7 @@ public final class SystemParameterHelper {
      *
      * @return country
      */
+    @NonNull
     public static String getDeviceCountry() {
         return Locale.getDefault().getCountry();
     }
@@ -69,6 +75,7 @@ public final class SystemParameterHelper {
      *
      * @return The current date
      */
+    @NonNull
     public static String getDeviceDate() {
         return Webservice.formatDate(new Date());
     }
@@ -79,6 +86,7 @@ public final class SystemParameterHelper {
      * @param applicationContext The application context.
      * @return Installation date or null on failure.
      */
+    @Nullable
     public static Long getFirstInstallDate(Context applicationContext) {
         try {
             PackageManager packageManager = applicationContext.getPackageManager();
@@ -96,6 +104,7 @@ public final class SystemParameterHelper {
      * @param applicationContext The application context.
      * @return Last update date or null on failure.
      */
+    @Nullable
     public static Long getLastUpdateDate(Context applicationContext) {
         try {
             PackageManager packageManager = applicationContext.getPackageManager();
@@ -108,10 +117,23 @@ public final class SystemParameterHelper {
     }
 
     /**
+     * Get the device install date.
+     *
+     * @param context Android's context to access shared preferences
+     * @return The device install date
+     */
+    @Nullable
+    public static Long getDeviceInstallDate(Context context) {
+        String value = ParametersProvider.get(context).get(ParameterKeys.INSTALL_TIMESTAMP_KEY);
+        return value != null ? Long.parseLong(value) : null;
+    }
+
+    /**
      * Return the Brand name of the device
      *
      * @return Brand name if found, null otherwise
      */
+    @Nullable
     public static String getDeviceBrand() {
         try {
             return Build.BRAND;
@@ -125,6 +147,7 @@ public final class SystemParameterHelper {
      *
      * @return The device model if found, null otherwise.
      */
+    @Nullable
     public static String getDeviceModel() {
         try {
             return Build.MODEL;
@@ -139,6 +162,7 @@ public final class SystemParameterHelper {
      * @param applicationContext The application context.
      * @return AppVersion if found, null otherwise
      */
+    @Nullable
     public static String getAppVersion(Context applicationContext) {
         try {
             PackageInfo info = applicationContext
@@ -156,6 +180,7 @@ public final class SystemParameterHelper {
      * @param applicationContext The application context.
      * @return AppVersion code if found, null otherwise
      */
+    @Nullable
     public static Integer getAppVersionCode(Context applicationContext) {
         try {
             PackageManager packageManager = applicationContext.getApplicationContext().getPackageManager();
@@ -175,6 +200,7 @@ public final class SystemParameterHelper {
      *
      * @return Version.
      */
+    @NonNull
     public static String getOSVersion() {
         return String.format("Android %s", Build.VERSION.RELEASE);
     }
@@ -184,6 +210,7 @@ public final class SystemParameterHelper {
      *
      * @return Bridge version string
      */
+    @NonNull
     public static String getBridgeVersion() {
         return System.getProperty(Parameters.BRIDGE_VERSION_ENVIRONEMENT_VAR, "");
     }
@@ -193,6 +220,7 @@ public final class SystemParameterHelper {
      *
      * @return Plugin version string
      */
+    @NonNull
     public static String getPluginVersion() {
         return System.getProperty(Parameters.PLUGIN_VERSION_ENVIRONEMENT_VAR, "");
     }
@@ -201,6 +229,7 @@ public final class SystemParameterHelper {
      * Get the android sdk api level
      * @return The android sdk api level
      */
+    @NonNull
     public static String getOSSdkLevel() {
         return String.valueOf(Build.VERSION.SDK_INT);
     }
@@ -209,6 +238,7 @@ public final class SystemParameterHelper {
      * Get the batch sdk api level
      * @return The batch sdk api level
      */
+    @NonNull
     public static String getSdkApiLevel() {
         return String.valueOf(Parameters.API_LEVEL);
     }
@@ -217,6 +247,7 @@ public final class SystemParameterHelper {
      * Get the batch sdk messaging api level
      * @return The batch sdk messaging api level
      */
+    @NonNull
     public static String getSdkMessagingApiLevel() {
         return String.valueOf(Parameters.MESSAGING_API_LEVEL);
     }
@@ -229,6 +260,7 @@ public final class SystemParameterHelper {
      * @return A JSONObject related to the given list of parameters
      * @throws JSONException parsing exception
      */
+    @NonNull
     public static JSONObject serializeSystemParameters(@NonNull List<WatchedSystemParameter> parameters)
         throws JSONException {
         JSONObject serializedParameters = new JSONObject();

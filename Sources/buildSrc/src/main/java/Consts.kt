@@ -1,18 +1,18 @@
 object ProjectConsts {
-    const val COMPILE_SDK = 34
+    const val COMPILE_SDK = 35
 
     const val KOTLIN_VERSION = "1.9.0"
     const val KOTLIN_COROUTINES_VERSION = "1.7.1"
 
     const val ANDROID_LINT_VERSION = "30.1.2"
 
-    const val ANDROID_GRADLE_PLUGIN_VERSION = "8.3.0"
+    const val ANDROID_GRADLE_PLUGIN_VERSION = "8.6.0"
     const val GMS_GRADLE_PLUGIN_VERSION = "4.3.14"
 }
 
 object SDKConsts {
-    const val VERSION = "2.0.3"
-    const val API_LEVEL = 200
+    const val VERSION = "2.1.0"
+    const val API_LEVEL = 210
     const val MESSAGING_API_LEVEL = 12
 
     const val MIN_SDK = 21

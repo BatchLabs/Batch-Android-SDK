@@ -37,7 +37,9 @@ class BatchProfileAttributeEditorTest : DITest() {
             setLanguage("fr")
             setRegion("FR")
             setEmailAddress("test@batch.com")
+            setPhoneNumber("+33612345678")
             setEmailMarketingSubscription(BatchEmailSubscriptionState.SUBSCRIBED)
+            setSMSMarketingSubscription(BatchSMSSubscriptionState.SUBSCRIBED)
             setAttribute("string_att", "hello")
             setAttribute("int_att", 3)
             setAttribute("double_att", 3.6)
@@ -53,7 +55,9 @@ class BatchProfileAttributeEditorTest : DITest() {
 
         val expectedProfileDataChangedParams = JSONObject().apply {
             put("email", "test@batch.com")
+            put("phone_number", "+33612345678")
             put("email_marketing", "subscribed")
+            put("sms_marketing", "subscribed")
             put("language", "fr")
             put("region", "FR")
             put("custom_attributes", JSONObject().apply {
@@ -117,6 +121,7 @@ class BatchProfileAttributeEditorTest : DITest() {
             setLanguage("fr")
             setRegion("FR")
             setEmailAddress("test@batch.com")
+            setPhoneNumber("+33612345678")
             setAttribute("string_att", "hello")
             setAttribute("int_att", 3)
             setAttribute("double_att", 3.6)
@@ -133,6 +138,7 @@ class BatchProfileAttributeEditorTest : DITest() {
             setLanguage(null)
             setRegion(null)
             setEmailAddress(null)
+            setPhoneNumber(null)
             removeAttribute("string_att")
             removeAttribute("int_att")
             removeAttribute("double_att")
@@ -144,6 +150,7 @@ class BatchProfileAttributeEditorTest : DITest() {
         // Expected profile data changed event parameter
         val expectedProfileDataChangedParams = JSONObject().apply {
             put("email", JSONObject.NULL)
+            put("phone_number", JSONObject.NULL)
             put("language", JSONObject.NULL)
             put("region", JSONObject.NULL)
             put("custom_attributes", JSONObject().apply {

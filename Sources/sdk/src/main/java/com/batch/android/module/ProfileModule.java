@@ -89,6 +89,16 @@ public final class ProfileModule extends BatchModule {
             return;
         }
 
+        if (ProfileDataHelper.isBlocklistedCustomUserID(identifier)) {
+            Logger.error(
+                TAG,
+                "identify called with a blocklisted identifier: `" +
+                identifier +
+                "`, Please ensure you have correctly implemented the API."
+            );
+            return;
+        }
+
         Context context = RuntimeManagerProvider.get().getContext();
         if (context == null) {
             Logger.error(TAG, "Batch does not have a context yet. Make sure Batch is started.");

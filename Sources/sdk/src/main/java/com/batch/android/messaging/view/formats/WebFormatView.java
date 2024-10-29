@@ -118,6 +118,7 @@ public class WebFormatView extends FrameLayout {
         webSettings.setSupportZoom(false);
         webSettings.setDefaultTextEncodingName("utf-8");
         webSettings.setSupportMultipleWindows(true);
+        webSettings.setAllowContentAccess(false);
 
         // Work around an issue where android could show "ERR_CACHE_MISS"
         // In a perfect world we would like to make use of the browser cache

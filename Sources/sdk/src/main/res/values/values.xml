@@ -8,4 +8,6 @@
     <style name="com_batchsdk_TextAppearance.Debug.Headline" parent="@android:style/TextAppearance.Widget.Button" />
 
     <style name="com_batchsdk_TextAppearance.Debug.Body" parent="@android:style/TextAppearance.Small" />
+
+    <style name="com_batchsdk_OptOutEdgeToEdgeEnforcement"/>
 </resources>
