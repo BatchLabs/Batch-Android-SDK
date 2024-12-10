@@ -43,6 +43,6 @@ public class BatchMessageAction {
     }
 
     public boolean isDismissAction() {
-        return action == null;
+        return action == null || "batch.dismiss".equals(action);
     }
 }

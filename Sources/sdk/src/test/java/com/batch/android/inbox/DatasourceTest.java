@@ -192,6 +192,8 @@ public class DatasourceTest {
         );
         assertEquals(2, notifications.size());
         assertEquals("test-id", notifications.get(0).identifiers.identifier);
+        assertEquals("test title", notifications.get(0).title);
+        assertEquals("test body", notifications.get(0).body);
         assertEquals("test-id-2", notifications.get(1).identifiers.identifier);
     }
 

@@ -156,14 +156,7 @@ public class InboxFetchWebserviceClient extends BatchWebservice implements TaskR
             // If so we're probably doing useless work
             final Map<String, String> convertedPayload = new HashMap<>();
             for (String payloadKey : payload.keySet()) {
-                try {
-                    convertedPayload.put(payloadKey, payload.getString(payloadKey));
-                } catch (JSONException ignored) {
-                    Logger.internal(
-                        TAG,
-                        "Could not coalesce payload value to string for key \"" + payloadKey + "\". Ignoring."
-                    );
-                }
+                convertedPayload.put(payloadKey, payload.reallyOptString(payloadKey, null));
             }
 
             final NotificationIdentifiers identifiers = new NotificationIdentifiers(

@@ -695,16 +695,15 @@ public final class InboxDatasource {
                 identifiers
             );
 
-            c.body = payload.reallyOptString(Batch.Push.BODY_KEY, null);
-            c.title = payload.reallyOptString(Batch.Push.TITLE_KEY, null);
+            String title = cursor.getString(cursor.getColumnIndexOrThrow(InboxDatabaseHelper.COLUMN_TITLE));
+            String body = cursor.getString(cursor.getColumnIndexOrThrow(InboxDatabaseHelper.COLUMN_BODY));
+            c.title = title.isEmpty() ? null : title;
+            c.body = body.isEmpty() ? null : body;
             c.isUnread = cursor.getInt(cursor.getColumnIndexOrThrow(InboxDatabaseHelper.COLUMN_UNREAD)) != 0;
-
             return c;
         } catch (JSONException e) {
             Logger.internal(TAG, "Could not parse notification from DB", e);
         }
-
-        // JSON IN DB IS INVALID -- TODO DELETE LINE
         return null;
     }
 
