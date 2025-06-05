@@ -26,6 +26,7 @@ public class SmartReOptInAction extends BroadcastReceiver implements UserActionR
     private static final String TAG = "SmartReOptInAction";
 
     public static final String IDENTIFIER = ActionModule.RESERVED_ACTION_IDENTIFIER_PREFIX + "android_smart_reoptin";
+    public static final String IDENTIFIER_CEP = ActionModule.RESERVED_ACTION_IDENTIFIER_PREFIX + "smart_reoptin";
 
     @Override
     public void performAction(

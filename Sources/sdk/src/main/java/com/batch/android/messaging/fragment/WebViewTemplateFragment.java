@@ -5,7 +5,6 @@ import static com.batch.android.BatchMessagingWebViewJavascriptBridge.Developmen
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.ContextMenu;
@@ -36,8 +35,8 @@ import com.batch.android.messaging.css.Parser;
 import com.batch.android.messaging.css.builtin.BuiltinStyleProvider;
 import com.batch.android.messaging.model.Action;
 import com.batch.android.messaging.model.MessagingError;
-import com.batch.android.messaging.model.WebViewMessage;
-import com.batch.android.messaging.view.formats.WebFormatView;
+import com.batch.android.messaging.model.mep.WebViewMessage;
+import com.batch.android.messaging.view.formats.mep.WebFormatView;
 import com.batch.android.messaging.view.helper.StyleHelper;
 import com.batch.android.messaging.view.helper.ThemeHelper;
 import com.batch.android.messaging.view.helper.ViewCompat;

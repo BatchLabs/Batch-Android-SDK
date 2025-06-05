@@ -1,8 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Legacy Theme -->
-    <style name="com_batchsdk_AdActivityTheme" parent="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"></style>
+    <style name="com_batchsdk_CEPDialogTheme" parent="@android:style/Theme.DeviceDefault.Dialog.NoActionBar.MinWidth">
+        <item name="android:windowBackground">@null</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowMinWidthMinor">100%</item>
+        <item name="android:windowMinWidthMajor">60%</item>
+    </style>
+
+    <style name="com_batchsdk_CEPDialogTheme.Fullscreen" parent="@style/com_batchsdk_CEPDialogTheme">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowMinWidthMajor">100%</item>
+    </style>
 
     <style name="com_batchsdk_MessagingActivityTheme" parent="@android:style/Theme.DeviceDefault.Dialog.NoActionBar.MinWidth">
         <item name="android:windowBackground">@null</item>
@@ -25,9 +37,7 @@
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:background">@android:color/transparent</item>
         <item name="android:windowIsFloating">false</item>
-        <item name="android:windowAnimationStyle">
-            @style/com_batchsdk_ModalDialogTheme.WindowAnimation
-        </item>
+        <item name="android:windowAnimationStyle">@style/com_batchsdk_ModalDialogTheme.WindowAnimation</item>
     </style>
 
     <style name="com_batchsdk_ModalDialogTheme.WindowAnimation" parent="@android:style/Animation.Activity">
@@ -39,7 +49,7 @@
         <item name="android:windowFullscreen">true</item>
     </style>
 
-    <style name="com_batchsdk_ImageDialogThemeBase" parent="@style/com_batchsdk_ModalDialogTheme"></style>
+    <style name="com_batchsdk_ImageDialogThemeBase" parent="@style/com_batchsdk_ModalDialogTheme" />
 
     <style name="com_batchsdk_ImageDialogFullscreenTheme" parent="@style/com_batchsdk_ImageDialogThemeBase">
         <!-- Overrides in -v21 -->
@@ -63,5 +73,5 @@
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
-    <style name="com_batchsdk_DebugActivityTheme" parent="@android:style/Theme.DeviceDefault.Light.DarkActionBar"></style>
+    <style name="com_batchsdk_DebugActivityTheme" parent="@android:style/Theme.DeviceDefault.Light.NoActionBar" />
 </resources>

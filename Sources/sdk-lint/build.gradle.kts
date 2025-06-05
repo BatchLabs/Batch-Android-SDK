@@ -3,17 +3,13 @@ plugins {
 }
 
 dependencies {
-    val lintVersion = ProjectConsts.ANDROID_LINT_VERSION
-
-    compileOnly("com.android.tools.lint:lint-api:$lintVersion")
-    compileOnly("com.android.tools.lint:lint-checks:$lintVersion")
-
-    testImplementation("junit:junit:4.12")
-    testImplementation("com.android.tools.lint:lint:$lintVersion")
-    testImplementation("com.android.tools.lint:lint-tests:$lintVersion")
-    testImplementation("com.android.tools:testutils:$lintVersion")
+    compileOnly(libs.lint.api)
+    compileOnly(libs.lint.checks)
+    testImplementation(libs.junit)
+    testImplementation(libs.lint)
+    testImplementation(libs.lint.tests)
+    testImplementation(libs.testutils)
 }
-
 
 tasks.withType<Jar> {
     manifest {

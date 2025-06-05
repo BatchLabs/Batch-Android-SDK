@@ -7,8 +7,8 @@ import androidx.annotation.Nullable;
 import com.batch.android.BatchWebservice;
 import com.batch.android.core.Logger;
 import com.batch.android.core.ParameterKeys;
-import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskRunnable;
+import com.batch.android.core.domain.DomainURLBuilder;
 import com.batch.android.di.providers.InboxDatasourceProvider;
 import com.batch.android.json.JSONArray;
 import com.batch.android.json.JSONException;
@@ -56,7 +56,7 @@ public class InboxSyncWebserviceClient extends BatchWebservice implements TaskRu
         @NonNull List<InboxCandidateNotificationInternal> candidates,
         @NonNull InboxWebserviceListener listener
     ) throws MalformedURLException {
-        super(context, RequestType.POST, Parameters.INBOX_SYNC_WS_URL, type.toWSPathElement(), identifier);
+        super(context, RequestType.POST, DomainURLBuilder.INBOX_SYNC_WS_URL, type.toWSPathElement(), identifier);
         this.authentication = authentication;
         this.fetcherId = fetcherId;
         this.candidates = candidates;

@@ -18,6 +18,7 @@ import com.batch.android.BatchMessage;
 import com.batch.android.BatchMessageAction;
 import com.batch.android.BatchMessageCTA;
 import com.batch.android.BatchMessagingException;
+import com.batch.android.BatchMessagingView;
 import com.batch.android.MessagingActivity;
 import com.batch.android.core.Logger;
 import com.batch.android.core.ReflectionHelper;
@@ -28,24 +29,27 @@ import com.batch.android.di.providers.TrackerModuleProvider;
 import com.batch.android.event.InternalEvents;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
-import com.batch.android.messaging.PayloadParser;
-import com.batch.android.messaging.PayloadParsingException;
 import com.batch.android.messaging.fragment.AlertTemplateFragment;
 import com.batch.android.messaging.fragment.ImageTemplateFragment;
 import com.batch.android.messaging.fragment.ModalTemplateFragment;
 import com.batch.android.messaging.fragment.UniversalTemplateFragment;
 import com.batch.android.messaging.fragment.WebViewTemplateFragment;
+import com.batch.android.messaging.fragment.cep.CEPTemplateFragment;
 import com.batch.android.messaging.model.Action;
-import com.batch.android.messaging.model.AlertMessage;
-import com.batch.android.messaging.model.BannerMessage;
 import com.batch.android.messaging.model.CTA;
-import com.batch.android.messaging.model.ImageMessage;
 import com.batch.android.messaging.model.Message;
 import com.batch.android.messaging.model.MessagingError;
-import com.batch.android.messaging.model.ModalMessage;
-import com.batch.android.messaging.model.UniversalMessage;
-import com.batch.android.messaging.model.WebViewMessage;
-import com.batch.android.messaging.view.styled.TextView;
+import com.batch.android.messaging.model.cep.CEPMessage;
+import com.batch.android.messaging.model.cep.InAppComponent;
+import com.batch.android.messaging.model.mep.AlertMessage;
+import com.batch.android.messaging.model.mep.BannerMessage;
+import com.batch.android.messaging.model.mep.ImageMessage;
+import com.batch.android.messaging.model.mep.ModalMessage;
+import com.batch.android.messaging.model.mep.UniversalMessage;
+import com.batch.android.messaging.model.mep.WebViewMessage;
+import com.batch.android.messaging.parsing.PayloadParser;
+import com.batch.android.messaging.parsing.PayloadParsingException;
+import com.batch.android.messaging.view.styled.mep.TextView;
 import com.batch.android.processor.Module;
 import com.batch.android.processor.Provide;
 import com.batch.android.processor.Singleton;
@@ -99,13 +103,15 @@ public class MessagingModule extends BatchModule {
 
     private Messaging.LifecycleListener listener = null;
 
+    private Messaging.InAppInterceptor interceptor = null;
+
     private boolean doNotDisturbMode = false;
 
     private BatchMessage pendingMessage = null;
 
-    private ActionModule actionModule;
+    private final ActionModule actionModule;
 
-    private TrackerModule trackerModule;
+    private final TrackerModule trackerModule;
 
     private MessagingModule(ActionModule actionModule, TrackerModule trackerModule) {
         this.actionModule = actionModule;
@@ -147,6 +153,10 @@ public class MessagingModule extends BatchModule {
         return listener;
     }
 
+    public Messaging.InAppInterceptor getInterceptor() {
+        return interceptor;
+    }
+
     public boolean isDoNotDisturbEnabled() {
         return doNotDisturbMode;
     }
@@ -166,10 +176,16 @@ public class MessagingModule extends BatchModule {
     public void setTypefaceOverride(@Nullable Typeface normalTypeface, @Nullable Typeface boldTypeface) {
         TextView.typefaceOverride = normalTypeface;
         TextView.boldTypefaceOverride = boldTypeface;
+        InAppComponent.FontDecorationComponent.setTypefaceOverride(normalTypeface);
+        InAppComponent.FontDecorationComponent.setBoldTypefaceOverride(boldTypeface);
     }
 
     public void setLifecycleListener(Messaging.LifecycleListener listener) {
         this.listener = listener;
+    }
+
+    public void setInAppInterceptor(Messaging.InAppInterceptor interceptor) {
+        this.interceptor = interceptor;
     }
 
     public void setDoNotDisturbEnabled(boolean enableDnd) {
@@ -235,23 +251,22 @@ public class MessagingModule extends BatchModule {
             );
         }
 
-        Message message;
-
+        Message message = null;
         try {
-            message = PayloadParser.parsePayload(json);
-
-            if (payloadMessage instanceof BatchInAppMessage) {
-                message.source = Message.Source.LOCAL;
-            } else if (payloadMessage instanceof BatchLandingMessage) {
-                if (((BatchLandingMessage) payloadMessage).isDisplayedFromInbox()) {
-                    message.source = Message.Source.INBOX_LANDING;
-                } else {
-                    message.source = Message.Source.LANDING;
-                }
-            }
+            message = PayloadParser.parseUnknownLandingMessage(json);
         } catch (PayloadParsingException e) {
             Logger.error(TAG, "Error while parsing push payload", e);
             throw new BatchMessagingException(e.getMessage());
+        }
+
+        if (payloadMessage instanceof BatchInAppMessage) {
+            message.source = Message.Source.LOCAL;
+        } else if (payloadMessage instanceof BatchLandingMessage) {
+            if (((BatchLandingMessage) payloadMessage).isDisplayedFromInbox()) {
+                message.source = Message.Source.INBOX_LANDING;
+            } else {
+                message.source = Message.Source.LANDING;
+            }
         }
 
         if (message instanceof AlertMessage) {
@@ -268,6 +283,8 @@ public class MessagingModule extends BatchModule {
             throw new BatchMessagingException(
                 "This message is a banner. Please use the dedicated loadBanner() method."
             );
+        } else if (message instanceof CEPMessage) {
+            return CEPTemplateFragment.newInstance(payloadMessage, (CEPMessage) message);
         } else {
             throw new BatchMessagingException("Internal error (code 10)");
         }
@@ -294,29 +311,28 @@ public class MessagingModule extends BatchModule {
             );
         }
 
-        Message message;
-
+        Message message = null;
         try {
-            message = PayloadParser.parsePayload(json);
-
-            if (payloadMessage instanceof BatchInAppMessage) {
-                message.source = Message.Source.LOCAL;
-            } else if (payloadMessage instanceof BatchLandingMessage) {
-                if (((BatchLandingMessage) payloadMessage).isDisplayedFromInbox()) {
-                    message.source = Message.Source.INBOX_LANDING;
-                } else {
-                    message.source = Message.Source.LANDING;
-                }
-            }
+            message = PayloadParser.parseUnknownLandingMessage(json);
         } catch (PayloadParsingException e) {
             Logger.error(TAG, "Error while parsing push payload", e);
             throw new BatchMessagingException(e.getMessage());
         }
 
-        if (message instanceof BannerMessage) {
+        if (payloadMessage instanceof BatchInAppMessage) {
+            message.source = Message.Source.LOCAL;
+        } else if (payloadMessage instanceof BatchLandingMessage) {
+            if (((BatchLandingMessage) payloadMessage).isDisplayedFromInbox()) {
+                message.source = Message.Source.INBOX_LANDING;
+            } else {
+                message.source = Message.Source.LANDING;
+            }
+        }
+
+        if (message.isBannerMessage()) {
             return BatchBannerViewPrivateHelper.newInstance(
                 payloadMessage,
-                (BannerMessage) message,
+                message,
                 MessagingAnalyticsDelegateProvider.get(message, payloadMessage)
             );
         } else {
@@ -340,20 +356,26 @@ public class MessagingModule extends BatchModule {
         // Try to load the banner corresponding to the message. If it's not a banner, fallback on the interstitial activity
 
         try {
-            BatchBannerView banner = Batch.Messaging.loadBanner(context, message);
-            if (context instanceof Activity) {
-                banner.show((Activity) context);
-            } else {
-                Logger.error(
-                    TAG,
-                    "A banner was attempted to be displayed, but the given context is not an Activity. Cannot continue."
-                );
+            BatchMessagingView view = Batch.Messaging.loadMessagingView(context, message);
+            if (view.getKind() == BatchMessagingView.Kind.View) {
+                if (context instanceof Activity) {
+                    view.showView((Activity) context);
+                } else {
+                    Logger.error(
+                        TAG,
+                        "A banner was attempted to be displayed, but the given context is not an Activity. Cannot continue."
+                    );
+                }
+                return;
             }
-            return;
         } catch (BatchMessagingException e) {
-            // Don't log: it's simply not a banner
+            Logger.error(
+                TAG,
+                "A banner was attempted to be displayed, but the given context is not an Activity. Cannot continue."
+            );
         }
-
+        // If view is not a banner fallback on the messaging activity
+        // to display the message as fragment
         MessagingActivity.startActivityForMessage(context, message);
     }
 
@@ -364,9 +386,9 @@ public class MessagingModule extends BatchModule {
 
             // Give a chance to the developer to intercept and prevent the display
             // of the In-App message
-            Messaging.LifecycleListener listener = getListener();
-            if (listener instanceof Messaging.LifecycleListener2) {
-                shouldDisplayMessage = !((Messaging.LifecycleListener2) listener).onBatchInAppMessageReady(message);
+            Messaging.InAppInterceptor inAppInterceptor = getInterceptor();
+            if (inAppInterceptor != null) {
+                shouldDisplayMessage = !inAppInterceptor.onBatchInAppMessageReady(message);
             }
 
             if (shouldDisplayMessage) {
@@ -436,7 +458,29 @@ public class MessagingModule extends BatchModule {
         }
     }
 
-    private void trackCTAClickEvent(@NonNull Message message, int ctaIndex, @Nullable String action) {
+    private void trackCTAClickEvent(
+        @NonNull Message message,
+        @NonNull String ctaIdentifier,
+        @NonNull String ctaType,
+        @Nullable String action
+    ) {
+        Object actionName = JSONObject.NULL;
+        if (action != null) {
+            actionName = action;
+        }
+
+        try {
+            final JSONObject parameters = generateBaseEventParameters(message, MESSAGING_EVENT_NAME_CTA);
+            parameters.put("ctaId", ctaIdentifier);
+            parameters.put("ctaType", ctaType);
+            parameters.put("action", actionName);
+            trackerModule.track(InternalEvents.MESSAGING, parameters);
+        } catch (JSONException e) {
+            Logger.internal(TAG, "Error while tracking CTA event", e);
+        }
+    }
+
+    private void trackOldCTAClickEvent(@NonNull Message message, int ctaIndex, @Nullable String action) {
         Object actionName = JSONObject.NULL;
         if (action != null) {
             actionName = action;
@@ -483,7 +527,10 @@ public class MessagingModule extends BatchModule {
     public void onMessageDismissed(@NonNull Message message) {
         trackGenericEvent(message, MESSAGING_EVENT_NAME_DISMISS);
         if (listener != null) {
-            listener.onBatchMessageClosed(message.devTrackingIdentifier);
+            listener.onBatchMessageClosed(
+                message.devTrackingIdentifier,
+                Messaging.LifecycleListener.MessagingCloseReason.Action
+            );
         }
     }
 
@@ -491,14 +538,36 @@ public class MessagingModule extends BatchModule {
     public void onMessageClosed(@NonNull Message message) {
         trackGenericEvent(message, MESSAGING_EVENT_NAME_CLOSE);
         if (listener != null) {
-            listener.onBatchMessageCancelledByUser(message.devTrackingIdentifier);
+            listener.onBatchMessageClosed(
+                message.devTrackingIdentifier,
+                Messaging.LifecycleListener.MessagingCloseReason.User
+            );
         }
     }
 
+    // Used only for MEP messages
     public void onMessageCTAClicked(@NonNull Message message, int ctaIndex, @NonNull CTA cta) {
-        trackCTAClickEvent(message, ctaIndex, cta.action);
+        trackOldCTAClickEvent(message, ctaIndex, cta.action);
         if (listener != null) {
-            listener.onBatchMessageActionTriggered(message.devTrackingIdentifier, ctaIndex, new BatchMessageCTA(cta));
+            String ctaIdentifier = "mepCtaIndex:".concat(String.valueOf(ctaIndex)); // Old MEP ctaIndex prefixed with "mepCtaIndex"
+            listener.onBatchMessageActionTriggered(
+                message.devTrackingIdentifier,
+                ctaIdentifier,
+                new BatchMessageCTA(cta)
+            );
+        }
+    }
+
+    // Used only for CEP messages
+    public void onMessageCTAClicked(
+        @NonNull Message message,
+        @NonNull String ctaId,
+        @NonNull String ctaType,
+        @NonNull CTA cta
+    ) {
+        trackCTAClickEvent(message, ctaId, ctaType, cta.action);
+        if (listener != null) {
+            listener.onBatchMessageActionTriggered(message.devTrackingIdentifier, ctaId, new BatchMessageCTA(cta));
         }
     }
 
@@ -511,7 +580,7 @@ public class MessagingModule extends BatchModule {
         trackWebViewClickEvent(message, action.action, buttonAnalyticsId);
 
         if (listener != null) {
-            listener.onBatchMessageWebViewActionTriggered(
+            listener.onBatchMessageActionTriggered(
                 message.devTrackingIdentifier,
                 buttonAnalyticsId,
                 new BatchMessageAction(action)
@@ -545,7 +614,10 @@ public class MessagingModule extends BatchModule {
     public void onMessageAutoClosed(@NonNull Message message) {
         trackGenericEvent(message, MESSAGING_EVENT_NAME_AUTO_CLOSE);
         if (listener != null) {
-            listener.onBatchMessageCancelledByAutoclose(message.devTrackingIdentifier);
+            listener.onBatchMessageClosed(
+                message.devTrackingIdentifier,
+                Messaging.LifecycleListener.MessagingCloseReason.Auto
+            );
         }
     }
 
@@ -553,7 +625,10 @@ public class MessagingModule extends BatchModule {
     public void onMessageClosedError(@NonNull Message message, @NonNull MessagingError cause) {
         trackCloseErrorEvent(message, cause);
         if (listener != null) {
-            listener.onBatchMessageCancelledByError(message.devTrackingIdentifier);
+            listener.onBatchMessageClosed(
+                message.devTrackingIdentifier,
+                Messaging.LifecycleListener.MessagingCloseReason.Error
+            );
         }
     }
     //endregion

@@ -4,6 +4,7 @@
     <item name="com_batchsdk_messaging_background_view" type="id" />
     <item name="com_batchsdk_messaging_container_view" type="id" />
     <item name="com_batchsdk_messaging_content_view" type="id" />
+    <item name="com_batchsdk_messaging_scroll_view" type="id" />
     <item name="com_batchsdk_messaging_image_view" type="id" />
     <item name="com_batchsdk_messaging_image_container_view" type="id" />
     <item name="com_batchsdk_messaging_web_view" type="id" />

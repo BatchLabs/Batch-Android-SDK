@@ -19,16 +19,16 @@ if (signingFile.exists()) {
 }
 
 nexusStaging {
-    packageGroup = mavenGroupId
+    packageGroup = libs.versions.batchMavenGroupId.get()
 }
 
 publishing {
     publications {
         release(MavenPublication) {
 
-            groupId mavenGroupId
-            artifactId mavenArtifact
-            version mavenArtifactVersion
+            groupId libs.versions.batchMavenGroupId.get()
+            artifactId libs.versions.batchMavenArtifact.get()
+            version libs.versions.batchSdk.get()
 
             afterEvaluate {
                 from components.release
@@ -207,7 +207,7 @@ signing {
 }
 
 // Do not sign if we run the publishToMavenLocal task, useful for dev
-tasks.withType(Sign) {
+tasks.withType(Sign).configureEach {
     onlyIf {
         !project.gradle.startParameter.taskNames.contains('publishToMavenLocal') &&
                 !project.gradle.startParameter.taskNames.contains('sdk:publishToMavenLocal')

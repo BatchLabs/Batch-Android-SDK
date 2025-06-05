@@ -1,38 +1,36 @@
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.dokka")
+    id("com.google.devtools.ksp")
+    id("com.ncorti.ktfmt.gradle")
 }
 
-// Required for Groovy compatibility, which cannot use Consts.kt
-ext {
-    set("mavenGroupId", SDKConsts.MAVEN_GROUP_ID)
-    set("mavenArtifact", SDKConsts.MAVEN_ARTIFACT)
-    set("mavenArtifactVersion", SDKConsts.MAVEN_ARTIFACT_VERSION)
-}
-
-base {
-    archivesName.set("Batch")
-}
+base { archivesName.set("Batch") }
 
 android {
-    compileSdk = ProjectConsts.COMPILE_SDK
+    compileSdk = libs.versions.androidCompileSdk.get().toInt()
 
-    resourcePrefix = SDKConsts.R_PREFIX
-    namespace = SDKConsts.NAMESPACE
-    testNamespace = SDKConsts.TEST_NAMESPACE
+    resourcePrefix = libs.versions.batchResourcePrefix.get()
+    namespace = libs.versions.batchNamespace.get()
+    testNamespace = libs.versions.batchTestNamespace.get()
 
     defaultConfig {
-        minSdk = SDKConsts.MIN_SDK
+        minSdk = libs.versions.androidMinSdk.get().toInt()
 
-        buildConfigField("String", "SDK_VERSION", "\"${SDKConsts.VERSION}\"")
-        buildConfigField("Integer", "API_LEVEL", "${SDKConsts.API_LEVEL}")
-        buildConfigField("Integer", "MESSAGING_API_LEVEL", "${SDKConsts.MESSAGING_API_LEVEL}")
-        buildConfigField("String", "WS_DOMAIN", "\"ws.batch.com\"")
+        buildConfigField("String", "SDK_VERSION", "\"${libs.versions.batchSdk.get()}\"")
+        buildConfigField("Integer", "API_LEVEL", "${libs.versions.batchApiLevel.get().toInt()}")
+        buildConfigField(
+            "Integer",
+            "MESSAGING_API_LEVEL",
+            "${libs.versions.batchMessagingApiLevel.get().toInt()}",
+        )
 
         consumerProguardFiles("proguard-consumer-rules.txt")
-        project.version = SDKConsts.VERSION
+        project.version = libs.versions.batchSdk.get()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -41,15 +39,15 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
+    kotlinOptions { jvmTarget = "1.8" }
 
     buildTypes {
-
         release {
             isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-sdk-release.txt")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android.txt"),
+                "proguard-sdk-release.txt",
+            )
 
             buildConfigField("boolean", "ENABLE_DEBUG_LOGGER", "false")
             buildConfigField("boolean", "ENABLE_WS_INTERCEPTOR", "false")
@@ -64,9 +62,7 @@ android {
         }
     }
 
-    buildFeatures {
-        buildConfig = true
-    }
+    buildFeatures { buildConfig = true }
 
     testOptions {
         unitTests {
@@ -74,8 +70,17 @@ android {
             isIncludeAndroidResources = true
             all {
                 apply {
-                    it.jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED")
-                    it.testLogging.events = setOf(TestLogEvent.STARTED, TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED)
+                    it.jvmArgs(
+                        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+                        "--add-opens=java.base/java.util=ALL-UNNAMED",
+                    )
+                    it.testLogging.events =
+                        setOf(
+                            TestLogEvent.STARTED,
+                            TestLogEvent.PASSED,
+                            TestLogEvent.SKIPPED,
+                            TestLogEvent.FAILED,
+                        )
                     it.testLogging.showCauses = true
                     it.testLogging.showExceptions = true
                 }
@@ -96,72 +101,93 @@ android {
     }
 }
 
-// Prevent from having accidental kotlin in production code
-/*afterEvaluate {
-    android.sourceSets.all { sourceSet ->
-        if (!sourceSet.name.startsWith("test")) {
-            sourceSet.kotlin.setSrcDirs([])
+// Print the sdk version name
+tasks.register("printVersion") { doLast { println(project.version) } }
+
+dokka {
+    moduleName.set("Batch Android SDK")
+    dokkaSourceSets.main {
+        // includes.from("README.md") // Texte a mettre sur la page d'intro
+        sourceLink {
+            localDirectory.set(file("src/main"))
+            remoteUrl("https://github.com/BatchLabs/Batch-Android-SDK")
+            // remoteLineSuffix.set("#L")
+        }
+
+        documentedVisibilities(VisibilityModifier.Public)
+
+        perPackageOption {
+            matchingRegex.set("""com\.batch\.android\..*""") // will match all subpackages
+            suppress.set(true)
+        }
+
+        perPackageOption {
+            matchingRegex.set("""com\.batch\.android\.json""") // will match all subpackages
+            suppress.set(false)
         }
     }
-}*/
-
-// Print the sdk version name
-tasks.register("printVersion") {
-    doLast {
-        println(project.version)
-    }
+    pluginsConfiguration.html { footerMessage.set("(c) Batch") }
+    dokkaPublications.html { outputDirectory.set(project.rootProject.file("../javadoc")) }
 }
 
+ktfmt { kotlinLangStyle() }
+
 dependencies {
+    // We use `api` since some androidx compatibility models
+    // are exposed through our public api (eg: BatchNotificationInterceptor)
+    api(libs.androidx.core.ktx)
 
-    val androidXLibraryVersion = SDKConsts.DependenciesVersions.ANDROIDX
-    val kotlinCoroutinesVersion = ProjectConsts.KOTLIN_COROUTINES_VERSION
-
-    api("androidx.core:core:${androidXLibraryVersion}")
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlinx.coroutines.android)
 
     compileOnly(project(":sdk-stubs"))
     compileOnly(project(":sdk-processor"))
-    annotationProcessor(project(":sdk-processor"))
+    ksp(project(":sdk-processor"))
     lintChecks(project(":sdk-lint"))
 
-    compileOnly("com.google.android.play:review:2.0.1")
-    compileOnly("com.google.firebase:firebase-messaging:22.0.0")
-    compileOnly("com.google.android.material:material:${androidXLibraryVersion}")
-    compileOnly("androidx.appcompat:appcompat:${androidXLibraryVersion}")
-    compileOnly("androidx.dynamicanimation:dynamicanimation:$androidXLibraryVersion")
+    compileOnly(libs.google.play.review)
+    compileOnly(libs.firebase.messaging)
+    compileOnly(libs.material)
+    compileOnly(libs.androidx.appcompat)
+    compileOnly(libs.androidx.dynamicanimation)
 
-    androidTestImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test:core-ktx:1.5.0")
-    androidTestImplementation("androidx.test:rules:1.5.0")
-    androidTestImplementation("androidx.test:runner:1.5.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation("androidx.test.ext:truth:1.5.0")
-    androidTestImplementation("com.google.firebase:firebase-core:17.4.3")
-    androidTestImplementation("androidx.appcompat:appcompat:${androidXLibraryVersion}")
-    androidTestImplementation("androidx.annotation:annotation:${androidXLibraryVersion}")
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.core.ktx)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.espresso.intents)
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.test.truth)
+    androidTestImplementation(libs.firebase.core)
+    androidTestImplementation(libs.androidx.appcompat)
+    androidTestImplementation(libs.androidx.annotation)
 
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("org.mockito:mockito-core:5.4.0")
-    testImplementation("androidx.test:core:1.5.0")
-    testImplementation("androidx.test:rules:1.5.0")
-    testImplementation("androidx.test.ext:junit:1.1.5")
-    testImplementation("androidx.test.ext:junit-ktx:1.1.5")
-    testImplementation("androidx.test.espresso:espresso-intents:3.5.1")
-    testImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    testImplementation("androidx.test.ext:truth:1.5.0")
-    testImplementation("androidx.appcompat:appcompat:${androidXLibraryVersion}")
+    testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.rules)
+    testImplementation(libs.androidx.test.junit)
+    testImplementation(libs.androidx.test.junit.ktx)
+    testImplementation(libs.androidx.test.espresso.intents)
+    testImplementation(libs.androidx.test.espresso.core)
+    testImplementation(libs.androidx.test.truth)
+    testImplementation(libs.androidx.appcompat)
+    testImplementation(libs.kotlin.test)
 
-    testImplementation("org.robolectric:robolectric:4.9.2")
-    testImplementation("org.powermock:powermock-module-junit4:2.0.9")
-    testImplementation("org.powermock:powermock-module-junit4-rule:2.0.9")
-    testImplementation("org.powermock:powermock-api-mockito2:2.0.9")
-    testImplementation("org.powermock:powermock-classloading-xstream:2.0.9")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${kotlinCoroutinesVersion}")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:${kotlinCoroutinesVersion}")
+    testImplementation(libs.robolectric)
+    testImplementation(libs.powermock.module.junit4)
+    testImplementation(libs.powermock.module.junit4.rule)
+    testImplementation(libs.powermock.api.mockito2)
+    testImplementation(libs.powermock.classloading.xstream)
+    testImplementation(libs.kotlinx.coroutines.core)
+    testImplementation(libs.kotlinx.coroutines.android)
+
+    dokkaPlugin(project(":dokka-limit-public-api"))
 }
 
 apply(from = "maven-publish.gradle")
+
 apply(from = "jacoco.gradle")
+
 apply(from = "metalava.gradle")

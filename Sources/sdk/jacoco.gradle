@@ -11,7 +11,7 @@ jacoco {
 
 def offline_instrumented_outputDir = "$buildDir.path/intermediates/classes-instrumented/debug"
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
     jacoco.includeNoLocationClasses = true
     jacoco.excludes = ['jdk.internal.*']
 }
@@ -62,7 +62,7 @@ task testDebugCoverageUnitTest(dependsOn: ['instrument', 'testDebugUnitTest']) {
  */
 gradle.taskGraph.whenReady { graph ->
     if (graph.hasTask(instrument)) {
-        tasks.withType(Test) {
+        tasks.withType(Test).configureEach {
             doFirst {
                 systemProperty 'jacoco-agent.destfile', buildDir.path + '/jacoco/testDebugUnitTest.exec'
                 classpath = files(offline_instrumented_outputDir) + classpath + configurations.jacocoRuntime

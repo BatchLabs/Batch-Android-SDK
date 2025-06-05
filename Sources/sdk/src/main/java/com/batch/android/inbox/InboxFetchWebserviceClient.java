@@ -9,14 +9,13 @@ import com.batch.android.BatchWebservice;
 import com.batch.android.core.InternalPushData;
 import com.batch.android.core.Logger;
 import com.batch.android.core.ParameterKeys;
-import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskRunnable;
+import com.batch.android.core.domain.DomainURLBuilder;
 import com.batch.android.di.providers.InboxDatasourceProvider;
 import com.batch.android.json.JSONArray;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.post.PostDataProvider;
-import com.batch.android.processor.Provide;
 import com.batch.android.webservice.listener.InboxWebserviceListener;
 import java.net.MalformedURLException;
 import java.util.Date;
@@ -49,7 +48,7 @@ public class InboxFetchWebserviceClient extends BatchWebservice implements TaskR
         long fetcherId,
         @NonNull InboxWebserviceListener listener
     ) throws MalformedURLException {
-        super(context, RequestType.GET, Parameters.INBOX_FETCH_WS_URL, type.toWSPathElement(), identifier);
+        super(context, RequestType.GET, DomainURLBuilder.INBOX_FETCH_WS_URL, type.toWSPathElement(), identifier);
         this.authentication = authentication;
         this.fetcherId = fetcherId;
         this.listener = listener;

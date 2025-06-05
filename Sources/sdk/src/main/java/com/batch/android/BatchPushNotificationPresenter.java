@@ -17,7 +17,6 @@ import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
 import android.widget.RemoteViews;
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import com.batch.android.core.DeeplinkHelper;
@@ -26,24 +25,19 @@ import com.batch.android.core.Logger;
 import com.batch.android.core.NotificationAuthorizationStatus;
 import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.PushImageCache;
+import com.batch.android.core.PushNotificationType;
 import com.batch.android.core.ReflectionHelper;
 import com.batch.android.di.providers.BatchNotificationChannelsManagerProvider;
-import com.batch.android.di.providers.DisplayReceiptModuleProvider;
 import com.batch.android.di.providers.EventDispatcherModuleProvider;
-import com.batch.android.di.providers.LocalCampaignsWebserviceListenerImplProvider;
 import com.batch.android.di.providers.MessagingModuleProvider;
 import com.batch.android.di.providers.OptOutModuleProvider;
 import com.batch.android.di.providers.ParametersProvider;
 import com.batch.android.di.providers.PushModuleProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
-import com.batch.android.di.providers.TaskExecutorProvider;
 import com.batch.android.eventdispatcher.PushEventPayload;
-import com.batch.android.json.JSONException;
-import com.batch.android.json.JSONObject;
-import com.batch.android.messaging.PayloadParser;
-import com.batch.android.messaging.PayloadParsingException;
-import com.batch.android.messaging.model.BannerMessage;
 import com.batch.android.messaging.model.Message;
+import com.batch.android.messaging.parsing.PayloadParser;
+import com.batch.android.messaging.parsing.PayloadParsingException;
 import com.batch.android.module.PushModule;
 import com.batch.android.push.formats.APENFormat;
 import com.batch.android.push.formats.NotificationFormat;
@@ -110,10 +104,6 @@ public class BatchPushNotificationPresenter {
             if (OptOutModuleProvider.get().isOptedOutSync(context)) {
                 Logger.info(TAG, "Ignoring push as Batch has been Opted Out from");
                 return;
-            }
-
-            if (payload.getInternalData().getReceiptMode() == InternalPushData.ReceiptMode.FORCE) {
-                DisplayReceiptModuleProvider.get().scheduleDisplayReceipt(context, payload.getInternalData());
             }
 
             // Do not display if manual display is activated
@@ -512,10 +502,6 @@ public class BatchPushNotificationPresenter {
         canDisplay = NotificationAuthorizationStatus.canAppShowNotificationsForChannel(context, finalChannelId);
 
         if (canDisplay) {
-            if (batchData.getReceiptMode() == InternalPushData.ReceiptMode.DISPLAY) {
-                DisplayReceiptModuleProvider.get().scheduleDisplayReceipt(context, batchData);
-            }
-
             // We may come from background, try to reload dispatchers from manifest
             EventDispatcherModuleProvider.get().loadDispatcherFromContext(context);
             Batch.EventDispatcher.Payload eventPayload = new PushEventPayload(payload);
@@ -554,32 +540,27 @@ public class BatchPushNotificationPresenter {
             return false;
         }
 
-        final JSONObject messageJSON = batchData.getLandingMessage();
-
-        if (messageJSON == null) {
+        if (batchData.getLandingMessage() == null) {
             return false;
         }
 
         // Try to parse the message (not entirely) so that we're sure we can skip the display and don't miss the notification if we can't show it
         try {
-            final Message message = PayloadParser.parseBasePayload(messageJSON);
-            if (message != null) {
-                // Workaround for banners: The service context will be unable to display it.
-                if (message instanceof BannerMessage) {
-                    Activity currentActivity = RuntimeManagerProvider.get().getActivity();
-                    if (currentActivity != null) {
-                        context = currentActivity;
-                    } else {
-                        return false;
-                    }
+            final Message message = PayloadParser.parsePayload(batchData.getPayload());
+            // Workaround for banners: The service context will be unable to display it.
+            if (message.isBannerMessage()) {
+                Activity currentActivity = RuntimeManagerProvider.get().getActivity();
+                if (currentActivity != null) {
+                    context = currentActivity;
+                } else {
+                    return false;
                 }
-
-                MessagingModuleProvider
-                    .get()
-                    .displayMessage(context, new BatchLandingMessage(extras, messageJSON), false);
-                return true;
             }
-        } catch (PayloadParsingException | JSONException e) {
+            MessagingModuleProvider
+                .get()
+                .displayMessage(context, new BatchLandingMessage(extras, batchData.getLandingMessage()), false);
+            return true;
+        } catch (PayloadParsingException e) {
             Logger.internal(TAG, "Error while parsing the messaging payload. Not forwarding to foreground.", e);
         }
 

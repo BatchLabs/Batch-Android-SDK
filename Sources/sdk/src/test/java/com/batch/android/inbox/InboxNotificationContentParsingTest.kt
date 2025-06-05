@@ -7,10 +7,10 @@ import com.batch.android.BatchInboxNotificationContent
 import com.batch.android.BatchNotificationSource
 import com.batch.android.PrivateNotificationContentHelper
 import com.batch.android.json.JSONObject
+import java.util.*
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.*
 
 @RunWith(AndroidJUnit4::class)
 @SmallTest
@@ -58,7 +58,8 @@ class InboxNotificationContentParsingTest {
         content = makePublicNotification(payload)
         Assert.assertTrue(content.isSilent)
 
-        // Test that a notification with a title and body BUT with the "s" flag in com.batch is silent
+        // Test that a notification with a title and body BUT with the "s" flag in com.batch is
+        // silent
         payload = addMessageToPayload(makeBaseNotificationPayload(), null, null)
         payload.getJSONObject("payload").getJSONObject("com.batch").put("s", true)
         content = makePublicNotification(payload)
@@ -75,34 +76,42 @@ class InboxNotificationContentParsingTest {
             put("notificationId", notifID)
             put("sendId", "abcdeff")
             put("notificationTime", now.time)
-            put("payload", JSONObject().apply {
-                put("com.batch", JSONObject().apply {
-                    put("t", "t")
-                    put("at", JSONObject().apply {
-                        put("u", "https://batch.com")
-                    })
-                    put("od", JSONObject().apply {
-                        put("n", "5a3c93c0-7a3b-0000-0000-69f412b0000000")
-                    })
-                    put("l", "https://batch.com")
-                    put("i", "6y4g8guj-u1586420592376_000000")
-                })
-            })
+            put(
+                "payload",
+                JSONObject().apply {
+                    put(
+                        "com.batch",
+                        JSONObject().apply {
+                            put("t", "t")
+                            put("at", JSONObject().apply { put("u", "https://batch.com") })
+                            put(
+                                "od",
+                                JSONObject().apply {
+                                    put("n", "5a3c93c0-7a3b-0000-0000-69f412b0000000")
+                                },
+                            )
+                            put("l", "https://batch.com")
+                            put("i", "6y4g8guj-u1586420592376_000000")
+                        },
+                    )
+                },
+            )
         }
     }
 
-    private fun addMessageToPayload(rootPayload: JSONObject, body: String?, title: String?): JSONObject {
+    private fun addMessageToPayload(
+        rootPayload: JSONObject,
+        body: String?,
+        title: String?,
+    ): JSONObject {
         val payload = rootPayload.getJSONObject("payload")
-        body?.let {
-            payload.put(Batch.Push.BODY_KEY, body)
-        }
-        title?.let {
-            payload.put(Batch.Push.TITLE_KEY, title)
-        }
+        body?.let { payload.put(Batch.Push.BODY_KEY, body) }
+        title?.let { payload.put(Batch.Push.TITLE_KEY, title) }
         return rootPayload
     }
 
     private fun makePublicNotification(payload: JSONObject): BatchInboxNotificationContent {
-        return InboxFetchWebserviceClient.parseNotification(payload).let(PrivateNotificationContentHelper::getPublicContent)
+        return InboxFetchWebserviceClient.parseNotification(payload)
+            .let(PrivateNotificationContentHelper::getPublicContent)
     }
 }

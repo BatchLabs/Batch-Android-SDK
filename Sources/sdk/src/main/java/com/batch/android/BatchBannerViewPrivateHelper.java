@@ -1,6 +1,6 @@
 package com.batch.android;
 
-import com.batch.android.messaging.model.BannerMessage;
+import com.batch.android.messaging.model.Message;
 
 /**
  * Helper to access package private methods of {@link BatchBannerView}
@@ -11,7 +11,7 @@ public class BatchBannerViewPrivateHelper {
 
     public static BatchBannerView newInstance(
         BatchMessage rawMsg,
-        BannerMessage msg,
+        Message msg,
         MessagingAnalyticsDelegate analyticsDelegate
     ) {
         return new BatchBannerView(rawMsg, msg, analyticsDelegate);

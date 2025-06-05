@@ -5,7 +5,7 @@ import androidx.annotation.Nullable;
 import com.batch.android.annotation.PublicSDK;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
-import com.batch.android.messaging.model.ModalMessage;
+import com.batch.android.messaging.model.mep.ModalMessage;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -7,10 +7,10 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.RippleDrawable;
-import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
+import android.text.Html;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.view.ViewCompat;
@@ -30,7 +31,8 @@ import com.batch.android.messaging.css.builtin.BuiltinStyleProvider;
 import com.batch.android.messaging.view.FlexboxLayout;
 import com.batch.android.messaging.view.PositionableGradientDrawable;
 import com.batch.android.messaging.view.percent.PercentRelativeLayout;
-import com.batch.android.messaging.view.styled.Button;
+import com.batch.android.messaging.view.styled.mep.Button;
+import com.batch.android.messaging.view.styled.mep.Styleable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +80,7 @@ public class StyleHelper {
      * Apply common rules to a view.
      * <p>
      * While this method tries to peek at the View's class to avoid code duplication (especially for the background drawable stuff),
-     * a view implementing specific rules should extends its base class and implement the {@link com.batch.android.messaging.view.styled.Styleable} interface.
+     * a view implementing specific rules should extends its base class and implement the {@link Styleable} interface.
      *
      * @param targetView View that the rules will be applied to.
      * @param rules      CSS-like rules.
@@ -703,6 +705,23 @@ public class StyleHelper {
         }
     }
 
+    @NonNull
+    public static String rgbaToArgb(@NonNull String rgbaColorString) {
+        if (rgbaColorString.length() < 8 || rgbaColorString.length() > 9) {
+            return rgbaColorString;
+        }
+        String colorString = rgbaColorString.startsWith("#") ? rgbaColorString.substring(1) : rgbaColorString;
+
+        if (colorString.length() != 8) {
+            return rgbaColorString;
+        }
+        String red = colorString.substring(0, 2);
+        String green = colorString.substring(2, 4);
+        String blue = colorString.substring(4, 6);
+        String alpha = colorString.substring(6, 8);
+        return "#" + alpha + red + green + blue;
+    }
+
     /**
      * Darkens a color, using HSL
      *
@@ -714,6 +733,14 @@ public class StyleHelper {
         Color.colorToHSV(color, hsv);
         hsv[2] *= 0.8f;
         return Color.HSVToColor(color, hsv);
+    }
+
+    public static Spanned textFromHTML(String html) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return Html.fromHtml(html, 0);
+        } else {
+            return Html.fromHtml(html);
+        }
     }
 
     /**

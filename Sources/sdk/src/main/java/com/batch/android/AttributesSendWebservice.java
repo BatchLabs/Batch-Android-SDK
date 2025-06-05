@@ -3,8 +3,8 @@ package com.batch.android;
 import android.content.Context;
 import com.batch.android.core.Logger;
 import com.batch.android.core.ParameterKeys;
-import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskRunnable;
+import com.batch.android.core.domain.DomainURLBuilder;
 import com.batch.android.json.JSONObject;
 import com.batch.android.query.AttributesSendQuery;
 import com.batch.android.query.Query;
@@ -55,7 +55,7 @@ class AttributesSendWebservice extends BatchQueryWebservice implements TaskRunna
         Map<String, Set<String>> tags,
         AttributesSendWebserviceListener listener
     ) throws MalformedURLException {
-        super(context, RequestType.POST, Parameters.ATTR_SEND_WS_URL);
+        super(context, RequestType.POST, DomainURLBuilder.ATTR_SEND_WS_URL);
         if (version <= 0) {
             throw new IllegalArgumentException("version <= 0");
         }
@@ -101,22 +101,7 @@ class AttributesSendWebservice extends BatchQueryWebservice implements TaskRunna
                 response = getStandardResponseBodyIfValid();
             } catch (WebserviceError error) {
                 Logger.internal(error.getReason().toString(), error.getCause());
-
-                switch (error.getReason()) {
-                    case NETWORK_ERROR:
-                        listener.onError(FailReason.NETWORK_ERROR);
-                        break;
-                    case INVALID_API_KEY:
-                        listener.onError(FailReason.INVALID_API_KEY);
-                        break;
-                    case DEACTIVATED_API_KEY:
-                        listener.onError(FailReason.DEACTIVATED_API_KEY);
-                        break;
-                    default:
-                        listener.onError(FailReason.UNEXPECTED_ERROR);
-                        break;
-                }
-
+                listener.onError(error.getFailReason());
                 return;
             }
 
@@ -126,7 +111,7 @@ class AttributesSendWebservice extends BatchQueryWebservice implements TaskRunna
             parseResponse(response);
 
             /*
-             * Read resposne
+             * Read response
              */
             AttributesSendResponse sendResponse = getResponseFor(AttributesSendResponse.class, QueryType.ATTRIBUTES);
             if (sendResponse == null) {

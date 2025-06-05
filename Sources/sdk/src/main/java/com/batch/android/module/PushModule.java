@@ -30,7 +30,6 @@ import com.batch.android.BatchPushPayload;
 import com.batch.android.BatchPushRegistration;
 import com.batch.android.BatchPushService;
 import com.batch.android.IntentParser;
-import com.batch.android.PushNotificationType;
 import com.batch.android.PushRegistrationProvider;
 import com.batch.android.PushRegistrationProviderAvailabilityException;
 import com.batch.android.WebserviceLauncher;
@@ -39,8 +38,8 @@ import com.batch.android.core.Logger;
 import com.batch.android.core.NotificationPermissionHelper;
 import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.Parameters;
+import com.batch.android.core.PushNotificationType;
 import com.batch.android.core.TaskRunnable;
-import com.batch.android.di.providers.DisplayReceiptModuleProvider;
 import com.batch.android.di.providers.ParametersProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.TaskExecutorProvider;
@@ -103,9 +102,10 @@ public class PushModule extends BatchModule {
     private boolean manualDisplay = false;
 
     /**
-     * Temporary stored notif type set by developer, waiting for Context to store it
+     * Temporary stored notification type set by developer, waiting for Context to store it
      */
-    private EnumSet<PushNotificationType> tempNotifType;
+    @Nullable
+    private EnumSet<PushNotificationType> temporaryNotificationType;
 
     /**
      * Custom intent flags
@@ -123,15 +123,11 @@ public class PushModule extends BatchModule {
     private PushRegistrationProvider registrationProvider;
     private boolean didSetupRegistrationProvider = false;
 
-    private DisplayReceiptModule displayReceiptModule;
-
-    private PushModule(DisplayReceiptModule displayReceiptModule) {
-        this.displayReceiptModule = displayReceiptModule;
-    }
+    private PushModule() {}
 
     @Provide
     public static PushModule provide() {
-        return new PushModule(DisplayReceiptModuleProvider.get());
+        return new PushModule();
     }
 
     // ---------------------------------------->
@@ -328,54 +324,53 @@ public class PushModule extends BatchModule {
     }
 
     /**
-     * Get the enabled notification types<br>
-     * Matches what you've set in setNotificationsType.
-     *
-     * @return Type of notifications you previously set. Be careful, as this can be null if you never used setNotificationsType() or if your context is invalid
+     * Whether we should show push notifications or not.
+     * <p>
+     * This method will return true by default if the user has never called setShowNotification.
+     * @param context The context to use to read the parameters.
+     * @return true if we should show notifications, false otherwise.
      */
-    @Nullable
-    public EnumSet<PushNotificationType> getNotificationsType(Context context) {
-        if (context == null) {
-            return null;
-        }
-
+    public boolean shouldShowNotifications(@NonNull Context context) {
         String param;
 
-        if (tempNotifType != null) {
-            // We do not return the notif type directly as we want a coherent implementation
-            param = Integer.toString(PushNotificationType.toValue(tempNotifType));
+        if (temporaryNotificationType != null) {
+            param = Integer.toString(PushNotificationType.toValue(temporaryNotificationType));
         } else {
             param = ParametersProvider.get(context).get(ParameterKeys.PUSH_NOTIF_TYPE);
         }
 
         if (TextUtils.isEmpty(param)) {
-            return null;
+            return true;
         }
 
         try {
             int intParam = Integer.parseInt(param);
-            return PushNotificationType.fromValue(intParam);
+            return PushNotificationType.fromValue(intParam).contains(PushNotificationType.ALERT);
         } catch (Exception e) {
             Logger.internal(TAG, "Error while reading notification type", e);
-            return null;
+            return true;
         }
     }
 
     /**
-     * Adjust the way Batch will display notifications.<br>
-     * You should use this method if you want to remove vibration, light, sound or avoid notifications for this user.
+     * Sets whether to show push notifications or not.
      *
-     * @param types Type of notifications you want, default = ALERT + LIGHTS + VIBRATE + SOUND
+     * @param show Whether to show notifications or not.
      */
-    public void setNotificationsType(EnumSet<PushNotificationType> types) {
-        if (types == null) {
-            Logger.error(TAG, "Call to setNotificationsType with null type given, aborting");
-            return;
-        }
-
+    public void setShowNotifications(boolean show) {
         try {
+            EnumSet<PushNotificationType> types = null;
+            if (show) {
+                // Enable show notifications
+                types = EnumSet.of(PushNotificationType.ALERT);
+            } else {
+                // Disable show notifications
+                types = EnumSet.of(PushNotificationType.NONE);
+            }
             final AtomicBoolean handled = new AtomicBoolean(false);
             final int value = PushNotificationType.toValue(types);
+
+            Logger.internal(TAG, "Setting notification type to " + value);
 
             RuntimeManagerProvider
                 .get()
@@ -389,7 +384,7 @@ public class PushModule extends BatchModule {
                 });
 
             if (!handled.get()) {
-                tempNotifType = types;
+                temporaryNotificationType = types;
             }
         } catch (Exception e) {
             Logger.internal(TAG, "Error while storing notification types", e);
@@ -690,38 +685,18 @@ public class PushModule extends BatchModule {
     /**
      * Call this method when you just displayed a Batch push notification by yourself.
      *
-     * @param context
+     * @param context the android context
      * @param intent  the gcm push intent
      */
     public void onNotificationDisplayed(Context context, Intent intent) {
-        try {
-            if (shouldDisplayPush(context, intent)) {
-                InternalPushData pushData = InternalPushData.getPushDataForReceiverIntent(intent);
-
-                if (pushData.getReceiptMode() == InternalPushData.ReceiptMode.DISPLAY) {
-                    displayReceiptModule.scheduleDisplayReceipt(context, pushData);
-                }
-            }
-        } catch (Exception e) {
-            Logger.internal(TAG, "Error while storing push as displayed", e);
-        }
+        // Does nothing since we removed display receipts but keep implementation for future uses.
     }
 
     /**
      * Firebase variant
      */
     public void onNotificationDisplayed(Context context, RemoteMessage message) {
-        try {
-            if (shouldDisplayPush(context, message)) {
-                InternalPushData pushData = InternalPushData.getPushDataForFirebaseMessage(message);
-
-                if (pushData.getReceiptMode() == InternalPushData.ReceiptMode.DISPLAY) {
-                    displayReceiptModule.scheduleDisplayReceipt(context, pushData);
-                }
-            }
-        } catch (Exception e) {
-            Logger.internal(TAG, "Error while storing push as displayed", e);
-        }
+        // Does nothing since we removed display receipts but keep implementation for future uses.
     }
 
     // -------------------------------------->
@@ -961,18 +936,18 @@ public class PushModule extends BatchModule {
     @Override
     public void batchWillStart() {
         /*
-         * Store Notif type
+         * Store Notification type
          */
-        if (tempNotifType != null) {
+        if (temporaryNotificationType != null) {
             RuntimeManagerProvider
                 .get()
                 .run(state -> {
                     try {
-                        int value = PushNotificationType.toValue(tempNotifType);
+                        int value = PushNotificationType.toValue(temporaryNotificationType);
                         ParametersProvider
                             .get(RuntimeManagerProvider.get().getContext())
                             .set(ParameterKeys.PUSH_NOTIF_TYPE, Integer.toString(value), true);
-                        tempNotifType = null;
+                        temporaryNotificationType = null;
                     } catch (Exception e) {
                         Logger.internal(TAG, "Error while saving temp notif type", e);
                     }

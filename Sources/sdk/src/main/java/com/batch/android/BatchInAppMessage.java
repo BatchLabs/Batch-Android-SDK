@@ -8,11 +8,16 @@ import com.batch.android.annotation.PublicSDK;
 import com.batch.android.core.Logger;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
-import com.batch.android.messaging.PayloadParser;
-import com.batch.android.messaging.PayloadParsingException;
 import com.batch.android.messaging.model.*;
+import com.batch.android.messaging.model.mep.AlertMessage;
+import com.batch.android.messaging.model.mep.BannerMessage;
+import com.batch.android.messaging.model.mep.ImageMessage;
+import com.batch.android.messaging.model.mep.ModalMessage;
+import com.batch.android.messaging.model.mep.UniversalMessage;
+import com.batch.android.messaging.model.mep.WebViewMessage;
+import com.batch.android.messaging.parsing.PayloadParser;
+import com.batch.android.messaging.parsing.PayloadParsingException;
 import com.batch.android.module.MessagingModule;
-import java.util.Set;
 
 /**
  * A subclass of BatchMessage that represents an In-App message
@@ -28,11 +33,12 @@ public class BatchInAppMessage extends BatchMessage implements InAppMessageUserA
     private static final String CAMPAIGN_ID_KEY = "campaign_id";
     private static final String CAMPAIGN_EVENT_DATA_KEY = "campaign_event_data";
 
-    private JSONObject landingPayload;
-    private JSONObject customPayload;
-    private String campaignToken;
-    private String campaignId;
-    private JSONObject eventData;
+    private final JSONObject landingPayload;
+    private final JSONObject customPayload;
+    private final String campaignToken;
+    private final String campaignId;
+    private final JSONObject eventData;
+
     private Content cachedContent;
 
     static BatchInAppMessage getInstanceFromBundle(@NonNull Bundle bundle) {
@@ -97,6 +103,7 @@ public class BatchInAppMessage extends BatchMessage implements InAppMessageUserA
     }
 
     @Override
+    @SuppressWarnings("ConstantConditions")
     protected Bundle getBundleRepresentation() {
         // TODO: save the whole campaign...
         // Or just what we need?
@@ -121,6 +128,7 @@ public class BatchInAppMessage extends BatchMessage implements InAppMessageUserA
 
     @Override
     @NonNull
+    @SuppressWarnings("ConstantConditions")
     public JSONObject getCustomPayload() {
         if (customPayload != null) {
             try {
@@ -133,20 +141,24 @@ public class BatchInAppMessage extends BatchMessage implements InAppMessageUserA
     }
 
     /**
-     * Get an In-App Message's visual contents.<br/>
+     * Get an In-App Message's visual contents.
+     * <p>
+     * Note that: This method is only for In-App messages that come from the MEP (Mobile Engagement Platform)
+     * and will return null for messages coming from the CEP (Customer Engagement Platform).
      * <p>
      * Since an In-App message's contents can change a lot between formats, you will need to cast this to
      * one of the classes implementing {@link BatchInAppMessage.Content}, such as {@link BatchAlertContent}, {@link BatchInterstitialContent}, {@link BatchBannerContent}, {@link BatchImageContent} or {@link BatchWebViewContent}<br/>
      * More types might be added in the future, so don't make any assumptions on the instance returned.
      *
-     * @return The In-App message's visual contents. Can be null if an error occurred or if not applicable
+     * @return The In-App message's visual contents. Can be null if an error occurred or if not applicable.
      */
     @Nullable
-    public synchronized Content getContent() {
+    @SuppressWarnings("ConstantConditions")
+    public synchronized Content getMEPContent() {
         if (cachedContent == null) {
             if (landingPayload != null) {
                 try {
-                    Message msg = PayloadParser.parsePayload(landingPayload);
+                    Message msg = PayloadParser.parseMEPPayload(landingPayload);
                     if (msg instanceof AlertMessage) {
                         cachedContent = new BatchAlertContent((AlertMessage) msg);
                     } else if (msg instanceof UniversalMessage) {

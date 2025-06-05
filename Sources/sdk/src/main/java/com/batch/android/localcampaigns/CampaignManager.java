@@ -8,6 +8,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import com.batch.android.FailReason;
 import com.batch.android.LoggerLevel;
 import com.batch.android.WebserviceLauncher;
 import com.batch.android.core.DateProvider;
@@ -299,7 +300,7 @@ public class CampaignManager {
                 @Override
                 public void onSuccess(List<String> eligibleCampaignIds) {
                     // Saving next jit available timestamp
-                    nextAvailableJITTimestamp = dateProvider.getCurrentDate().getTime() + MIN_DELAY_BETWEEN_JIT_SYNC;
+                    setNextAvailableJITTimestampWithDefaultDelay();
 
                     // Handling jit response
                     if (eligibleCampaignIds.isEmpty()) {
@@ -329,10 +330,7 @@ public class CampaignManager {
                 @Override
                 public void onFailure(Webservice.WebserviceError error) {
                     // Saving next jit available timestamp
-                    long retryAfter = error.getRetryAfterInMillis() != 0
-                        ? error.getRetryAfterInMillis()
-                        : DEFAULT_RETRY_AFTER;
-                    nextAvailableJITTimestamp = dateProvider.getCurrentDate().getTime() + retryAfter;
+                    setNextAvailableJITTimestampWithCustomDelay(error.getRetryAfterInMillis());
                     listener.onCampaignElected(null);
                 }
             }
@@ -689,5 +687,26 @@ public class CampaignManager {
 
     public ViewTracker getViewTracker() {
         return viewTracker;
+    }
+
+    /**
+     * Sets the next available timestamp for Just-In-Time (JIT) synchronization
+     * using the default minimum delay.
+     * The default minimum delay is defined by the constant
+     * {@link #MIN_DELAY_BETWEEN_JIT_SYNC}.</p>
+     */
+    public void setNextAvailableJITTimestampWithDefaultDelay() {
+        setNextAvailableJITTimestampWithCustomDelay(MIN_DELAY_BETWEEN_JIT_SYNC);
+    }
+
+    /**
+     * Sets the next available timestamp for Just-In-Time (JIT) synchronization
+     * using a custom delay.
+     * The default minimum delay is defined by the constant
+     * {@link #DEFAULT_RETRY_AFTER}.</p>
+     */
+    public void setNextAvailableJITTimestampWithCustomDelay(int delay) {
+        long retryAfter = delay <= 0 ? DEFAULT_RETRY_AFTER : delay;
+        nextAvailableJITTimestamp = dateProvider.getCurrentDate().getTime() + retryAfter;
     }
 }

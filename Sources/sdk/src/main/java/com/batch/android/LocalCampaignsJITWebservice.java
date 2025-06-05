@@ -4,8 +4,8 @@ import android.content.Context;
 import com.batch.android.core.Logger;
 import com.batch.android.core.MessagePackWebservice;
 import com.batch.android.core.ParameterKeys;
-import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskRunnable;
+import com.batch.android.core.domain.DomainURLBuilder;
 import com.batch.android.metrics.MetricRegistry;
 import com.batch.android.post.LocalCampaignsJITPostDataProvider;
 import com.batch.android.webservice.listener.LocalCampaignsJITWebserviceListener;
@@ -27,7 +27,7 @@ class LocalCampaignsJITWebservice extends MessagePackWebservice implements TaskR
         LocalCampaignsJITPostDataProvider dataProvider,
         String... parameters
     ) throws MalformedURLException {
-        super(context, dataProvider, Parameters.LOCAL_CAMPAIGNS_JIT_WS_URL, addBatchApiKey(parameters));
+        super(context, dataProvider, DomainURLBuilder.LOCAL_CAMPAIGNS_JIT_WS_URL, addBatchApiKey(parameters));
         if (listener == null) {
             throw new NullPointerException("Listener is null");
         }

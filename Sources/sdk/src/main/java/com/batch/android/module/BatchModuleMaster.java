@@ -4,7 +4,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import com.batch.android.di.providers.ActionModuleProvider;
 import com.batch.android.di.providers.DataCollectionModuleProvider;
-import com.batch.android.di.providers.DisplayReceiptModuleProvider;
 import com.batch.android.di.providers.EventDispatcherModuleProvider;
 import com.batch.android.di.providers.LocalCampaignsModuleProvider;
 import com.batch.android.di.providers.MessagingModuleProvider;
@@ -40,7 +39,6 @@ public class BatchModuleMaster extends BatchModule {
         List<BatchModule> modules = new ArrayList<>(8);
 
         modules.add(ActionModuleProvider.get());
-        modules.add(DisplayReceiptModuleProvider.get());
         modules.add(EventDispatcherModuleProvider.get());
         modules.add(LocalCampaignsModuleProvider.get());
         modules.add(MessagingModuleProvider.get());

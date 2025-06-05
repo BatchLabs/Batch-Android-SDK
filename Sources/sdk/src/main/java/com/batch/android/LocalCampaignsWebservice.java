@@ -3,8 +3,8 @@ package com.batch.android;
 import android.content.Context;
 import com.batch.android.core.Logger;
 import com.batch.android.core.ParameterKeys;
-import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskRunnable;
+import com.batch.android.core.domain.DomainURLBuilder;
 import com.batch.android.di.providers.CampaignManagerProvider;
 import com.batch.android.json.JSONObject;
 import com.batch.android.metrics.MetricRegistry;
@@ -35,7 +35,7 @@ public class LocalCampaignsWebservice extends BatchQueryWebservice implements Ta
 
     public LocalCampaignsWebservice(Context context, LocalCampaignsWebserviceListener listener)
         throws MalformedURLException {
-        super(context, RequestType.POST, Parameters.LOCAL_CAMPAIGNS_WS_URL);
+        super(context, RequestType.POST, DomainURLBuilder.LOCAL_CAMPAIGNS_WS_URL);
         this.listener = listener;
     }
 
@@ -70,20 +70,7 @@ public class LocalCampaignsWebservice extends BatchQueryWebservice implements Ta
                 );
                 MetricRegistry.localCampaignsSyncResponseTime.observeDuration();
 
-                switch (error.getReason()) {
-                    case NETWORK_ERROR:
-                        listener.onError(FailReason.NETWORK_ERROR);
-                        break;
-                    case INVALID_API_KEY:
-                        listener.onError(FailReason.INVALID_API_KEY);
-                        break;
-                    case DEACTIVATED_API_KEY:
-                        listener.onError(FailReason.DEACTIVATED_API_KEY);
-                        break;
-                    default:
-                        listener.onError(FailReason.UNEXPECTED_ERROR);
-                        break;
-                }
+                listener.onError(error.getFailReason());
                 return;
             }
 

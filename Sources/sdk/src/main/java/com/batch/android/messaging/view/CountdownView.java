@@ -15,7 +15,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.Nullable;
 import com.batch.android.core.Logger;
 import com.batch.android.messaging.view.helper.StyleHelper;
-import com.batch.android.messaging.view.styled.Styleable;
+import com.batch.android.messaging.view.styled.mep.Styleable;
 import java.util.Map;
 
 /**

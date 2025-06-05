@@ -8,11 +8,9 @@ import com.batch.android.di.providers.LocalCampaignsWebserviceListenerImplProvid
 import com.batch.android.di.providers.TaskExecutorProvider;
 import com.batch.android.event.Event;
 import com.batch.android.localcampaigns.model.LocalCampaign;
-import com.batch.android.post.DisplayReceiptPostDataProvider;
 import com.batch.android.post.LocalCampaignsJITPostDataProvider;
 import com.batch.android.post.MetricPostDataProvider;
 import com.batch.android.runtime.RuntimeManager;
-import com.batch.android.webservice.listener.DisplayReceiptWebserviceListener;
 import com.batch.android.webservice.listener.LocalCampaignsJITWebserviceListener;
 import com.batch.android.webservice.listener.MetricWebserviceListener;
 import com.batch.android.webservice.listener.TrackerWebserviceListener;
@@ -221,28 +219,6 @@ public final class WebserviceLauncher {
             return true;
         } catch (Exception e) {
             Logger.internal(TAG, "Error while initializing Local Campaigns JIT WS", e);
-            return false;
-        }
-    }
-
-    /**
-     * Launch the display receipt webservice
-     *
-     * @param context Android's context
-     * @param dataProvider Display receipt data provider
-     * @param listener Webservice callback
-     * @return instance of the webservice ready to be run
-     */
-    public static boolean launchDisplayReceiptWebservice(
-        Context context,
-        DisplayReceiptPostDataProvider dataProvider,
-        DisplayReceiptWebserviceListener listener
-    ) {
-        try {
-            TaskExecutorProvider.get(context).submit(new DisplayReceiptWebservice(context, listener, dataProvider));
-            return true;
-        } catch (Exception e) {
-            Logger.internal(TAG, "Error while initializing DRW", e);
             return false;
         }
     }

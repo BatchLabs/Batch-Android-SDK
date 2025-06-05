@@ -85,59 +85,6 @@ public final class Parameters {
     // -------------------------------------------------->
 
     /**
-     * Base URL of the WS
-     */
-    // To change this, simply build another type of the sdk (see build.gradle)
-    private static final String BASE_WS_URL = "https://" + BuildConfig.WS_DOMAIN + "/a/" + SDK_VERSION;
-
-    /**
-     * URL of the start WS
-     */
-    public static final String START_WS_URL = BASE_WS_URL + "/st/%s";
-    /**
-     * URL of the restore WS
-     */
-    public static final String TRACKER_WS_URL = BASE_WS_URL + "/tr/%s";
-    /**
-     * URL of the push WS
-     */
-    public static final String PUSH_WS_URL = BASE_WS_URL + "/t/%s";
-    /**
-     * URL of the attributes send WS
-     */
-    public static final String ATTR_SEND_WS_URL = BASE_WS_URL + "/ats/%s";
-    /**
-     * URL of the attributes check WS
-     */
-    public static final String ATTR_CHECK_WS_URL = BASE_WS_URL + "/atc/%s";
-    /**
-     * URL of the local campaigns WS
-     */
-    public static final String LOCAL_CAMPAIGNS_WS_URL = BASE_WS_URL + "/local/%s";
-    /**
-     * URL of the inbox fetch WS
-     */
-    public static final String INBOX_FETCH_WS_URL = BASE_WS_URL + "/inbox/%s/%s/%s";
-    /**
-     * URL of the inbox sync WS
-     */
-    public static final String INBOX_SYNC_WS_URL = BASE_WS_URL + "/inbox/%s/sync/%s/%s";
-    /**
-     * URL of the display receipt WS
-     */
-    public static final String DISPLAY_RECEIPT_WS_URL = "https://dr" + BuildConfig.WS_DOMAIN + "/a/%s";
-    /**
-     * URL of the metrics WS
-     */
-    public static final String METRIC_WS_URL = "https://wsmetrics.batch.com/api-sdk";
-    /**
-     * URL of the local campaigns JIT (check just in time) WS
-     */
-    public static final String LOCAL_CAMPAIGNS_JIT_WS_URL = BASE_WS_URL + "/lc_jit/%s";
-
-    // -------------------------------------------------->
-
-    /**
      * App parameters hard coded
      */
     private static final Map<String, String> appParameters;
@@ -213,7 +160,7 @@ public final class Parameters {
     /**
      * @param context The Android's context
      */
-    public Parameters(Context context) {
+    public Parameters(@Nullable Context context) {
         if (context == null) {
             throw new NullPointerException("Null applicationContext");
         }

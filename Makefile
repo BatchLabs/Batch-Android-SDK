@@ -10,3 +10,6 @@ aar:
 clean:
 	rm -f public-sdk/Batch.aar
 	cd Sources && ./gradlew clean
+
+doc:
+	cd Sources && ./gradlew :sdk:dokkaGeneratePublicationHtml

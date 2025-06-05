@@ -24,4 +24,16 @@ public final class MetricRegistry {
         "sdk_local_campaigns_sync_ws_duration"
     )
         .register();
+
+    // Monitor local campaign ws call by status ("OK", "KO")
+    public static final Counter dnsErrorCount = new Counter("sdk_dns_error_count").labelNames("status").register();
+
+    // Monitor error when downloading image for in-apps
+    public static final Counter downloadingImageErrorCount = new Counter("sdk_download_image_error_count").register();
+
+    // Monitor image download duration for in-apps
+    // Register a new metric for each calls since several images could load simultaneously.
+    public static Observation registerNewDownloadImageDurationMetric() {
+        return new Observation("sdk_download_image_duration").labelNames("type").register();
+    }
 }

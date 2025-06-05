@@ -1,10 +1,13 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 plugins {
-    id("com.android.application") version ProjectConsts.ANDROID_GRADLE_PLUGIN_VERSION apply false
-    id("com.android.library") version ProjectConsts.ANDROID_GRADLE_PLUGIN_VERSION apply false
-    id("org.jetbrains.kotlin.android") version ProjectConsts.KOTLIN_VERSION apply false
-    id("com.google.gms.google-services") version ProjectConsts.GMS_GRADLE_PLUGIN_VERSION apply false
-    id("io.codearte.nexus-staging") version "0.30.0"
-    id("org.sonarqube") version "4.2.1.3168"
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.gms.google.services) apply false
+    alias(libs.plugins.testify) apply false
+    alias(libs.plugins.nexus.staging)
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.kfmt)
 }

@@ -15,6 +15,8 @@ public class NotificationPermissionActionRunnable implements UserActionRunnable 
     private static final String TAG = "NotificationPermissionAction";
     public static final String IDENTIFIER =
         ActionModule.RESERVED_ACTION_IDENTIFIER_PREFIX + "android_request_notifications";
+    public static final String IDENTIFIER_CEP =
+        ActionModule.RESERVED_ACTION_IDENTIFIER_PREFIX + "request_notifications";
 
     @Override
     public void performAction(

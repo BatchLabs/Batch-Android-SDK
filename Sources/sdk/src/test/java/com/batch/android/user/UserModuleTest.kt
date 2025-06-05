@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
-
 import com.batch.android.MockBatchAttributesFetchListener
 import com.batch.android.MockBatchTagCollectionsFetchListener
 import com.batch.android.UserDataAccessor
@@ -67,9 +66,10 @@ class UserModuleTest : DITest() {
         val userModule = UserModuleProvider.get()
 
         // initial state
-        InstallDataEditor().addTag("collection","tag")
-                .setAttribute("attribute","string")
-                .saveSync()
+        InstallDataEditor()
+            .addTag("collection", "tag")
+            .setAttribute("attribute", "string")
+            .saveSync()
         val attributeListener = MockBatchAttributesFetchListener()
         val tagsListener = MockBatchTagCollectionsFetchListener()
 

@@ -5,7 +5,7 @@ import androidx.annotation.Nullable;
 import com.batch.android.annotation.PublicSDK;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
-import com.batch.android.messaging.model.AlertMessage;
+import com.batch.android.messaging.model.mep.AlertMessage;
 
 /**
  * Model for the content of an Alert In-App/Landing message

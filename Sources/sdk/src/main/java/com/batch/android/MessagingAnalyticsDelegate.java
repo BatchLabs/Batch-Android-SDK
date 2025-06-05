@@ -38,11 +38,11 @@ public class MessagingAnalyticsDelegate {
 
     private static final String STATE_KEY_CALLED_METHODS = "analyticsdelegate_called_methods";
 
-    private MessagingModule messagingModule;
-    private TrackerModule trackerModule;
-    private EventDispatcherModule eventDispatcherModule;
-    private Message message;
-    private BatchMessage sourceMessage;
+    private final MessagingModule messagingModule;
+    private final TrackerModule trackerModule;
+    private final EventDispatcherModule eventDispatcherModule;
+    private final Message message;
+    private final BatchMessage sourceMessage;
     final ArrayList<String> calledMethods = new ArrayList<>(6);
 
     MessagingAnalyticsDelegate(
@@ -105,12 +105,25 @@ public class MessagingAnalyticsDelegate {
         );
     }
 
+    // Called on CEP Messages
+    public void onCTAClicked(@NonNull String ctaId, @NonNull String ctaType, @NonNull CTA cta) {
+        if (ensureOnce("ctaclicked")) {
+            return;
+        }
+        messagingModule.onMessageCTAClicked(message, ctaId, ctaType, cta);
+        dispatchCTAClickedEvent(cta);
+    }
+
+    // Called on MEP Messages
     public void onCTAClicked(int ctaIndex, @NonNull CTA cta) {
         if (ensureOnce("ctaclicked")) {
             return;
         }
         messagingModule.onMessageCTAClicked(message, ctaIndex, cta);
+        dispatchCTAClickedEvent(cta);
+    }
 
+    private void dispatchCTAClickedEvent(@NonNull CTA cta) {
         Batch.EventDispatcher.Type type = MESSAGING_CLICK;
         if (cta.isDismissAction()) {
             // We trigger a close event when the CTA is a dismiss action

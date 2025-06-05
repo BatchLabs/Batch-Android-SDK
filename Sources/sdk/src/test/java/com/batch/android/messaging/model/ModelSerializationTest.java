@@ -6,6 +6,14 @@ import androidx.test.filters.SmallTest;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.messaging.Size2D;
+import com.batch.android.messaging.model.mep.AlertMessage;
+import com.batch.android.messaging.model.mep.BannerMessage;
+import com.batch.android.messaging.model.mep.BaseBannerMessage;
+import com.batch.android.messaging.model.mep.ImageMessage;
+import com.batch.android.messaging.model.mep.MEPMessage;
+import com.batch.android.messaging.model.mep.ModalMessage;
+import com.batch.android.messaging.model.mep.UniversalMessage;
+import com.batch.android.messaging.model.mep.WebViewMessage;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +29,7 @@ public class ModelSerializationTest {
 
     @Test
     public void testAlertMessage() throws JSONException {
-        AlertMessage m = new AlertMessage();
+        AlertMessage m = new AlertMessage("id");
         fillMessage(m);
         m.titleText = "foo";
         m.cancelButtonText = "bar";
@@ -31,7 +39,7 @@ public class ModelSerializationTest {
 
     @Test
     public void testBannerMessage() throws JSONException {
-        BannerMessage m = new BannerMessage();
+        BannerMessage m = new BannerMessage("id");
         fillMessage(m);
         fillBaseBannerMessage(m);
 
@@ -40,7 +48,7 @@ public class ModelSerializationTest {
 
     @Test
     public void testImageMessage() throws JSONException {
-        ImageMessage m = new ImageMessage();
+        ImageMessage m = new ImageMessage("id");
         fillMessage(m);
         m.css = "test";
         m.globalTapAction = makeAction();
@@ -56,14 +64,14 @@ public class ModelSerializationTest {
 
     @Test
     public void testModalMessage() throws JSONException {
-        ModalMessage m = new ModalMessage();
+        ModalMessage m = new ModalMessage("id");
         fillMessage(m);
         fillBaseBannerMessage(m);
     }
 
     @Test
     public void testUniversalMessage() throws JSONException {
-        UniversalMessage m = new UniversalMessage();
+        UniversalMessage m = new UniversalMessage("id");
         fillMessage(m);
         m.css = "test";
         m.headingText = "test";
@@ -86,7 +94,7 @@ public class ModelSerializationTest {
 
     @Test
     public void testWebViewMessage() throws JSONException {
-        WebViewMessage m = new WebViewMessage();
+        WebViewMessage m = new WebViewMessage("id");
         fillMessage(m);
         m.css = "test";
         m.timeout = 7000;
@@ -109,7 +117,7 @@ public class ModelSerializationTest {
         serialize(m);
     }
 
-    private void fillMessage(Message m) throws JSONException {
+    private void fillMessage(MEPMessage m) throws JSONException {
         m.messageIdentifier = "foo";
         m.devTrackingIdentifier = "bar";
         m.bodyText = "foobar";

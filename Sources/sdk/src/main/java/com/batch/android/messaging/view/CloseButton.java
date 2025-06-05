@@ -1,6 +1,5 @@
 package com.batch.android.messaging.view;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -10,14 +9,13 @@ import android.graphics.Outline;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewOutlineProvider;
 import androidx.annotation.Keep;
 import com.batch.android.core.Logger;
 import com.batch.android.messaging.view.helper.StyleHelper;
-import com.batch.android.messaging.view.styled.Styleable;
+import com.batch.android.messaging.view.styled.mep.Styleable;
 import java.util.Map;
 
 /**
@@ -33,6 +31,8 @@ public class CloseButton extends View implements Styleable {
 
     private static final int UNSCALED_GLYPH_PADDING_PX = 10;
     private static final int UNSCALED_GLYPH_WIDTH_PX = 2;
+
+    private int size = DEFAULT_SIZE_DP;
 
     private int padding = 0;
 
@@ -53,6 +53,8 @@ public class CloseButton extends View implements Styleable {
     private Paint glyphPaint;
 
     private Paint borderPaint;
+
+    private Paint.Cap glyphStrokeCap = Paint.Cap.SQUARE;
 
     private Drawable foregoundDrawable;
 
@@ -126,6 +128,7 @@ public class CloseButton extends View implements Styleable {
         glyphPaint.setStyle(Paint.Style.STROKE);
         glyphPaint.setColor(glyphColor);
         glyphPaint.setAntiAlias(true);
+        glyphPaint.setStrokeCap(glyphStrokeCap);
 
         borderPaint = new Paint();
         borderPaint.setStyle(Paint.Style.STROKE);
@@ -141,7 +144,7 @@ public class CloseButton extends View implements Styleable {
         float density = getResources().getDisplayMetrics().density;
         Resources resources = getResources();
         int padding = getPadding();
-        float viewScalingRatio = (getWidth() - padding * 2) / (DEFAULT_SIZE_DP * density);
+        float viewScalingRatio = (getWidth() - padding * 2) / (size * density);
         computedGlyphPadding =
             glyphPadding >= 0 ? glyphPadding : (int) (UNSCALED_GLYPH_PADDING_PX * density * viewScalingRatio);
 
@@ -210,6 +213,16 @@ public class CloseButton extends View implements Styleable {
     }
 
     /**
+     * Set the size of the view in dp.
+     * @param size size in dp
+     */
+    public void setSize(int size) {
+        this.size = size;
+        recomputeMetrics();
+        invalidate();
+    }
+
+    /**
      * Sets the countdown progress (if any).
      * Progress is represented as a float going from 0.0 to 1.0
      */
@@ -237,6 +250,17 @@ public class CloseButton extends View implements Styleable {
      */
     public void setGlyphWidth(int glyphWidth) {
         this.glyphWidth = glyphWidth;
+        recomputeMetrics();
+        invalidate();
+    }
+
+    /**
+     * Set the glyph stroke cap
+     *
+     * @param cap The stroke cap to use.
+     */
+    public void setGlyphStrokeCap(Paint.Cap cap) {
+        this.glyphStrokeCap = cap;
         recomputeMetrics();
         invalidate();
     }
@@ -305,9 +329,9 @@ public class CloseButton extends View implements Styleable {
 
         // Fall back on default size if none was specified
         if (widthMode == MeasureSpec.AT_MOST) {
-            width = (int) Math.min(DEFAULT_SIZE_DP * density + getPadding() * 2, width);
+            width = (int) Math.min(size * density + getPadding() * 2, width);
         } else if (widthMode == MeasureSpec.UNSPECIFIED) {
-            width = (int) (DEFAULT_SIZE_DP * density + getPadding() * 2);
+            width = (int) (size * density + getPadding() * 2);
         }
 
         //noinspection SuspiciousNameCombination

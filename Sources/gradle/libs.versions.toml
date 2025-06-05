@@ -1,0 +1,103 @@
+[versions]
+agp = "8.9.2"
+android = "4.1.1.4"
+androidCompileSdk = "36"
+androidMinSdk = "21"
+androidLint = "30.1.2"
+androidxJunit = "1.2.1"
+androidXCoreKtx = "1.16.0"
+androidXLibraryVersion = "1.0.0"
+androidXTestCoreKtx = "1.6.1"
+androidXTestRunner = "1.6.2"
+androidXTestTruth = "1.6.0"
+assertjCore = "3.24.2"
+batchSdk = "3.0.0"
+batchApiLevel = "300"
+batchMessagingApiLevel = "30"
+batchResourcePrefix = "com_batchsdk_"
+batchNamespace = "com.batch.android"
+batchTestNamespace = "com.batch.android.test"
+batchMavenGroupId = "com.batch.android"
+batchMavenArtifact = "batch-sdk"
+dokka = "2.0.0"
+espressoIntents = "3.6.1"
+firebaseCore = "17.4.3"
+firebaseMessaging = "22.0.0"
+gms = "4.3.14"
+googlePlayReview = "2.0.1"
+junit = "4.13.2"
+kfmt = "0.22.0"
+kotlinCompileTestingKsp = "1.6.0"
+kotlinpoet = "2.0.0"
+ksp = "1.9.0-1.0.13"
+kotlin = "1.9.0"
+kotlinxCoroutinesAndroid = "1.7.1"
+metalava = "1.0.0-alpha04"
+mockitoCore = "5.12.0"
+nexusStaging = "0.30.0"
+powermockClassloadingXstream = "2.0.9"
+robolectric = "4.9.2"
+testify = "3.2.2"
+
+[libraries]
+android = { module = "com.google.android:android", version.ref = "android" }
+androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidXLibraryVersion" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidXLibraryVersion" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidXCoreKtx" }
+androidx-dynamicanimation = { module = "androidx.dynamicanimation:dynamicanimation", version.ref = "androidXLibraryVersion" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "androidXTestCoreKtx" }
+androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoIntents" }
+androidx-test-espresso-intents = { module = "androidx.test.espresso:espresso-intents", version.ref = "espressoIntents" }
+androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "androidxJunit" }
+androidx-test-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "androidxJunit" }
+androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidXTestCoreKtx" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidXTestRunner" }
+androidx-test-truth = { module = "androidx.test.ext:truth", version.ref = "androidXTestTruth" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertjCore" }
+core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidXTestCoreKtx" }
+dokka-base = { module = "org.jetbrains.dokka:dokka-base", version.ref = "dokka" }
+dokka-base-test-utils = { module = "org.jetbrains.dokka:dokka-base-test-utils", version.ref = "dokka" }
+dokka-core = { module = "org.jetbrains.dokka:dokka-core", version.ref = "dokka" }
+dokka-test-api = { module = "org.jetbrains.dokka:dokka-test-api", version.ref = "dokka" }
+firebase-core = { module = "com.google.firebase:firebase-core", version.ref = "firebaseCore" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
+junit = { module = "junit:junit", version.ref = "junit" }
+kotlin-compile-testing-ksp = { module = "com.github.tschuchortdev:kotlin-compile-testing-ksp", version.ref = "kotlinCompileTestingKsp" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
+kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet" }
+ksp-symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesAndroid" }
+lint = { module = "com.android.tools.lint:lint", version.ref = "androidLint" }
+lint-api = { module = "com.android.tools.lint:lint-api", version.ref = "androidLint" }
+lint-checks = { module = "com.android.tools.lint:lint-checks", version.ref = "androidLint" }
+lint-tests = { module = "com.android.tools.lint:lint-tests", version.ref = "androidLint" }
+material = { module = "com.google.android.material:material", version.ref = "androidXLibraryVersion" }
+metalava = { module = "com.android.tools.metalava:metalava", version.ref = "metalava" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
+powermock-api-mockito2 = { module = "org.powermock:powermock-api-mockito2", version.ref = "powermockClassloadingXstream" }
+powermock-classloading-xstream = { module = "org.powermock:powermock-classloading-xstream", version.ref = "powermockClassloadingXstream" }
+powermock-module-junit4 = { module = "org.powermock:powermock-module-junit4", version.ref = "powermockClassloadingXstream" }
+powermock-module-junit4-rule = { module = "org.powermock:powermock-module-junit4-rule", version.ref = "powermockClassloadingXstream" }
+google-play-review = { module = "com.google.android.play:review", version.ref = "googlePlayReview" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+testutils = { module = "com.android.tools:testutils", version.ref = "androidLint" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+gms-google-services = { id = "com.google.gms.google-services", version.ref = "gms" }
+kfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "kfmt" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+nexus-staging = { id = "io.codearte.nexus-staging", version.ref = "nexusStaging" }
+testify = { id = "dev.testify", version.ref = "testify" }
+
+
+
+
+
+

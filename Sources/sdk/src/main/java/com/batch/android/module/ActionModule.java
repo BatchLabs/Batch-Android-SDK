@@ -258,15 +258,30 @@ public class ActionModule extends BatchModule {
             NotificationPermissionActionRunnable.IDENTIFIER,
             new UserAction(NotificationPermissionActionRunnable.IDENTIFIER, new NotificationPermissionActionRunnable())
         );
+        registeredActions.put(
+            NotificationPermissionActionRunnable.IDENTIFIER_CEP,
+            new UserAction(
+                NotificationPermissionActionRunnable.IDENTIFIER_CEP,
+                new NotificationPermissionActionRunnable()
+            )
+        );
 
         registeredActions.put(
             SmartReOptInAction.IDENTIFIER,
             new UserAction(SmartReOptInAction.IDENTIFIER, new SmartReOptInAction())
         );
+        registeredActions.put(
+            SmartReOptInAction.IDENTIFIER_CEP,
+            new UserAction(SmartReOptInAction.IDENTIFIER_CEP, new SmartReOptInAction())
+        );
 
         registeredActions.put(
             RedirectNotificationSettingsAction.IDENTIFIER,
             new UserAction(RedirectNotificationSettingsAction.IDENTIFIER, new RedirectNotificationSettingsAction())
+        );
+        registeredActions.put(
+            RedirectNotificationSettingsAction.IDENTIFIER_CEP,
+            new UserAction(RedirectNotificationSettingsAction.IDENTIFIER_CEP, new RedirectNotificationSettingsAction())
         );
     }
 

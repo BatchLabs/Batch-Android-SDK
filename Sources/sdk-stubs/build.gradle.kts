@@ -5,10 +5,10 @@ plugins {
 android {
     namespace = "sun.misc"
 
-    compileSdk = ProjectConsts.COMPILE_SDK
+    compileSdk = libs.versions.androidCompileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = SDKConsts.MIN_SDK
+        minSdk = libs.versions.androidMinSdk.get().toInt()
     }
 
     buildTypes {

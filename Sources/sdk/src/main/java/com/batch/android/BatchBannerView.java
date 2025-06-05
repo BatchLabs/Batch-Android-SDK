@@ -8,9 +8,12 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import com.batch.android.annotation.PublicSDK;
 import com.batch.android.core.Logger;
-import com.batch.android.di.providers.EmbeddedBannerContainerProvider;
+import com.batch.android.di.providers.CEPBannerContainerProvider;
 import com.batch.android.di.providers.LocalBroadcastManagerProvider;
-import com.batch.android.messaging.model.BannerMessage;
+import com.batch.android.di.providers.MEPBannerContainerProvider;
+import com.batch.android.messaging.model.Message;
+import com.batch.android.messaging.model.cep.CEPMessage;
+import com.batch.android.messaging.model.mep.BannerMessage;
 import com.batch.android.messaging.view.formats.EmbeddedBannerContainer;
 import com.batch.android.module.MessagingModule;
 
@@ -19,12 +22,11 @@ import com.batch.android.module.MessagingModule;
  * <p>
  * It is not actually a view that you can directly add to your hierarchy. You will have to use {@link #show(View)} and {@link #dismiss(boolean)} to control how it shows up.
  */
-@PublicSDK
 public class BatchBannerView {
 
-    private BatchMessage rawMessage;
+    private final BatchMessage rawMessage;
 
-    private BannerMessage message;
+    private final Message message;
 
     private EmbeddedBannerContainer shownContainer;
 
@@ -34,7 +36,7 @@ public class BatchBannerView {
 
     BatchBannerView(
         @NonNull BatchMessage rawMessage,
-        @NonNull BannerMessage message,
+        @NonNull Message message,
         @NonNull MessagingAnalyticsDelegate analyticsDelegate
     ) {
         this.rawMessage = rawMessage;
@@ -122,8 +124,25 @@ public class BatchBannerView {
                     LocalBroadcastManagerProvider
                         .get(anchorView.getContext())
                         .sendBroadcast(new Intent(MessagingModule.ACTION_DISMISS_BANNER));
-                    shownContainer =
-                        EmbeddedBannerContainerProvider.get(anchorView, rawMessage, message, analyticsDelegate, false);
+                    if (message.isMEPMessage()) {
+                        shownContainer =
+                            MEPBannerContainerProvider.get(
+                                anchorView,
+                                rawMessage,
+                                (BannerMessage) message,
+                                analyticsDelegate,
+                                false
+                            );
+                    } else if (message.isCEPMessage()) {
+                        shownContainer =
+                            CEPBannerContainerProvider.get(
+                                anchorView,
+                                rawMessage,
+                                (CEPMessage) message,
+                                analyticsDelegate,
+                                false
+                            );
+                    }
                     shownContainer.show();
                 } catch (Exception e) {
                     Logger.internal(MessagingModule.TAG, "Could not display banner", e);
@@ -162,8 +181,25 @@ public class BatchBannerView {
                     LocalBroadcastManagerProvider
                         .get(embedLayout.getContext())
                         .sendBroadcast(new Intent(MessagingModule.ACTION_DISMISS_BANNER));
-                    shownContainer =
-                        EmbeddedBannerContainerProvider.get(embedLayout, rawMessage, message, analyticsDelegate, true);
+                    if (message.isMEPMessage()) {
+                        shownContainer =
+                            MEPBannerContainerProvider.get(
+                                embedLayout,
+                                rawMessage,
+                                (BannerMessage) message,
+                                analyticsDelegate,
+                                true
+                            );
+                    } else if (message.isCEPMessage()) {
+                        shownContainer =
+                            CEPBannerContainerProvider.get(
+                                embedLayout,
+                                rawMessage,
+                                (CEPMessage) message,
+                                analyticsDelegate,
+                                true
+                            );
+                    }
                     shownContainer.show();
                 } catch (Exception e) {
                     Logger.internal(MessagingModule.TAG, "Could not embed banner", e);

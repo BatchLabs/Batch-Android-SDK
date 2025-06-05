@@ -40,6 +40,7 @@ public class LocalCampaignsWebserviceListenerImpl implements LocalCampaignsWebse
 
     @Override
     public void onSuccess(List<LocalCampaignsResponse> responses) {
+        campaignManager.setNextAvailableJITTimestampWithDefaultDelay();
         for (LocalCampaignsResponse response : responses) {
             handleInAppResponse(response);
         }

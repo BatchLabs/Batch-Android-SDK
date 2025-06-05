@@ -1,6 +1,16 @@
 package com.batch.android.debug;
 
+import android.app.ActionBar;
 import android.os.Bundle;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
@@ -26,7 +36,7 @@ public class BatchDebugActivity extends FragmentActivity implements OnMenuSelect
     public static final int LOCAL_CAMPAIGNS_DEBUG_FRAGMENT = 3;
     public static final int LOCAL_CAMPAIGN_DEBUG_FRAGMENT = 4;
 
-    private Fragment[] fragments = new Fragment[5];
+    private final Fragment[] fragments = new Fragment[5];
 
     private void switchFragment(int newIndex, boolean first, String campaignToken) {
         if (newIndex >= 0 && newIndex < fragments.length) {
@@ -54,12 +64,10 @@ public class BatchDebugActivity extends FragmentActivity implements OnMenuSelect
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             if (first) {
-                fragmentTransaction
-                    .replace(R.id.com_batchsdk_debug_fragment_container, fragments[newIndex])
-                    .commitNow();
+                fragmentTransaction.replace(R.id.com_batchsdk_debug_fragment_content, fragments[newIndex]).commitNow();
             } else {
                 fragmentTransaction
-                    .replace(R.id.com_batchsdk_debug_fragment_container, fragments[newIndex])
+                    .replace(R.id.com_batchsdk_debug_fragment_content, fragments[newIndex])
                     .addToBackStack(null)
                     .commit();
             }
@@ -82,18 +90,17 @@ public class BatchDebugActivity extends FragmentActivity implements OnMenuSelect
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Workaround to opt-out the android 15 edge to edge enforcement.
-        // This is a temporary fix since this api will be soon deprecated by google.
-        // But using the view compat to handle inset force us to bump the minimal androidx core version.
-        getTheme().applyStyle(R.style.com_batchsdk_OptOutEdgeToEdgeEnforcement, false);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.com_batchsdk_debug_view);
         if (savedInstanceState == null) {
             switchFragment(MAIN_DEBUG_FRAGMENT, true);
         }
 
-        getActionBar().setTitle(R.string.com_batchsdk_debug_view_title);
+        ActionBar actionBar = getActionBar();
+        if (actionBar != null) {
+            actionBar.setTitle(R.string.com_batchsdk_debug_view_title);
+        }
+        setupWindowInsets();
     }
 
     @Override
@@ -112,5 +119,41 @@ public class BatchDebugActivity extends FragmentActivity implements OnMenuSelect
     protected void onDestroy() {
         Batch.onDestroy(this);
         super.onDestroy();
+    }
+
+    private void setupWindowInsets() {
+        Window window = getWindow();
+        if (window == null) {
+            return;
+        }
+        // Set the window to not fit system windows
+        WindowCompat.setDecorFitsSystemWindows(window, false);
+
+        // Set the status bar and navigation bar to be light
+        WindowInsetsControllerCompat windowInsetsController = WindowCompat.getInsetsController(
+            window,
+            window.getDecorView()
+        );
+        windowInsetsController.setAppearanceLightStatusBars(true);
+        windowInsetsController.setAppearanceLightNavigationBars(true);
+
+        // Apply insets to the container view
+        LinearLayout containerView = findViewById(R.id.com_batchsdk_debug_fragment_container);
+        ViewCompat.setOnApplyWindowInsetsListener(
+            containerView,
+            (view, windowInsets) -> {
+                Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
+                if (params != null) {
+                    params.leftMargin = insets.left;
+                    params.bottomMargin = insets.bottom;
+                    params.rightMargin = insets.right;
+                    params.topMargin = insets.top;
+                    view.setLayoutParams(params);
+                }
+                return WindowInsetsCompat.CONSUMED;
+            }
+        );
+        ViewCompat.requestApplyInsets(containerView);
     }
 }

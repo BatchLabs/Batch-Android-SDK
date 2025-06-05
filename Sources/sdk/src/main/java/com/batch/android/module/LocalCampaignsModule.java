@@ -202,7 +202,7 @@ public class LocalCampaignsModule extends BatchModule {
         if (!eligibleCampaigns.isEmpty()) {
             // Get the first elected campaign
             LocalCampaign firstElectedCampaign = eligibleCampaigns.get(0);
-            if (firstElectedCampaign.requiresJustInTimeSync && signal instanceof EventTrackedSignal) {
+            if (firstElectedCampaign.requiresJustInTimeSync) {
                 SyncedJITResult.State syncedCampaignState = campaignManager.getSyncedJITCampaignState(
                     firstElectedCampaign
                 );

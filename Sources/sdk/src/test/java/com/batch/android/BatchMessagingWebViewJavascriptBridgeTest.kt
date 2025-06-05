@@ -40,8 +40,14 @@ class BatchMessagingWebViewJavascriptBridgeTest {
     @Test
     fun testExpectedResults() {
         val bridge = MockingBridge(context, null, null)
-        assertBridgeResult(MockingBridge.Expectations.installationID, bridge.get("getInstallationID"))
-        assertBridgeResult(MockingBridge.Expectations.customLanguage, bridge.get("getCustomLanguage"))
+        assertBridgeResult(
+            MockingBridge.Expectations.installationID,
+            bridge.get("getInstallationID"),
+        )
+        assertBridgeResult(
+            MockingBridge.Expectations.customLanguage,
+            bridge.get("getCustomLanguage"),
+        )
         assertBridgeResult(MockingBridge.Expectations.customRegion, bridge.get("getCustomRegion"))
         assertBridgeResult(MockingBridge.Expectations.customUserID, bridge.get("getCustomUserID"))
 
@@ -74,17 +80,69 @@ class BatchMessagingWebViewJavascriptBridgeTest {
         val bridge = BatchMessagingWebViewJavascriptBridge(context, null, mockActionListener)
 
         assertBridgeError(bridge.postMessage("openDeeplink", "{}"))
-        assertBridgeResult("ok", bridge.postMessage("openDeeplink", """{"url": "https://batch.com"}"""))
-        assertBridgeResult("ok", bridge.postMessage("openDeeplink", """{"url": "https://batch.com", "openInApp": true}"""))
-        assertBridgeResult("ok", bridge.postMessage("openDeeplink", """{"url": "https://batch.com", "openInApp": false}"""))
-        assertBridgeResult("ok", bridge.postMessage("openDeeplink", """{"url": "https://batch.com", "openInApp": true, "analyticsID": 2}"""))
-        assertBridgeResult("ok", bridge.postMessage("openDeeplink", """{"url": "https://batch.com", "openInApp": true, "analyticsID": "test_analytics"}"""))
+        assertBridgeResult(
+            "ok",
+            bridge.postMessage("openDeeplink", """{"url": "https://batch.com"}"""),
+        )
+        assertBridgeResult(
+            "ok",
+            bridge.postMessage(
+                "openDeeplink",
+                """{"url": "https://batch.com", "openInApp": true}""",
+            ),
+        )
+        assertBridgeResult(
+            "ok",
+            bridge.postMessage(
+                "openDeeplink",
+                """{"url": "https://batch.com", "openInApp": false}""",
+            ),
+        )
+        assertBridgeResult(
+            "ok",
+            bridge.postMessage(
+                "openDeeplink",
+                """{"url": "https://batch.com", "openInApp": true, "analyticsID": 2}""",
+            ),
+        )
+        assertBridgeResult(
+            "ok",
+            bridge.postMessage(
+                "openDeeplink",
+                """{"url": "https://batch.com", "openInApp": true, "analyticsID": "test_analytics"}""",
+            ),
+        )
 
-        verify(mockActionListener).onOpenDeeplinkAction(Mockito.eq("https://batch.com"), Mockito.eq(null), Mockito.eq(null))
-        verify(mockActionListener).onOpenDeeplinkAction(Mockito.eq("https://batch.com"), Mockito.eq(true), Mockito.eq(null))
-        verify(mockActionListener).onOpenDeeplinkAction(Mockito.eq("https://batch.com"), Mockito.eq(false), Mockito.eq(null))
-        verify(mockActionListener).onOpenDeeplinkAction(Mockito.eq("https://batch.com"), Mockito.eq(true), Mockito.eq(null))
-        verify(mockActionListener).onOpenDeeplinkAction(Mockito.eq("https://batch.com"), Mockito.eq(true), Mockito.eq("test_analytics"))
+        verify(mockActionListener)
+            .onOpenDeeplinkAction(
+                Mockito.eq("https://batch.com"),
+                Mockito.eq(null),
+                Mockito.eq(null),
+            )
+        verify(mockActionListener)
+            .onOpenDeeplinkAction(
+                Mockito.eq("https://batch.com"),
+                Mockito.eq(true),
+                Mockito.eq(null),
+            )
+        verify(mockActionListener)
+            .onOpenDeeplinkAction(
+                Mockito.eq("https://batch.com"),
+                Mockito.eq(false),
+                Mockito.eq(null),
+            )
+        verify(mockActionListener)
+            .onOpenDeeplinkAction(
+                Mockito.eq("https://batch.com"),
+                Mockito.eq(true),
+                Mockito.eq(null),
+            )
+        verify(mockActionListener)
+            .onOpenDeeplinkAction(
+                Mockito.eq("https://batch.com"),
+                Mockito.eq(true),
+                Mockito.eq("test_analytics"),
+            )
     }
 
     @Test
@@ -94,7 +152,10 @@ class BatchMessagingWebViewJavascriptBridgeTest {
 
         assertBridgeResult("ok", bridge.postMessage("dismiss", "{}"))
         assertBridgeResult("ok", bridge.postMessage("dismiss", """{"analyticsID": 2}"""))
-        assertBridgeResult("ok", bridge.postMessage("dismiss", """{"analyticsID": "test_analytics"}"""))
+        assertBridgeResult(
+            "ok",
+            bridge.postMessage("dismiss", """{"analyticsID": "test_analytics"}"""),
+        )
 
         verify(mockActionListener).onDismissAction(Mockito.eq(null))
         verify(mockActionListener).onDismissAction(Mockito.eq("2"))
@@ -108,30 +169,66 @@ class BatchMessagingWebViewJavascriptBridgeTest {
 
         assertBridgeError(bridge.postMessage("performAction", "{}"))
         assertBridgeError(bridge.postMessage("performAction", """{"badKey": "foo"}"""))
-        assertBridgeResult("ok", bridge.postMessage("performAction", """{"name":"batch.test", "args": {"arg1":"value"}}"""))
-        assertBridgeResult("ok", bridge.postMessage("performAction", """{"name":"batch.test", "args": {"arg1":"value"}, "analyticsID": 2}"""))
-        assertBridgeResult("ok", bridge.postMessage("performAction", """{"name":"batch.test", "args": {"arg1":"value"}, "analyticsID": " "}"""))
-        assertBridgeResult("ok", bridge.postMessage("performAction", """{"name":"batch.test", "args": {"arg1":"value"}, "analyticsID": "test_analytics"}"""))
+        assertBridgeResult(
+            "ok",
+            bridge.postMessage(
+                "performAction",
+                """{"name":"batch.test", "args": {"arg1":"value"}}""",
+            ),
+        )
+        assertBridgeResult(
+            "ok",
+            bridge.postMessage(
+                "performAction",
+                """{"name":"batch.test", "args": {"arg1":"value"}, "analyticsID": 2}""",
+            ),
+        )
+        assertBridgeResult(
+            "ok",
+            bridge.postMessage(
+                "performAction",
+                """{"name":"batch.test", "args": {"arg1":"value"}, "analyticsID": " "}""",
+            ),
+        )
+        assertBridgeResult(
+            "ok",
+            bridge.postMessage(
+                "performAction",
+                """{"name":"batch.test", "args": {"arg1":"value"}, "analyticsID": "test_analytics"}""",
+            ),
+        )
 
-        verify(mockActionListener).onPerformAction(Mockito.eq("batch.test"), JSONObjectMockitoMatcher.eq(JSONObject().apply {
-            put("arg1", "value")
-        }), Mockito.eq(null))
+        verify(mockActionListener)
+            .onPerformAction(
+                Mockito.eq("batch.test"),
+                JSONObjectMockitoMatcher.eq(JSONObject().apply { put("arg1", "value") }),
+                Mockito.eq(null),
+            )
 
-        verify(mockActionListener).onPerformAction(Mockito.eq("batch.test"), JSONObjectMockitoMatcher.eq(JSONObject().apply {
-            put("arg1", "value")
-        }), Mockito.eq("2"))
+        verify(mockActionListener)
+            .onPerformAction(
+                Mockito.eq("batch.test"),
+                JSONObjectMockitoMatcher.eq(JSONObject().apply { put("arg1", "value") }),
+                Mockito.eq("2"),
+            )
 
-        verify(mockActionListener).onPerformAction(Mockito.eq("batch.test"), JSONObjectMockitoMatcher.eq(JSONObject().apply {
-            put("arg1", "value")
-        }), Mockito.eq(" "))
+        verify(mockActionListener)
+            .onPerformAction(
+                Mockito.eq("batch.test"),
+                JSONObjectMockitoMatcher.eq(JSONObject().apply { put("arg1", "value") }),
+                Mockito.eq(" "),
+            )
 
-        verify(mockActionListener).onPerformAction(Mockito.eq("batch.test"), JSONObjectMockitoMatcher.eq(JSONObject().apply {
-            put("arg1", "value")
-        }), Mockito.eq("test_analytics"))
+        verify(mockActionListener)
+            .onPerformAction(
+                Mockito.eq("batch.test"),
+                JSONObjectMockitoMatcher.eq(JSONObject().apply { put("arg1", "value") }),
+                Mockito.eq("test_analytics"),
+            )
     }
 
     private fun assertJSONContainsKey(key: String, rawJSON: String) {
-        Assert.assertTrue(JSONObject(rawJSON).has(key));
+        Assert.assertTrue(JSONObject(rawJSON).has(key))
     }
 
     private fun assertBridgeResult(expected: String?, bridgeResponse: String) {
@@ -141,13 +238,15 @@ class BatchMessagingWebViewJavascriptBridgeTest {
     }
 
     private fun assertBridgeError(bridgeResponse: String) {
-        with(JSONObject(bridgeResponse)) {
-            Assert.assertNotNull(reallyOptString("error", null))
-        }
+        with(JSONObject(bridgeResponse)) { Assert.assertNotNull(reallyOptString("error", null)) }
     }
 }
 
-class MockingBridge(context: Context, message: BatchMessage?, actionListener: WebViewActionListener?) : BatchMessagingWebViewJavascriptBridge(context, message, actionListener) {
+class MockingBridge(
+    context: Context,
+    message: BatchMessage?,
+    actionListener: WebViewActionListener?,
+) : BatchMessagingWebViewJavascriptBridge(context, message, actionListener) {
     object Expectations {
         const val installationID = "install"
         const val customLanguage = "xx"
@@ -195,7 +294,6 @@ class MockingBridge(context: Context, message: BatchMessage?, actionListener: We
         }
         return null
     }
-
 }
 
 class MockMessage(val payload: JSONObject) : BatchMessage() {
@@ -214,5 +312,4 @@ class MockMessage(val payload: JSONObject) : BatchMessage() {
     override fun getBundleRepresentation(): Bundle {
         throw NotImplementedError("Not implemented")
     }
-
 }

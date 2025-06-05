@@ -139,7 +139,13 @@ public final class ParameterKeys
 
     public final static String SHARED_PREFS_STORAGE_VERSION				= "app.shared_prefs.version";
 
-    public final static String DATA_COLLECTION_CONFIG_KEY				    = "data.privacy.config";
+    public final static String DATA_COLLECTION_CONFIG_KEY			    = "data.privacy.config";
 
+    // DNS Fallback
+    public final static String DNS_DOMAIN_KEY                           = "dns.domain.current";
+    public static final String DNS_DOMAIN_ERROR_COUNT_KEY               = "dns.domain.current.error.count";
+    public static final String DNS_DOMAIN_ERROR_UPDATE_DATE             = "dns.domain.current.error.last_update.date";
+    public static final String DNS_DOMAIN_LAST_UPDATE_DATE              = "dns.domain.current.last_update.date";
+    public static final String DNS_DOMAIN_LAST_CHECK_DATE               = "dns.domain.original.last_check.date";
 }
 //@formatter:on

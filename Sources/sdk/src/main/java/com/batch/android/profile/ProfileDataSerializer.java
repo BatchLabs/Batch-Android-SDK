@@ -7,6 +7,7 @@ import com.batch.android.json.JSONObject;
 import com.batch.android.user.UserAttribute;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class ProfileDataSerializer {
@@ -51,11 +52,17 @@ public class ProfileDataSerializer {
         }
 
         if (profileUpdateOperation.getEmailMarketing() != null) {
-            serializedProfile.put(EMAIL_MARKETING, profileUpdateOperation.getEmailMarketing().name().toLowerCase());
+            serializedProfile.put(
+                EMAIL_MARKETING,
+                profileUpdateOperation.getEmailMarketing().name().toLowerCase(Locale.US)
+            );
         }
 
         if (profileUpdateOperation.getSMSMarketing() != null) {
-            serializedProfile.put(SMS_MARKETING, profileUpdateOperation.getSMSMarketing().name().toLowerCase());
+            serializedProfile.put(
+                SMS_MARKETING,
+                profileUpdateOperation.getSMSMarketing().name().toLowerCase(Locale.US)
+            );
         }
 
         Map<String, UserAttribute> customAttributes = profileUpdateOperation.getCustomAttributes();

@@ -3,8 +3,8 @@ package com.batch.android;
 import android.content.Context;
 import com.batch.android.core.Logger;
 import com.batch.android.core.ParameterKeys;
-import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskRunnable;
+import com.batch.android.core.domain.DomainURLBuilder;
 import com.batch.android.json.JSONObject;
 import com.batch.android.query.AttributesCheckQuery;
 import com.batch.android.query.Query;
@@ -48,7 +48,7 @@ class AttributesCheckWebservice extends BatchQueryWebservice implements TaskRunn
         String transactionID,
         AttributesCheckWebserviceListener listener
     ) throws MalformedURLException {
-        super(context, RequestType.POST, Parameters.ATTR_CHECK_WS_URL);
+        super(context, RequestType.POST, DomainURLBuilder.ATTR_CHECK_WS_URL);
         if (version <= 0) {
             throw new IllegalArgumentException("version <= 0");
         }
@@ -90,22 +90,7 @@ class AttributesCheckWebservice extends BatchQueryWebservice implements TaskRunn
                 response = getStandardResponseBodyIfValid();
             } catch (WebserviceError error) {
                 Logger.internal(TAG, error.getReason().toString(), error.getCause());
-
-                switch (error.getReason()) {
-                    case NETWORK_ERROR:
-                        listener.onError(FailReason.NETWORK_ERROR);
-                        break;
-                    case INVALID_API_KEY:
-                        listener.onError(FailReason.INVALID_API_KEY);
-                        break;
-                    case DEACTIVATED_API_KEY:
-                        listener.onError(FailReason.DEACTIVATED_API_KEY);
-                        break;
-                    default:
-                        listener.onError(FailReason.UNEXPECTED_ERROR);
-                        break;
-                }
-
+                listener.onError(error.getFailReason());
                 return;
             }
 
@@ -115,7 +100,7 @@ class AttributesCheckWebservice extends BatchQueryWebservice implements TaskRunn
             parseResponse(response);
 
             /*
-             * Read resposne
+             * Read response
              */
             AttributesCheckResponse checkResponse = getResponseFor(
                 AttributesCheckResponse.class,

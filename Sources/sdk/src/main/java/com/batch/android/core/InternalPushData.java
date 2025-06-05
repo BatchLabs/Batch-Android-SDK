@@ -1,10 +1,8 @@
 package com.batch.android.core;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Notification;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
@@ -54,6 +52,10 @@ public class InternalPushData {
      * Key to retrieve the landing payload
      */
     private static final String LANDING_KEY = "ld";
+    /**
+     * Key to retrieve the landing v2 payload
+     */
+    private static final String LANDING_V2_KEY = "ld2";
     /**
      * Key to retrieve the big icon key
      */
@@ -137,8 +139,15 @@ public class InternalPushData {
      */
     public static final String BATCH_BUNDLE_KEY = "com.batch";
 
-    private String jsonPayload;
-    private JSONObject payload;
+    /**
+     * Push Payload
+     */
+    private final JSONObject payload;
+
+    /**
+     * Decoded landing message
+     */
+    private JSONObject cachedDecodedLandingMessage;
 
     public InternalPushData(String batchData) {
         if (batchData == null || batchData.isEmpty()) {
@@ -146,7 +155,6 @@ public class InternalPushData {
         }
 
         try {
-            jsonPayload = batchData;
             payload = new JSONObject(batchData);
         } catch (JSONException e) {
             throw new IllegalArgumentException("Error while parsing JSON data", e);
@@ -157,8 +165,6 @@ public class InternalPushData {
         if (batchData == null || batchData.keySet().isEmpty()) {
             throw new NullPointerException("Cannot init PushData without the associated JSON data");
         }
-
-        jsonPayload = batchData.toString();
         payload = batchData;
     }
 
@@ -188,7 +194,7 @@ public class InternalPushData {
         }
 
         final Map<String, String> data = message.getData();
-        if (data != null && data.size() > 0) {
+        if (!data.isEmpty()) {
             String batchData = data.get(BATCH_BUNDLE_KEY);
             if (batchData != null) {
                 return new InternalPushData(batchData);
@@ -198,8 +204,8 @@ public class InternalPushData {
         return null;
     }
 
-    public String getJsonPayload() {
-        return jsonPayload;
+    public JSONObject getPayload() {
+        return payload;
     }
 
     // --------------------------------------->
@@ -242,11 +248,47 @@ public class InternalPushData {
     }
 
     public boolean hasLandingMessage() {
-        return nullSafeGetJSONObject(LANDING_KEY) != null;
+        return nullSafeGetJSONObject(LANDING_KEY) != null || nullSafeGetString(LANDING_V2_KEY) != null;
     }
 
+    @Nullable
     public JSONObject getLandingMessage() {
+        // Check for v2 landing message (CEP)
+        JSONObject landingMessage = getCEPLandingMessage();
+        if (landingMessage != null) {
+            return landingMessage;
+        }
+        // Fallback to v1 landing message (MEP) or null
+        return getMEPLandingMessage();
+    }
+
+    @Nullable
+    private JSONObject getMEPLandingMessage() {
         return nullSafeGetJSONObject(LANDING_KEY);
+    }
+
+    @Nullable
+    private JSONObject getCEPLandingMessage() {
+        if (cachedDecodedLandingMessage != null) {
+            return cachedDecodedLandingMessage;
+        }
+
+        // Check for v2 landing message (CEP)
+        String landing = nullSafeGetString(LANDING_V2_KEY);
+        if (landing != null) {
+            try {
+                // Decode base91J landing message
+                byte[] decodedLanding = new Base91J().decodeString(landing);
+                // Uncompressed gzip message
+                String uncompressedLanding = GzipHelper.ungzip(decodedLanding);
+                // Keep decoded landing message in cache to avoid decoding it again
+                cachedDecodedLandingMessage = new JSONObject(uncompressedLanding);
+                return cachedDecodedLandingMessage;
+            } catch (Exception e) {
+                Logger.error("Decoding landing message has failed", e);
+            }
+        }
+        return null;
     }
 
     public boolean hasCustomBigIcon() {
@@ -550,25 +592,6 @@ public class InternalPushData {
             return JSONHelper.jsonObjectToMap(trimmedPayload);
         } catch (JSONException e) {
             Logger.internal(PushModule.TAG, "Error while deserializing the PushData open data.", e);
-        }
-
-        return null;
-    }
-
-    /**
-     * Get the event data for the display receipt
-     *
-     * @return
-     */
-    public Map<String, Object> getReceiptEventData() {
-        try {
-            final JSONObject trimmedPayload = new JSONObject(
-                payload,
-                new String[] { ID_KEY, EXPERIMENT_KEY, VARIANT_KEY }
-            );
-            return JSONHelper.jsonObjectToMap(trimmedPayload);
-        } catch (JSONException e) {
-            Logger.internal(PushModule.TAG, "Error while deserializing the receipt event data.", e);
         }
 
         return null;

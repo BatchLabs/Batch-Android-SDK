@@ -15,7 +15,7 @@ configurations {
 }
 
 dependencies {
-    metalavaRuntime 'com.android.tools.metalava:metalava:1.0.0-alpha04'
+    metalavaRuntime libs.metalava
 }
 
 /**

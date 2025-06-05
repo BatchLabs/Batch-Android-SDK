@@ -3,7 +3,7 @@ package com.batch.android;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.annotation.PublicSDK;
-import com.batch.android.messaging.model.WebViewMessage;
+import com.batch.android.messaging.model.mep.WebViewMessage;
 
 /**
  * Model for the content of an WebView message

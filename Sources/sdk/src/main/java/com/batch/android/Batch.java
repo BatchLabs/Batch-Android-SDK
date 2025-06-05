@@ -21,8 +21,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import com.batch.android.annotation.PublicSDK;
 import com.batch.android.core.ExcludedActivityHelper;
 import com.batch.android.core.GenericHelper;
@@ -54,7 +53,11 @@ import com.batch.android.event.InternalEvents;
 import com.batch.android.eventdispatcher.PushEventPayload;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
+import com.batch.android.messaging.model.Message;
+import com.batch.android.messaging.parsing.PayloadParser;
+import com.batch.android.messaging.parsing.PayloadParsingException;
 import com.batch.android.module.BatchModule;
+import com.batch.android.module.MessagingModule;
 import com.batch.android.module.OptOutModule;
 import com.batch.android.module.PushModule;
 import com.batch.android.runtime.RuntimeManager;
@@ -587,29 +590,29 @@ public final class Batch {
         }
 
         /**
-         * Get the enabled notification types<br>
-         * Matches what you've set in setNotificationsType.
-         *
-         * @return Type of notifications you previously set. Be careful, as this can be null if you never used setNotificationsType() or if your context is invalid
+         * Whether Batch should show notifications or not.
+         * <p>
+         * Default: true if you never used setShowNotifications() or if your context is invalid.
+         * @param context Android's context
+         * @return Whether Batch should show notifications or not
          */
-        @Nullable
-        public static EnumSet<PushNotificationType> getNotificationsType(Context context) {
-            return PushModuleProvider.get().getNotificationsType(context);
+        public static boolean shouldShowNotifications(@NonNull Context context) {
+            // noinspection ConstantConditions
+            if (context == null) {
+                throw new IllegalArgumentException("Context cannot be null");
+            }
+            return PushModuleProvider.get().shouldShowNotifications(context);
         }
 
         /**
-         * Adjust the way Batch will display notifications.<br>
-         * You should use this method if you want to remove vibration, light, sound or avoid notifications for this user.<br/><br/>
+         * Adjust the way Batch will display notifications.
          * <p>
-         * Note: On Android 8.0 and higher, this method ignores {@link PushNotificationType#LIGHTS}, {@link PushNotificationType#VIBRATE} and {@link PushNotificationType#SOUND}.<br/>
-         * Only {@link PushNotificationType#ALERT} will be honored, toggling whether notifications should be displayed or not.<br/>
-         * This is because Android 8 manages notifications using channels, meaning that these settings cannot be in your app anymore, and must redirect to the system's UI.<br/>
-         * Use {@link Push#getChannelsManager()} to manage your channels.
-         *
-         * @param types Type of notifications you want, default = ALERT + LIGHTS + VIBRATE + SOUND
+         * You should use this method if you want avoid notifications for this user.
+         * Note that Batch will remember this value, even if your Application reboots.
+         * @param show Whether Batch should show notifications or not
          */
-        public static void setNotificationsType(EnumSet<PushNotificationType> types) {
-            PushModuleProvider.get().setNotificationsType(types);
+        public static void setShowNotifications(boolean show) {
+            PushModuleProvider.get().setShowNotifications(show);
         }
 
         /**
@@ -1327,7 +1330,7 @@ public final class Batch {
         /**
          * CTA Index representing a global tap action
          */
-        public static final int GLOBAL_TAP_ACTION_INDEX = -1;
+        public static final String GLOBAL_TAP_ACTION_INDEX = "mepCtaIndex:-1"; // was -1
 
         private Messaging() {}
 
@@ -1335,11 +1338,39 @@ public final class Batch {
 
         /**
          * Listener interface for messaging views lifecycle events.
+         * <p>
          * Implement this if you want to be notified of what happens to the messaging view (for example, perform some analytics on show/hide).
          * You're also <b>required</b> to implement this if you want to add actions with a "callback" type.
          */
         @PublicSDK
         public interface LifecycleListener {
+            /**
+             * Enum for the different reasons why an In-App message can be closed.
+             */
+            @PublicSDK
+            enum MessagingCloseReason {
+                /**
+                 * The message was closed automatically from auto dismiss feature.
+                 */
+                Auto,
+
+                /**
+                 * The message was closed by the user (like clicking on the close or back button).
+                 */
+                User,
+
+                /**
+                 * The message was closed because the user clicked on a CTA.
+                 */
+                Action,
+
+                /**
+                 * The message was closed because of an error
+                 * (for example, a message with only one image in it that fails to be downloaded).
+                 */
+                Error,
+            }
+
             /**
              * Called when the message view appeared on screen.
              *
@@ -1348,75 +1379,41 @@ public final class Batch {
             void onBatchMessageShown(@Nullable String messageIdentifier);
 
             /**
-             * Called when the message view disappeared from the screen.
-             *
-             * @param messageIdentifier Analytics message identifier string. Can be null.
-             */
-            void onBatchMessageClosed(@Nullable String messageIdentifier);
-
-            /**
              * Called when the message view will be dismissed due to the user pressing a CTA or the global tap action.
-             * Not applicable for the WebView format.
              *
              * @param messageIdentifier Analytics message identifier string. Can be null.
-             * @param index             Index of the action/CTA. If the action comes from the "global tap action", the index will be {@link #GLOBAL_TAP_ACTION_INDEX}
-             *                          If the index is greater than or equal to zero, you can cast the action to {@link BatchMessageCTA} to get the CTA's label.
+             * @param ctaIdentifier     Identifier of the action/CTA.
+             *                          If the action comes from the "global tap action", the identifier will be {@link #GLOBAL_TAP_ACTION_INDEX} (for MEP messages only).
+             *                          If the identifier isn't null, you can cast the action to {@link BatchMessageCTA} to get the CTA's label.
+             *                          If the action comes from a WebView, the identifier will be the Analytics identifier. Matches the "analyticsID" parameter of the Javascript call,
+             *                          or the 'batchAnalyticsID' get parameter of a link.
              * @param action            Action that will be performed. Fields can be null if the action was only to dismiss the message on tap.
              *                          DO NOT run the action yourself: the SDK will automatically do it.
              */
             default void onBatchMessageActionTriggered(
                 @Nullable String messageIdentifier,
-                int index,
+                @Nullable String ctaIdentifier,
                 @NonNull BatchMessageAction action
             ) {}
 
             /**
-             * Called when the WebView message view will be dismissed due to the user navigating away or triggering an
-             * action (using the Javascript SDK).
+             * Called when the message view disappeared from the screen.
              *
              * @param messageIdentifier Analytics message identifier string. Can be null.
-             * @param analyticsID       Analytics identifier. Matches the "analyticsID" parameter of the Javascript call,
-             *                          or the 'batchAnalyticsID' get parameter of a link.
-             * @param action            Action that will be performed, can be null. Some fields might be null.
-             *                          DO NOT run the action yourself: the SDK will automatically do it.
+             * @param reason Reason why the message was closed.
              */
-            default void onBatchMessageWebViewActionTriggered(
-                @Nullable String messageIdentifier,
-                @Nullable String analyticsID,
-                @Nullable BatchMessageAction action
-            ) {}
-
-            /**
-             * Called when the message view will be dismissed due to the user pressing the close button,
-             * or the system's Back button.
-             *
-             * @param messageIdentifier Analytics message identifier string. Can be null.
-             */
-            default void onBatchMessageCancelledByUser(@Nullable String messageIdentifier) {}
-
-            /**
-             * Called when the message view will be dismissed due to the auto close timer running out
-             *
-             * @param messageIdentifier Analytics message identifier string. Can be null.
-             */
-            default void onBatchMessageCancelledByAutoclose(@Nullable String messageIdentifier) {}
-
-            /**
-             * Called when the message view will be dismissed due to an error when loading the message's content.
-             * Can only happen on WebView and Image messages.
-             *
-             * @param messageIdentifier Analytics message identifier string. Can be null.
-             */
-            default void onBatchMessageCancelledByError(@Nullable String messageIdentifier) {}
+            void onBatchMessageClosed(@Nullable String messageIdentifier, MessagingCloseReason reason);
         }
 
         /**
-         * Listener interface for messaging events.
-         * If you'd like to opt-in to additional lifecycle events, you should implement this methods,
-         * as it gives you more control about how and when to display In-App Messages
+         * Interface to intercept In-App Messages before they are displayed.
+         * <p>
+         * This interface can be used to cancel the automatic display of a message
+         * and allow manual handling. It is called when the SDK is about to
+         * display an In-App message.
          */
         @PublicSDK
-        public interface LifecycleListener2 extends LifecycleListener {
+        public interface InAppInterceptor {
             /**
              * Called when an In-App Message is about to be displayed, giving a chance to cancel it and
              * handle it manually.
@@ -1502,7 +1499,7 @@ public final class Batch {
         /**
          * Toggle this module's automatic mode. By default, this value is "true".
          * <p>
-         * If you disable automatic mode, you will have to implement {@link #loadFragment(Context, BatchMessage)}
+         * If you disable automatic mode, you will have to implement {@link #loadMessagingView(Context, BatchMessage)}
          *
          * @param automatic True to enable the automatic mode, false to disable it.
          */
@@ -1533,46 +1530,60 @@ public final class Batch {
         }
 
         /**
-         * Load the {@link Fragment} corresponding to the message payload.
-         * <br>
-         * This method should be called from your UI thread.
-         * <p>
-         * If the specified message contains a banner, this method will throw a {@link BatchMessagingException}.
-         * <br/>
-         * You should then fallback on {@link #loadBanner(Context, BatchMessage)}, or attempt it before,
-         * as there is currently no way of checking whether a BatchMessage contains a banner, an interstitial,
-         * or any potential future format.
+         * Set an In-App interceptor. For more information about what an In-App interceptor is useful for, look at {@link InAppInterceptor}'s documentation.
          *
-         * @param context Your activity's context. Can't be null.
-         * @param message Message to display. Can't be null.
-         * @throws IllegalArgumentException If some parameters are null.
-         * @throws BatchMessagingException When loading fail
+         * @param interceptor An {@link InAppInterceptor} implementation. null to remove a previously set one.
          */
-        @NonNull
-        public static DialogFragment loadFragment(@NonNull Context context, @NonNull BatchMessage message)
-            throws BatchMessagingException {
-            // Extract the json from this class rather than in MessagingModule because getJSON is protected,
-            // and not accessible from the messaging module's package
-            return MessagingModuleProvider.get().loadFragment(context, message, message.getJSON());
+        public static void setInAppInterceptor(@Nullable InAppInterceptor interceptor) {
+            MessagingModuleProvider.get().setInAppInterceptor(interceptor);
         }
 
         /**
-         * Load the {@link BatchBannerView} corresponding to the message payload.
-         * <br>
+         * Load the {@link BatchMessagingView} corresponding to the message payload.
+         * <p>
          * This method should be called from your UI thread.
          * <p>
-         * If the message does not contain a banner, a {@link BatchMessagingException} will be thrown.
-         *
+         * Note that this method will not display the message.
+         * You will have to call {@link BatchMessagingView#showView(Activity)}
+         * or {@link BatchMessagingView#showFragment(FragmentActivity, String)}
+         * according to the {@link BatchMessagingView#kind}.
+         * <p>
+         * Example:
+         * <br />
+         * <pre>
+         * {@code
+         *   val messagingView = Batch.Messaging.loadMessagingView(this, message)
+         *   when (messagingView.kind) {
+         *       BatchMessagingView.Kind.Fragment -> messagingView.showFragment(supportFragmentManager, "batch-landing")
+         *       BatchMessagingView.Kind.View -> messagingView.showView(this)
+         *    }
+         * }
+         * </pre>
          * @param context Your activity's context. Can't be null.
          * @param message Message to display. Can't be null.
-         * @return A Banner instance.
-         * @throws IllegalArgumentException If some parameters are null.
+         * @return A BatchMessagingView instance.
          * @throws BatchMessagingException When loading fail
          */
         @NonNull
-        public static BatchBannerView loadBanner(@NonNull Context context, @NonNull BatchMessage message)
+        public static BatchMessagingView loadMessagingView(@NonNull Context context, @NonNull BatchMessage message)
             throws BatchMessagingException {
-            return MessagingModuleProvider.get().loadBanner(context, message, message.getJSON());
+            try {
+                JSONObject json = message.getJSON();
+                MessagingModule messagingModule = MessagingModuleProvider.get();
+                Message msg = PayloadParser.parseUnknownLandingMessage(json);
+                if (msg.isBannerMessage()) {
+                    return new BatchMessagingView(
+                        BatchMessagingView.Kind.View,
+                        messagingModule.loadBanner(context, message, json)
+                    );
+                }
+                return new BatchMessagingView(
+                    BatchMessagingView.Kind.Fragment,
+                    messagingModule.loadFragment(context, message, json)
+                );
+            } catch (PayloadParsingException e) {
+                throw new BatchMessagingException("Could not read base payload from message");
+            }
         }
 
         /**
@@ -1599,7 +1610,7 @@ public final class Batch {
         }
 
         /**
-         * Toggles whether Batch.Messaging should entier its "do not disturb" (DnD) mode, or exit it.
+         * Toggles whether Batch.Messaging should enter its "do not disturb" (DnD) mode, or exit it.
          * <p>
          * While in DnD, Batch will not display landings, not matter if they've been triggered by notifications or an In-App Campaign, even in automatic mode.
          * </p><p>
@@ -1609,7 +1620,7 @@ public final class Batch {
          * When exiting DnD, Batch will not display the message automatically: you'll have to call the queue management methods to display the message, if you want to.<br/>
          * See {@link #hasPendingMessage()}, {@link #popPendingMessage()} to manage the enqueued message, if any.
          * </p><p>
-         * Note: This is only supported if automatic mode is disabled. Messages will not be enqueued, as they will be delivered to your {@link LifecycleListener2} implementation.
+         * Note: This is only supported if automatic mode is disabled. Messages will not be enqueued, as they will be delivered to your {@link InAppInterceptor} implementation.
          * </p>
          *
          * @param enableDnd true to enable DnD, false to disable it

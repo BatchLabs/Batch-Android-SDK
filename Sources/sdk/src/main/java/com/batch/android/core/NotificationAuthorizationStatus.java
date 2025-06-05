@@ -14,7 +14,6 @@ import androidx.core.app.NotificationManagerCompat;
 import com.batch.android.BatchNotificationChannelsManager;
 import com.batch.android.BatchNotificationChannelsManagerPrivateHelper;
 import com.batch.android.BatchPushRegistration;
-import com.batch.android.PushNotificationType;
 import com.batch.android.WebserviceLauncher;
 import com.batch.android.di.providers.BatchNotificationChannelsManagerProvider;
 import com.batch.android.di.providers.ParametersProvider;
@@ -175,11 +174,9 @@ public class NotificationAuthorizationStatus {
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             return notificationManagerService.areNotificationsEnabled();
-        } else if (Build.VERSION.SDK_INT >= 19) {
+        } else {
             return NotificationManagerCompat.from(context).areNotificationsEnabled();
         }
-
-        return true;
     }
 
     @VisibleForTesting

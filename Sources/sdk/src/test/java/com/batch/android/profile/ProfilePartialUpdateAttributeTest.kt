@@ -1,7 +1,6 @@
 package com.batch.android.profile
 
 import androidx.test.filters.SmallTest
-import com.batch.android.json.JSONObject
 import org.junit.Assert
 import org.junit.Test
 
@@ -10,7 +9,7 @@ class ProfilePartialUpdateAttributeTest {
 
     @Test
     fun testPutInAdded() {
-       val partial = ProfilePartialUpdateAttribute(null)
+        val partial = ProfilePartialUpdateAttribute(null)
         Assert.assertNull(partial.added)
         Assert.assertNull(partial.removed)
         partial.putInAdded(listOf("a", "b"))

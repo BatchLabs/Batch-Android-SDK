@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import com.batch.android.BatchMessage;
 import com.batch.android.core.Logger;
-import com.batch.android.messaging.model.AlertMessage;
+import com.batch.android.messaging.model.mep.AlertMessage;
 import com.batch.android.messaging.view.helper.ThemeHelper;
 
 /**

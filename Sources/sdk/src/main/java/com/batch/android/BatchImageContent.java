@@ -7,7 +7,7 @@ import com.batch.android.annotation.PublicSDK;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.messaging.Size2D;
-import com.batch.android.messaging.model.ImageMessage;
+import com.batch.android.messaging.model.mep.ImageMessage;
 
 /**
  * Model for the content of an image-only message

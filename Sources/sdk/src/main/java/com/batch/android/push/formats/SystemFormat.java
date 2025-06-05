@@ -51,7 +51,7 @@ public class SystemFormat extends BaseFormat implements NotificationFormat {
             // Make BigPictureStyle hide it when expanded so that we don't show the same image
             // twice
             if (icon == null && !useLegacyBigPictureIconBehaviour) {
-                bpStyle.bigLargeIcon(null);
+                bpStyle.bigLargeIcon((Bitmap) null);
             }
             style = bpStyle;
         } else {

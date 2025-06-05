@@ -16,24 +16,28 @@ class APENFormatTests {
         Assert.assertEquals(false, layoutType.shouldFitCenter())
         Assert.assertEquals(false, layoutType.shouldForceLayoutHeight())
     }
+
     @Test
     fun testApenLayoutTypeFill200() {
         val layoutType = APENFormat.LayoutType.CENTER_CROP_200
         Assert.assertEquals(false, layoutType.shouldFitCenter())
         Assert.assertEquals(true, layoutType.shouldForceLayoutHeight())
     }
+
     @Test
     fun testApenLayoutTypeFitMatchParent() {
         val layoutType = APENFormat.LayoutType.FIT_CENTER_MP
         Assert.assertEquals(true, layoutType.shouldFitCenter())
         Assert.assertEquals(false, layoutType.shouldForceLayoutHeight())
     }
+
     @Test
     fun testApenLayoutTypeFit200() {
         val layoutType = APENFormat.LayoutType.FIT_CENTER_200
         Assert.assertEquals(true, layoutType.shouldFitCenter())
         Assert.assertEquals(true, layoutType.shouldForceLayoutHeight())
     }
+
     @Test
     fun testScaling() {
         val format = APENFormat("title", "body", null, null)
@@ -44,27 +48,19 @@ class APENFormatTests {
         Assert.assertEquals(APENFormat.LayoutType.FIT_CENTER_200, format.layoutType)
 
         // Testing arguments fit center match parent
-        format.applyArguments(JSONObject().apply {
-            put("apen_layout_type", "fit_mp")
-        })
+        format.applyArguments(JSONObject().apply { put("apen_layout_type", "fit_mp") })
         Assert.assertEquals(APENFormat.LayoutType.FIT_CENTER_MP, format.layoutType)
 
         // Testing arguments fit center 200dp
-        format.applyArguments(JSONObject().apply {
-            put("apen_layout_type", "fit_200")
-        })
+        format.applyArguments(JSONObject().apply { put("apen_layout_type", "fit_200") })
         Assert.assertEquals(APENFormat.LayoutType.FIT_CENTER_200, format.layoutType)
 
         // Testing arguments fill match parent
-        format.applyArguments(JSONObject().apply {
-            put("apen_layout_type", "fill_mp")
-        })
+        format.applyArguments(JSONObject().apply { put("apen_layout_type", "fill_mp") })
         Assert.assertEquals(APENFormat.LayoutType.CENTER_CROP_MP, format.layoutType)
 
         // Testing arguments fill 200dp
-        format.applyArguments(JSONObject().apply {
-            put("apen_layout_type", "fill_200")
-        })
+        format.applyArguments(JSONObject().apply { put("apen_layout_type", "fill_200") })
         Assert.assertEquals(APENFormat.LayoutType.CENTER_CROP_200, format.layoutType)
     }
 }

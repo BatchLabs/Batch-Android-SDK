@@ -19,6 +19,7 @@ public class RedirectNotificationSettingsAction implements UserActionRunnable {
 
     public static final String IDENTIFIER =
         ActionModule.RESERVED_ACTION_IDENTIFIER_PREFIX + "android_redirect_settings";
+    public static final String IDENTIFIER_CEP = ActionModule.RESERVED_ACTION_IDENTIFIER_PREFIX + "redirect_settings";
 
     @Override
     public void performAction(

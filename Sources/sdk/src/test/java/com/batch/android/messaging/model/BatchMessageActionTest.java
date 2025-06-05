@@ -33,11 +33,11 @@ public class BatchMessageActionTest extends DITest {
         assertFalse("Should not be a dismissible action because it is a callback", isCallbackAction.isDismissAction());
 
         assertTrue(
-            "Should be a dismissible action because it is a null action",
+            "Should be a dismissible action because it is a Nil action",
             isDismissibleActionWithNil.isDismissAction()
         );
         assertTrue(
-            "Should be a dismissible action because it is a null action",
+            "Should be a dismissible action because it is a Nil action",
             isDismissibleActionWithNilAction.isDismissAction()
         );
         assertTrue(

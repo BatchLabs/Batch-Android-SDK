@@ -10,7 +10,6 @@ import com.batch.android.BatchOptOutResultListener;
 import com.batch.android.core.Logger;
 import com.batch.android.core.Parameters;
 import com.batch.android.core.Promise;
-import com.batch.android.di.providers.DisplayReceiptModuleProvider;
 import com.batch.android.di.providers.InboxDatasourceProvider;
 import com.batch.android.di.providers.LocalBroadcastManagerProvider;
 import com.batch.android.di.providers.LocalCampaignsModuleProvider;
@@ -182,7 +181,6 @@ public class OptOutModule extends BatchModule {
         UserModule.wipeData(context);
         TrackerModuleProvider.get().wipeData(context);
         LocalCampaignsModuleProvider.get().wipeData(context);
-        DisplayReceiptModuleProvider.get().wipeData(context);
         InboxDatasourceProvider.get(context).wipeData();
         ParametersProvider.get(context).wipeData();
     }

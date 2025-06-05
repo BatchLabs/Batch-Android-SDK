@@ -5,8 +5,12 @@ import android.net.TrafficStats;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.batch.android.FailReason;
 import com.batch.android.core.URLBuilder.CryptorMode;
 import com.batch.android.core.Webservice.WebserviceError.Reason;
+import com.batch.android.core.domain.DomainManager;
+import com.batch.android.core.domain.DomainStore;
+import com.batch.android.di.providers.DomainManagerProvider;
 import com.batch.android.di.providers.OptOutModuleProvider;
 import com.batch.android.di.providers.ParametersProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
@@ -44,7 +48,6 @@ import javax.net.ssl.SSLHandshakeException;
 
 /**
  * Abstract webservice class designed for any WS call
- *
  */
 public abstract class Webservice {
 
@@ -438,6 +441,7 @@ public abstract class Webservice {
 
             InputStream in = null;
             ByteArrayOutputStream baos = null;
+            DomainManager domainManager = DomainManagerProvider.get(new DomainStore());
             try {
                 try {
                     TrafficStats.setThreadStatsTag((int) Thread.currentThread().getId());
@@ -447,6 +451,24 @@ public abstract class Webservice {
                     error = new WebserviceError(WebserviceError.Reason.NETWORK_ERROR, ce);
                     responseCode = -1;
                     count++;
+
+                    /// On host error
+                    if (ce instanceof java.net.UnknownHostException || ce instanceof java.net.ConnectException) {
+                        String host = builder.build().getHost();
+                        /*
+                            URL was build with `canCheckOriginalDomainAvailability` to override current domain
+                            So if the host is the original domain but not the current that means we try to check the availability of the original domain
+                            If error means that the original domain is not available for now
+                        */
+                        if (domainManager.isOriginalDomain(host) && !domainManager.isCurrentDomain(host)) {
+                            /// Update last check domain date
+                            domainManager.updateLastCheckDomainDate();
+                        } else {
+                            /// Update domain if needed
+                            domainManager.updateDomainIfNeeded();
+                        }
+                    }
+
                     continue;
                 } catch (Exception | ExceptionInInitializerError e) {
                     throw new WebserviceError(WebserviceError.Reason.UNEXPECTED_ERROR, e);
@@ -466,6 +488,14 @@ public abstract class Webservice {
                 responseCode = connection.getResponseCode();
 
                 if (isResponseValid(responseCode)) {
+                    /// If URL was build with `canCheckOriginalDomainAvailability` to override current domain so success means that the original domain is now available
+                    String host = buildURL().getHost();
+                    if (domainManager.isOriginalDomain(host) && !domainManager.isCurrentDomain(host)) {
+                        domainManager.resetDomainToOriginal();
+                    }
+
+                    domainManager.resetErrorCountIfNeeded();
+
                     // Treat GZIP stream.
                     String header = connection.getHeaderField("Content-Encoding");
                     if (header != null && header.equals("gzip")) {
@@ -1047,7 +1077,6 @@ public abstract class Webservice {
 
     /**
      * Type of the HTTP Request
-     *
      */
     protected enum RequestType {
         /**
@@ -1063,7 +1092,6 @@ public abstract class Webservice {
 
     /**
      * Error thrown by Webservice on error
-     *
      */
     public static class WebserviceError extends Throwable {
 
@@ -1123,11 +1151,28 @@ public abstract class Webservice {
             return reason;
         }
 
+        /**
+         * Return the fail reason of the error
+         *
+         * @return
+         */
+        public FailReason getFailReason() {
+            switch (getReason()) {
+                case NETWORK_ERROR:
+                    return FailReason.NETWORK_ERROR;
+                case INVALID_API_KEY:
+                    return FailReason.INVALID_API_KEY;
+                case DEACTIVATED_API_KEY:
+                    return FailReason.DEACTIVATED_API_KEY;
+                default:
+                    return FailReason.UNEXPECTED_ERROR;
+            }
+        }
+
         // ------------------------------------------>
 
         /**
          * A possible reason of error
-         *
          */
         public enum Reason {
             /**
@@ -1178,6 +1223,7 @@ public abstract class Webservice {
 
         /**
          * Get the time to wait before sending another request
+         *
          * @return retryAfter (in milliseconds)
          */
         public int getRetryAfterInMillis() {

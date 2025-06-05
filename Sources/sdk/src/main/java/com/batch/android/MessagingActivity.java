@@ -13,6 +13,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.batch.android.annotation.PublicSDK;
 import com.batch.android.core.Logger;
+import com.batch.android.di.providers.MessagingModuleProvider;
 import com.batch.android.messaging.fragment.DialogEventListener;
 import com.batch.android.messaging.fragment.ListenableDialog;
 
@@ -26,7 +27,7 @@ public class MessagingActivity extends FragmentActivity implements DialogEventLi
     private static final String ROTATED = "ROTATED";
     private static final String DIALOG_FRAGMENT_TAG = "batchMessage";
 
-    private BroadcastReceiver dismissReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver dismissReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent != null && ACTION_DISMISS_INTERSTITIAL.equalsIgnoreCase(intent.getAction())) {
@@ -107,7 +108,7 @@ public class MessagingActivity extends FragmentActivity implements DialogEventLi
         }
 
         try {
-            DialogFragment df = Batch.Messaging.loadFragment(this, message);
+            DialogFragment df = MessagingModuleProvider.get().loadFragment(this, message, message.getJSON());
 
             if (df instanceof ListenableDialog) {
                 ((ListenableDialog) df).setDialogEventListener(this);

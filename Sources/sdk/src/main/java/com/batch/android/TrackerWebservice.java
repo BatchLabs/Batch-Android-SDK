@@ -3,8 +3,8 @@ package com.batch.android;
 import android.content.Context;
 import com.batch.android.core.Logger;
 import com.batch.android.core.ParameterKeys;
-import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskRunnable;
+import com.batch.android.core.domain.DomainURLBuilder;
 import com.batch.android.event.Event;
 import com.batch.android.json.JSONObject;
 import com.batch.android.query.Query;
@@ -32,7 +32,7 @@ final class TrackerWebservice extends BatchQueryWebservice implements TaskRunnab
         List<Event> events,
         boolean canBypassOptOut
     ) throws MalformedURLException {
-        super(context, RequestType.POST, Parameters.TRACKER_WS_URL);
+        super(context, RequestType.POST, DomainURLBuilder.TRACKER_WS_URL);
         if (listener == null) {
             throw new NullPointerException("listener==null");
         }
@@ -75,21 +75,7 @@ final class TrackerWebservice extends BatchQueryWebservice implements TaskRunnab
             } catch (WebserviceError error) {
                 Logger.internal(TAG, "Error on TrackerWebservice : " + error.getReason().toString(), error.getCause());
 
-                switch (error.getReason()) {
-                    case NETWORK_ERROR:
-                        listener.onFailure(FailReason.NETWORK_ERROR, events);
-                        break;
-                    case INVALID_API_KEY:
-                        listener.onFailure(FailReason.INVALID_API_KEY, events);
-                        break;
-                    case DEACTIVATED_API_KEY:
-                        listener.onFailure(FailReason.DEACTIVATED_API_KEY, events);
-                        break;
-                    default:
-                        listener.onFailure(FailReason.UNEXPECTED_ERROR, events);
-                        break;
-                }
-
+                listener.onFailure(error.getFailReason(), events);
                 return;
             }
 

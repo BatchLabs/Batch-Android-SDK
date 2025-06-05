@@ -17,6 +17,7 @@
 package com.batch.android.json;
 
 import androidx.annotation.Keep;
+import androidx.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -25,6 +26,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 // Note: this class was written without inspecting the non-free org.json sourcecode.
@@ -689,6 +691,7 @@ public class JSONObject implements Serializable {
      * Returns the value mapped by {@code name} if it exists and is a {@code
      * JSONArray}, or null otherwise.
      */
+    @Nullable
     public JSONArray optJSONArray(String name) {
         Object object = opt(name);
         return object instanceof JSONArray ? (JSONArray) object : null;
@@ -714,6 +717,7 @@ public class JSONObject implements Serializable {
      * Returns the value mapped by {@code name} if it exists and is a {@code
      * JSONObject}, or null otherwise.
      */
+    @Nullable
     public JSONObject optJSONObject(String name) {
         Object object = opt(name);
         return object instanceof JSONObject ? (JSONObject) object : null;
@@ -939,5 +943,22 @@ public class JSONObject implements Serializable {
         } else {
             throw new IOException("Error while deserializing JSONObject: unable to find JSON string");
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        JSONObject object = (JSONObject) o;
+        return Objects.equals(nameValuePairs, object.nameValuePairs);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(nameValuePairs);
     }
 }

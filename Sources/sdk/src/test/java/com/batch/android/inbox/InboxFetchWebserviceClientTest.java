@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
+import com.batch.android.di.DITest;
 import com.batch.android.json.JSONObject;
 import com.batch.android.webservice.listener.InboxWebserviceListener;
 import org.junit.Assert;
@@ -21,7 +22,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 @PowerMockIgnore({ "org.mockito.*", "org.robolectric.*", "android.*", "androidx.*" })
 @SmallTest
 @PrepareForTest({ InboxFetchWebserviceClient.class })
-public class InboxFetchWebserviceClientTest {
+public class InboxFetchWebserviceClientTest extends DITest {
 
     private Context appContext;
     private String payload =
@@ -29,7 +30,10 @@ public class InboxFetchWebserviceClientTest {
 
     @Before
     public void setUp() {
+        super.setUp();
         appContext = ApplicationProvider.getApplicationContext();
+
+        simulateBatchStart(appContext);
     }
 
     @Test

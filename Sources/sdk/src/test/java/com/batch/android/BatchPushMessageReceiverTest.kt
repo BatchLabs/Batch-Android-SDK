@@ -5,11 +5,11 @@ import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import java.util.*
 import org.junit.After
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.*
 
 @RunWith(AndroidJUnit4::class)
 @SmallTest
@@ -39,8 +39,10 @@ class BatchPushMessageReceiverTest {
 
         // We looped more than MAX_HANDLED_MESSAGE_IDS_COUNT, test that the receiver isn't leaking
         // memory by storing infinite IDs
-        Assert.assertEquals(BatchPushMessageReceiver.MAX_HANDLED_MESSAGE_IDS_COUNT,
-                BatchPushMessageReceiver.getHandledMessageIDsSize())
+        Assert.assertEquals(
+            BatchPushMessageReceiver.MAX_HANDLED_MESSAGE_IDS_COUNT,
+            BatchPushMessageReceiver.getHandledMessageIDsSize(),
+        )
 
         // Test that multiple pushes are deduplicated
         val duplicateMessageID = UUID.randomUUID().toString()
@@ -84,7 +86,7 @@ class BatchPushMessageReceiverTest {
     }
 }
 
-private class ObservablePushMessageReceiver: BatchPushMessageReceiver() {
+private class ObservablePushMessageReceiver : BatchPushMessageReceiver() {
     var presentNotificationCalled = false
 
     override fun presentNotification(context: Context, intent: Intent): Boolean {

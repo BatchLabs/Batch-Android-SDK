@@ -6,13 +6,15 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
-import com.batch.android.messaging.model.BannerMessage;
-import com.batch.android.messaging.model.BaseBannerMessage;
-import com.batch.android.messaging.model.ImageMessage;
 import com.batch.android.messaging.model.Message;
-import com.batch.android.messaging.model.ModalMessage;
-import com.batch.android.messaging.model.UniversalMessage;
-import com.batch.android.messaging.model.WebViewMessage;
+import com.batch.android.messaging.model.mep.BannerMessage;
+import com.batch.android.messaging.model.mep.BaseBannerMessage;
+import com.batch.android.messaging.model.mep.ImageMessage;
+import com.batch.android.messaging.model.mep.ModalMessage;
+import com.batch.android.messaging.model.mep.UniversalMessage;
+import com.batch.android.messaging.model.mep.WebViewMessage;
+import com.batch.android.messaging.parsing.PayloadParser;
+import com.batch.android.messaging.parsing.PayloadParsingException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +33,7 @@ public class PayloadParserTest {
             "{'image':'https://static.batch.com/tmp/test_inapp.jpg','hasImage':true,'kind':'image','id':'tmpid','did':'webtest','fullscreen': false,'auto_close': 0,'action': {'a': 'batch.deeplink','args':{'l':'https://google.fr'}},'style':'@import sdk(\\\"image1-detached\\\");'}";
         JSONObject json = new JSONObject(payload);
 
-        Message message = PayloadParser.parsePayload(json);
+        Message message = PayloadParser.parseMEPPayload(json);
         Assert.assertTrue(message instanceof ImageMessage);
         ImageMessage imageMessage = (ImageMessage) message;
         Assert.assertEquals("https://static.batch.com/tmp/test_inapp.jpg", imageMessage.imageURL);
@@ -50,7 +52,7 @@ public class PayloadParserTest {
         JSONObject json = new JSONObject(payload);
 
         try {
-            PayloadParser.parsePayload(json);
+            PayloadParser.parseMEPPayload(json);
             Assert.fail();
         } catch (PayloadParsingException e) {}
     }
@@ -62,7 +64,7 @@ public class PayloadParserTest {
         JSONObject json = new JSONObject(payload);
 
         try {
-            PayloadParser.parsePayload(json);
+            PayloadParser.parseMEPPayload(json);
             Assert.fail();
         } catch (PayloadParsingException e) {}
     }
@@ -74,7 +76,7 @@ public class PayloadParserTest {
         JSONObject json = new JSONObject(payload);
 
         try {
-            PayloadParser.parsePayload(json);
+            PayloadParser.parseMEPPayload(json);
             Assert.fail();
         } catch (PayloadParsingException e) {}
     }
@@ -86,7 +88,7 @@ public class PayloadParserTest {
         JSONObject json = new JSONObject(payload);
 
         try {
-            PayloadParser.parsePayload(json);
+            PayloadParser.parseMEPPayload(json);
             Assert.fail();
         } catch (PayloadParsingException e) {}
     }
@@ -97,7 +99,7 @@ public class PayloadParserTest {
             "{'url':'https://batch-html-inapp-test.glitch.me/index.html','kind':'webview','id':'tmpid','did':'webtest','style':'@import sdk(\\\"webview1\\\");'}";
         JSONObject json = new JSONObject(payload);
 
-        Message message = PayloadParser.parsePayload(json);
+        Message message = PayloadParser.parseMEPPayload(json);
         Assert.assertTrue(message instanceof WebViewMessage);
         WebViewMessage webViewMessage = (WebViewMessage) message;
         Assert.assertEquals("https://batch-html-inapp-test.glitch.me/index.html", webViewMessage.url);
@@ -112,7 +114,7 @@ public class PayloadParserTest {
         JSONObject json = new JSONObject(payload);
 
         try {
-            PayloadParser.parsePayload(json);
+            PayloadParser.parseMEPPayload(json);
             Assert.fail();
         } catch (PayloadParsingException e) {}
     }
@@ -124,7 +126,7 @@ public class PayloadParserTest {
         JSONObject json = new JSONObject(payload);
 
         try {
-            PayloadParser.parsePayload(json);
+            PayloadParser.parseMEPPayload(json);
             Assert.fail();
         } catch (PayloadParsingException e) {}
     }
@@ -136,7 +138,7 @@ public class PayloadParserTest {
         JSONObject json = new JSONObject(payload);
 
         try {
-            PayloadParser.parsePayload(json);
+            PayloadParser.parseMEPPayload(json);
             Assert.fail();
         } catch (PayloadParsingException e) {}
     }
@@ -148,7 +150,7 @@ public class PayloadParserTest {
         JSONObject json = new JSONObject(payload);
 
         try {
-            PayloadParser.parsePayload(json);
+            PayloadParser.parseMEPPayload(json);
             Assert.fail();
         } catch (PayloadParsingException e) {}
     }
@@ -160,7 +162,7 @@ public class PayloadParserTest {
         JSONObject json = new JSONObject(payload);
 
         try {
-            PayloadParser.parsePayload(json);
+            PayloadParser.parseMEPPayload(json);
             Assert.fail();
         } catch (PayloadParsingException e) {}
     }
@@ -171,7 +173,7 @@ public class PayloadParserTest {
             "{'cta':[{'l':'testLabel', 'a': 'batch.deeplink','args':{'l':'https://google.fr'}}],'ctaCount':1,'hasImage':true,'id':'tmpid','did':'webtest','image':'https://test.com/image.jpg','action': {'a': 'batch.deeplink','args':{'l':'https://google.fr'}},'kind':'modal','close':true,'cta_direction':'h','auto_close':0,'style':'@import sdk(\\\"modal1\\\");'}";
         JSONObject json = new JSONObject(payload);
 
-        Message message = PayloadParser.parsePayload(json);
+        Message message = PayloadParser.parseMEPPayload(json);
         Assert.assertTrue(message instanceof ModalMessage);
         ModalMessage modalMessage = (ModalMessage) message;
         Assert.assertEquals("https://test.com/image.jpg", modalMessage.imageURL);
@@ -192,7 +194,7 @@ public class PayloadParserTest {
         JSONObject json = new JSONObject(payload);
 
         try {
-            PayloadParser.parsePayload(json);
+            PayloadParser.parseMEPPayload(json);
             Assert.fail();
         } catch (PayloadParsingException e) {}
     }
@@ -204,7 +206,7 @@ public class PayloadParserTest {
         JSONObject json = new JSONObject(payload);
 
         try {
-            PayloadParser.parsePayload(json);
+            PayloadParser.parseMEPPayload(json);
             Assert.fail();
         } catch (PayloadParsingException e) {}
     }
@@ -215,7 +217,7 @@ public class PayloadParserTest {
             "{'cta':[{'l':'testLabel', 'a': 'batch.deeplink','args':{'l':'https://google.fr'}}],'ctaCount':1,'hasImage':true,'id':'tmpid','did':'webtest','image':'https://test.com/image.jpg','action': {'a': 'batch.deeplink','args':{'l':'https://google.fr'}},'kind':'banner','close':true,'cta_direction':'h','auto_close':0,'style':'@import sdk(\\\"banner1\\\");'}";
         JSONObject json = new JSONObject(payload);
 
-        Message message = PayloadParser.parsePayload(json);
+        Message message = PayloadParser.parseMEPPayload(json);
         Assert.assertTrue(message instanceof BannerMessage);
         BannerMessage bannerMessage = (BannerMessage) message;
         Assert.assertEquals("https://test.com/image.jpg", bannerMessage.imageURL);
@@ -235,7 +237,7 @@ public class PayloadParserTest {
             "{'cta':[{'l':'testLabel', 'a': 'batch.deeplink','args':{'l':'https://google.fr'}}],'id':'tmpid','did':'webtest','ctaCount':1,'hasImage':false,'kind':'universal','flip_hero_h':false,'flip_hero_v':true,'attach_cta_bottom':true,'stack_cta_h':false,'stretch_cta_h':true,'hero_split_ratio':0.4,'close':false,'style':'@import sdk(\\\"generic1-v-cta\\\");'}";
         JSONObject json = new JSONObject(payload);
 
-        Message message = PayloadParser.parsePayload(json);
+        Message message = PayloadParser.parseMEPPayload(json);
         Assert.assertTrue(message instanceof UniversalMessage);
         UniversalMessage universalMessage = (UniversalMessage) message;
         Assert.assertEquals("@import sdk(\"generic1-v-cta\");", universalMessage.css);
@@ -256,13 +258,13 @@ public class PayloadParserTest {
             "{'min_android_sdk': 26, 'url':'https://batch-html-inapp-test.glitch.me/index.html','kind':'webview','id':'tmpid','did':'webtest','style':'@import sdk(\\\"webview1\\\");'}";
         JSONObject json = new JSONObject(payload);
 
-        Message message = PayloadParser.parsePayload(json);
+        Message message = PayloadParser.parseMEPPayload(json);
         Assert.assertTrue(message instanceof WebViewMessage);
 
         // Android version too old
         json.put("min_android_sdk", 27);
         try {
-            PayloadParser.parsePayload(json);
+            PayloadParser.parseMEPPayload(json);
             Assert.fail();
         } catch (PayloadParsingException ignored) {}
     }

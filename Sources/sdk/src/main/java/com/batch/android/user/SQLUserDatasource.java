@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.batch.android.core.Logger;
 import com.batch.android.module.UserModule;
 import com.batch.android.processor.Module;
@@ -56,7 +57,7 @@ public final class SQLUserDatasource implements UserDatasource {
      */
     private long currentChangeset = 0;
 
-    public SQLUserDatasource(Context context) throws SQLiteException {
+    public SQLUserDatasource(@Nullable Context context) throws SQLiteException {
         if (context == null) {
             throw new NullPointerException("context==null");
         }
