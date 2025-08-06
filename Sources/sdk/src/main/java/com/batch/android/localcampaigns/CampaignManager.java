@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -121,7 +122,7 @@ public class CampaignManager {
     /**
      * Cached list of synced JIT campaigns
      */
-    private final Map<String, SyncedJITResult> syncedJITCampaigns = new HashMap<>();
+    private final Map<String, SyncedJITResult> syncedJITCampaignsCached = new HashMap<>();
 
     public CampaignManager(@NonNull LocalCampaignsTracker viewTracker) {
         this.viewTracker = viewTracker;
@@ -137,11 +138,21 @@ public class CampaignManager {
      * Calling this will triggers campaigns that have seen their conditions met.
      *
      * @param updatedCampaignList Updated campaign list. Can't be null
+     * @param upToDate Whether the campaigns are up-to-date (meaning just been sync from server) or not
      */
-    public void updateCampaignList(@NonNull List<LocalCampaign> updatedCampaignList) {
+    public void updateCampaignList(@NonNull List<LocalCampaign> updatedCampaignList, boolean upToDate) {
         synchronized (this.campaignListLock) {
             this.campaignList.clear();
             this.campaignList.addAll(cleanCampaignList(updatedCampaignList));
+
+            if (upToDate) {
+                List<String> ids = new ArrayList<>();
+                for (LocalCampaign campaign : this.campaignList) {
+                    ids.add(campaign.id);
+                }
+                updateSyncedJITCampaignsCached(this.campaignList, ids, false);
+            }
+
             campaignsLoaded.set(true);
 
             updateWatchedEventNames();
@@ -306,18 +317,7 @@ public class CampaignManager {
                     if (eligibleCampaignIds.isEmpty()) {
                         listener.onCampaignElected(null);
                     } else {
-                        for (LocalCampaign campaign : eligibleCampaignsRequiringSync) {
-                            SyncedJITResult syncedJITCampaignState = new SyncedJITResult(
-                                dateProvider.getCurrentDate().getTime()
-                            );
-                            if (!eligibleCampaignIds.contains(campaign.id)) {
-                                eligibleCampaignsRequiringSync.remove(campaign);
-                                syncedJITCampaignState.eligible = false;
-                            } else {
-                                syncedJITCampaignState.eligible = true;
-                            }
-                            syncedJITCampaigns.put(campaign.id, syncedJITCampaignState);
-                        }
+                        updateSyncedJITCampaignsCached(eligibleCampaignsRequiringSync, eligibleCampaignIds, true);
                         if (eligibleCampaignsRequiringSync.isEmpty()) {
                             // Should not happen
                             listener.onCampaignElected(null);
@@ -338,6 +338,35 @@ public class CampaignManager {
     }
 
     /**
+     * Update the synced JIT campaigns cache after a LocalCampaign WS Sync or a JIT sync
+     *
+     * @param syncedCampaigns The synced JIT campaigns
+     * @param eligibleCampaignIds The eligible campaign ids
+     * @param removeNonEligibleCampaigns Whether to remove non-eligible campaigns
+     */
+    @VisibleForTesting
+    protected void updateSyncedJITCampaignsCached(
+        @NonNull List<LocalCampaign> syncedCampaigns,
+        @NonNull List<String> eligibleCampaignIds,
+        boolean removeNonEligibleCampaigns
+    ) {
+        synchronized (syncedJITCampaignsCached) {
+            Iterator<LocalCampaign> iterator = syncedCampaigns.iterator();
+            long now = dateProvider.getCurrentDate().getTime();
+            while (iterator.hasNext()) {
+                LocalCampaign campaign = iterator.next();
+                if (campaign.requiresJustInTimeSync) {
+                    boolean eligible = eligibleCampaignIds.contains(campaign.id);
+                    if (!eligible && removeNonEligibleCampaigns) {
+                        iterator.remove();
+                    }
+                    syncedJITCampaignsCached.put(campaign.id, new SyncedJITResult(now, eligible));
+                }
+            }
+        }
+    }
+
+    /**
      * Check if JIT sync is available
      *
      * Meaning MIN_DELAY_BETWEEN_JIT_SYNC or last 'retryAfter' time respond by server is passed.
@@ -353,24 +382,26 @@ public class CampaignManager {
      * @return a {@link SyncedJITResult.State}
      */
     public SyncedJITResult.State getSyncedJITCampaignState(LocalCampaign campaign) {
-        if (!campaign.requiresJustInTimeSync) {
-            //Should not happen but ensure we do not sync for a non-jit campaign
-            return SyncedJITResult.State.ELIGIBLE;
-        }
+        synchronized (syncedJITCampaignsCached) {
+            if (!campaign.requiresJustInTimeSync) {
+                //Should not happen but ensure we do not sync for a non-jit campaign
+                return SyncedJITResult.State.ELIGIBLE;
+            }
 
-        if (!syncedJITCampaigns.containsKey(campaign.id)) {
-            return SyncedJITResult.State.REQUIRES_SYNC;
-        }
+            if (!syncedJITCampaignsCached.containsKey(campaign.id)) {
+                return SyncedJITResult.State.REQUIRES_SYNC;
+            }
 
-        SyncedJITResult syncedJITResult = syncedJITCampaigns.get(campaign.id);
-        if (syncedJITResult == null) {
-            return SyncedJITResult.State.REQUIRES_SYNC;
-        }
+            SyncedJITResult syncedJITResult = syncedJITCampaignsCached.get(campaign.id);
+            if (syncedJITResult == null) {
+                return SyncedJITResult.State.REQUIRES_SYNC;
+            }
 
-        if (dateProvider.getCurrentDate().getTime() >= (syncedJITResult.timestamp + JIT_CAMPAIGN_CACHE_PERIOD)) {
-            return SyncedJITResult.State.REQUIRES_SYNC;
+            if (dateProvider.getCurrentDate().getTime() >= (syncedJITResult.timestamp + JIT_CAMPAIGN_CACHE_PERIOD)) {
+                return SyncedJITResult.State.REQUIRES_SYNC;
+            }
+            return syncedJITResult.eligible ? SyncedJITResult.State.ELIGIBLE : SyncedJITResult.State.NOT_ELIGIBLE;
         }
-        return syncedJITResult.eligible ? SyncedJITResult.State.ELIGIBLE : SyncedJITResult.State.NOT_ELIGIBLE;
     }
 
     /**
@@ -411,6 +442,7 @@ public class CampaignManager {
      * - Campaigns that have a max api level too low (min api level doesn't not mean that it is busted forever)
      */
     @VisibleForTesting
+    @NonNull
     public List<LocalCampaign> cleanCampaignList(@NonNull List<LocalCampaign> campaignsToClean) {
         final BatchDate currentDate = dateProvider.getCurrentDate();
 
@@ -652,7 +684,7 @@ public class CampaignManager {
         try {
             List<LocalCampaign> campaigns = localCampaignResponseDeserializer.deserializeCampaigns();
             cappings = localCampaignResponseDeserializer.deserializeCappings();
-            updateCampaignList(campaigns);
+            updateCampaignList(campaigns, false);
         } catch (Exception ex) {
             Logger.internal(TAG, "Can't convert json to LocalCampaignsResponse : " + ex.toString());
             return false;

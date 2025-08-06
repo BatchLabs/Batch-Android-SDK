@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.Application;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -31,6 +33,7 @@ import com.batch.android.core.NotificationAuthorizationStatus;
 import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskExecutor;
+import com.batch.android.core.VersionHelper;
 import com.batch.android.debug.BatchDebugActivity;
 import com.batch.android.debug.FindMyInstallationHelper;
 import com.batch.android.di.providers.ActionModuleProvider;
@@ -2035,7 +2038,7 @@ public final class Batch {
                     /*
                      * Check for update migration stuff
                      */
-                    updateVersionManagement();
+                    updateVersionManagement(applicationContext);
 
                     /*
                      * Check that we have mandatory permissions
@@ -2386,26 +2389,56 @@ public final class Batch {
     /**
      * Method call at every start to check if the lib has been updated
      */
-    private static void updateVersionManagement() {
+    private static void updateVersionManagement(@NonNull Context context) {
         try {
             String currentVersion = Parameters.SDK_VERSION;
-            String savedVersion = ParametersProvider
-                .get(RuntimeManagerProvider.get().getContext())
-                .get(ParameterKeys.LIB_CURRENTVERSION_KEY);
+            String savedVersion = ParametersProvider.get(context).get(ParameterKeys.LIB_CURRENTVERSION_KEY);
             if (savedVersion == null) { // First launch case
-                ParametersProvider
-                    .get(RuntimeManagerProvider.get().getContext())
-                    .set(ParameterKeys.LIB_CURRENTVERSION_KEY, currentVersion, true);
+                ParametersProvider.get(context).set(ParameterKeys.LIB_CURRENTVERSION_KEY, currentVersion, true);
             } else if (!savedVersion.equals(currentVersion)) { // new version
-                ParametersProvider
-                    .get(RuntimeManagerProvider.get().getContext())
-                    .set(ParameterKeys.LIB_CURRENTVERSION_KEY, currentVersion, true);
-                ParametersProvider
-                    .get(RuntimeManagerProvider.get().getContext())
-                    .set(ParameterKeys.LIB_PREVIOUSVERSION_KEY, savedVersion, true);
+                handleNewVersionMigration(context, savedVersion, currentVersion);
+                ParametersProvider.get(context).set(ParameterKeys.LIB_CURRENTVERSION_KEY, currentVersion, true);
+                ParametersProvider.get(context).set(ParameterKeys.LIB_PREVIOUSVERSION_KEY, savedVersion, true);
             }
         } catch (Exception e) {
             Logger.internal("Error on updateVersionManagement", e);
+        }
+    }
+
+    private static void handleNewVersionMigration(Context context, String savedVersion, String currentVersion) {
+        Logger.internal("New version detected : " + savedVersion + " -> " + currentVersion);
+
+        int savedMajorVersion = VersionHelper.getMajor(savedVersion);
+        int currentMajorVersion = VersionHelper.getMajor(currentVersion);
+
+        if (savedMajorVersion <= 2 && currentMajorVersion == 3) {
+            removeOldPendingDisplayReceiptJobs(context);
+        }
+    }
+
+    /**
+     * Removes all pending display receipt jobs from the JobScheduler.
+     * <p>
+     * This method is used to clean up any leftover display receipt jobs that might have been scheduled
+     * by older versions of the SDK, which could potentially cause issues with newer versions.
+     *
+     * @param context The application context.
+     */
+    private static void removeOldPendingDisplayReceiptJobs(Context context) {
+        JobScheduler scheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+
+        if (scheduler == null) {
+            Logger.internal("JobScheduler service is unavailable. Skipping job cancellation.");
+            return;
+        }
+
+        for (JobInfo pendingJob : scheduler.getAllPendingJobs()) {
+            if (pendingJob.getService().getClassName().equals("com.batch.android.BatchDisplayReceiptJobService")) {
+                scheduler.cancel(pendingJob.getId());
+                Logger.internal(
+                    "Scheduled display receipt job service with id " + pendingJob.getId() + " was canceled"
+                );
+            }
         }
     }
 

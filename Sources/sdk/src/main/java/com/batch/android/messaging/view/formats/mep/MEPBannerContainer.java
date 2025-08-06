@@ -3,6 +3,7 @@ package com.batch.android.messaging.view.formats.mep;
 import android.os.SystemClock;
 import android.util.LruCache;
 import android.view.View;
+import android.widget.ScrollView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.BatchMessage;
@@ -106,6 +107,12 @@ public class MEPBannerContainer
             long when = SystemClock.uptimeMillis() + message.autoCloseDelay;
             mainThreadHandler.postAtTime(this::performAutoClose, autoCloseHandlerToken, when);
         }
+    }
+
+    @Nullable
+    @Override
+    protected ScrollView getScrollView() {
+        return null;
     }
 
     @Override

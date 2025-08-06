@@ -29,10 +29,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
@@ -103,7 +106,7 @@ public class CampaignManagerTest {
         // Remove all campaigns, saved or loaded
         removeExistingSave();
         assertFalse(campaignManager.hasSavedCampaigns(context));
-        campaignManager.updateCampaignList(new ArrayList<>());
+        campaignManager.updateCampaignList(new ArrayList<>(), true);
 
         // Save using the code that will actually save the response in production, rather
         // than reimplementing it in the tests.
@@ -356,7 +359,7 @@ public class CampaignManagerTest {
         fakeCampaigns.add(createFakeCampaignWithPriority(20));
         fakeCampaigns.add(createFakeCampaignWithPriority(30));
 
-        campaignManager.updateCampaignList(fakeCampaigns);
+        campaignManager.updateCampaignList(fakeCampaigns, true);
 
         List<LocalCampaign> eligibleCampaigns = campaignManager.getEligibleCampaignsSortedByPriority(trigger -> true);
 
@@ -397,7 +400,7 @@ public class CampaignManagerTest {
     @Test
     public void testGetSyncedJITCampaignState() throws NoSuchFieldException, IllegalAccessException {
         // Get synced jit campaign from manager
-        Field syncedCampaignsField = CampaignManager.class.getDeclaredField("syncedJITCampaigns");
+        Field syncedCampaignsField = CampaignManager.class.getDeclaredField("syncedJITCampaignsCached");
         syncedCampaignsField.setAccessible(true);
         Map<String, SyncedJITResult> syncedCampaigns = (HashMap<String, SyncedJITResult>) syncedCampaignsField.get(
             campaignManager
@@ -435,6 +438,60 @@ public class CampaignManagerTest {
         Assert.assertEquals(SyncedJITResult.State.REQUIRES_SYNC, campaignManager.getSyncedJITCampaignState(campaign));
     }
 
+    @Test
+    public void testUpdateSyncedJITCampaignsCached() throws NoSuchFieldException, IllegalAccessException {
+        Field syncedCampaignsField = CampaignManager.class.getDeclaredField("syncedJITCampaignsCached");
+        syncedCampaignsField.setAccessible(true);
+        Map<String, SyncedJITResult> syncedCampaignsCached = (HashMap<String, SyncedJITResult>) syncedCampaignsField.get(
+            campaignManager
+        );
+
+        LocalCampaign campaign1 = createFakeCampaignWithPriority(1);
+        campaign1.requiresJustInTimeSync = true;
+        LocalCampaign campaign2 = createFakeCampaignWithPriority(2);
+        campaign2.requiresJustInTimeSync = true;
+        LocalCampaign campaign3 = createFakeCampaignWithPriority(3);
+        campaign3.requiresJustInTimeSync = false;
+
+        List<LocalCampaign> syncedCampaigns = new LinkedList<>();
+        syncedCampaigns.add(campaign1);
+        syncedCampaigns.add(campaign2);
+        syncedCampaigns.add(campaign3);
+
+        List<String> eligibleCampaignIds = Arrays.asList(campaign1.id, campaign3.id);
+        campaignManager.updateSyncedJITCampaignsCached(syncedCampaigns, eligibleCampaignIds, false);
+
+        // ensure only campaign1 and campaign2 are in the cache
+        assertNotNull(syncedCampaignsCached);
+        assertEquals(2, syncedCampaignsCached.size());
+        assertTrue(syncedCampaignsCached.containsKey(campaign1.id));
+        assertTrue(syncedCampaignsCached.containsKey(campaign2.id));
+        assertFalse(syncedCampaignsCached.containsKey(campaign3.id));
+
+        // ensure just campaign1 is eligible
+        assertTrue(Objects.requireNonNull(syncedCampaignsCached.get(campaign1.id)).eligible);
+        assertFalse(Objects.requireNonNull(syncedCampaignsCached.get(campaign2.id)).eligible);
+
+        // ensure we did not remove any campaigns
+        assertEquals(3, syncedCampaigns.size());
+
+        campaignManager.updateSyncedJITCampaignsCached(syncedCampaigns, eligibleCampaignIds, true);
+
+        // ensure only campaign1 and campaign2 are in the cache
+        assertNotNull(syncedCampaignsCached);
+        assertEquals(2, syncedCampaignsCached.size());
+        assertTrue(syncedCampaignsCached.containsKey(campaign1.id));
+        assertTrue(syncedCampaignsCached.containsKey(campaign2.id));
+        assertFalse(syncedCampaignsCached.containsKey(campaign3.id));
+
+        // ensure just campaign1 is eligible
+        assertTrue(Objects.requireNonNull(syncedCampaignsCached.get(campaign1.id)).eligible);
+        assertFalse(Objects.requireNonNull(syncedCampaignsCached.get(campaign2.id)).eligible);
+
+        // ensure we removed non eligible campaigns from original list
+        assertEquals(2, syncedCampaigns.size());
+    }
+
     private void removeExistingSave() throws NoSuchFieldException, IllegalAccessException {
         Field inappCampaignsFileNameField =
             CampaignManager.class.getDeclaredField("PERSISTENCE_LOCAL_CAMPAIGNS_FILE_NAME");
@@ -450,7 +507,7 @@ public class CampaignManagerTest {
             tmpFile.delete();
         }
 
-        campaignManager.updateCampaignList(new ArrayList<>(0));
+        campaignManager.updateCampaignList(new ArrayList<>(0), true);
     }
 
     private void reloadCampaigns() throws NoSuchFieldException, IllegalAccessException, JSONException {
@@ -466,14 +523,7 @@ public class CampaignManagerTest {
         campaign.output = LandingOutputProvider.get(new JSONObject());
         campaign.priority = priority;
         campaign.startDate = new UTCDate(0);
-        campaign.triggers.add(
-            new LocalCampaign.Trigger() {
-                @Override
-                public String getType() {
-                    return "";
-                }
-            }
-        );
+        campaign.triggers.add(() -> "");
         return campaign;
     }
 }

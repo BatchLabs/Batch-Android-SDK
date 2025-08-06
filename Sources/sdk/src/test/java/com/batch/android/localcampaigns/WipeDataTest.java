@@ -50,7 +50,7 @@ public class WipeDataTest {
         fakeCampaignList.add(fakeCampaign);
         // Stub out the method that checks the validity, as it will remove our fake campaign
         Mockito.when(campaignManager.cleanCampaignList(Mockito.anyList())).thenReturn(fakeCampaignList);
-        campaignManager.updateCampaignList(fakeCampaignList);
+        campaignManager.updateCampaignList(fakeCampaignList, true);
 
         LocalCampaignsModuleProvider.get().wipeData(c);
 

@@ -54,6 +54,9 @@ class BuildableRootView(
     /** Listener for CTA actions */
     var actionListener: OnActionListener? = null
 
+    /** The scroll view that contains the message content. */
+    var scrollView = ScrollView(context)
+
     /** Interface for handling actions */
     interface OnActionListener {
         /** Called when the close button is clicked or the auto dismiss countdown is finished */
@@ -202,17 +205,15 @@ class BuildableRootView(
                 }
             }
         // Encapsulate content layout in a ScrollView
-        val scrollView =
-            ScrollView(context).apply {
-                id = R.id.com_batchsdk_messaging_scroll_view
-                layoutParams =
-                    FrameLayout.LayoutParams(
-                        LayoutParams.MATCH_PARENT,
-                        if (message.isModal()) LayoutParams.WRAP_CONTENT
-                        else LayoutParams.MATCH_PARENT,
-                    )
-                isFillViewport = true
-            }
+        scrollView.apply {
+            id = R.id.com_batchsdk_messaging_scroll_view
+            layoutParams =
+                FrameLayout.LayoutParams(
+                    LayoutParams.MATCH_PARENT,
+                    if (message.isModal()) LayoutParams.WRAP_CONTENT else LayoutParams.MATCH_PARENT,
+                )
+            isFillViewport = true
+        }
         scrollView.addView(contentLayout)
         addView(scrollView)
     }

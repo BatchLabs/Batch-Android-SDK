@@ -20,7 +20,7 @@
             "foo": "bar"
           },
           "minimumApiLevel": 1,
-          "maximumApiLevel": 30,
+          "maximumApiLevel": 31,
           "priority": 2,
           "minDisplayInterval": 3,
           "requireJIT": true,

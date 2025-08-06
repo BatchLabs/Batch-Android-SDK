@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
@@ -172,7 +173,7 @@ public abstract class EmbeddedBannerContainer implements PannableBannerFrameLayo
 
         bannerView = makeBannerView();
         pinnedVerticalEdge = getPinnedVerticalEdge();
-
+        rootView.setNestedScrollView(getScrollView());
         rootView.setPannable(allowSwipeToDismiss());
         rootView.setDismissDirection(
             pinnedVerticalEdge == VerticalEdge.TOP
@@ -214,6 +215,13 @@ public abstract class EmbeddedBannerContainer implements PannableBannerFrameLayo
      * Schedule the auto close.
      */
     protected abstract void scheduleAutoClose();
+
+    /**
+     * Get the nested scroll view if there is one.
+     * @return The nested scroll view if there is one
+     */
+    @Nullable
+    protected abstract ScrollView getScrollView();
 
     /**
      * Unschedule the auto close.

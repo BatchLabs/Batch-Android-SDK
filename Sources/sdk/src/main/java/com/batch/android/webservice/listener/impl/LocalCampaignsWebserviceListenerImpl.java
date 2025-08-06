@@ -18,9 +18,9 @@ import java.util.List;
 @Module
 public class LocalCampaignsWebserviceListenerImpl implements LocalCampaignsWebserviceListener {
 
-    private LocalCampaignsModule localCampaignsModule;
+    private final LocalCampaignsModule localCampaignsModule;
 
-    private CampaignManager campaignManager;
+    private final CampaignManager campaignManager;
 
     private LocalCampaignsWebserviceListenerImpl(
         LocalCampaignsModule localCampaignsModule,
@@ -54,7 +54,7 @@ public class LocalCampaignsWebserviceListenerImpl implements LocalCampaignsWebse
 
     private void handleInAppResponse(LocalCampaignsResponse response) {
         campaignManager.setCappings(response.getCappings());
-        campaignManager.updateCampaignList(response.getCampaigns());
+        campaignManager.updateCampaignList(response.getCampaigns(), true);
         localCampaignsModule.onLocalCampaignsWebserviceFinished();
     }
 }

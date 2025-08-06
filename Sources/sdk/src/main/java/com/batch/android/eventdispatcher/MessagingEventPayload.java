@@ -48,7 +48,13 @@ public class MessagingEventPayload implements Batch.EventDispatcher.Payload {
     @Override
     public String getTrackingId() {
         if (payload != null) {
-            return payload.reallyOptString("did", null);
+            // MEP TrackingId key
+            String trackingId = payload.reallyOptString("did", null);
+            if (trackingId != null) {
+                return trackingId;
+            }
+            // CEP TrackingId key
+            return payload.reallyOptString("trackingId", null);
         }
         return null;
     }

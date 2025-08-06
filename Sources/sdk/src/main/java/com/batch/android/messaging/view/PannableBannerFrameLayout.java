@@ -5,7 +5,6 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -13,6 +12,7 @@ import android.view.ViewConfiguration;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
+import android.widget.ScrollView;
 import androidx.annotation.Nullable;
 import androidx.dynamicanimation.animation.DynamicAnimation;
 import androidx.dynamicanimation.animation.SpringAnimation;
@@ -39,6 +39,9 @@ public class PannableBannerFrameLayout extends FrameLayout implements GestureDet
     private DismissDirection dismissDirection;
 
     private OnDismissListener dismissListener;
+
+    @Nullable
+    private ScrollView nestedScrollView;
 
     private boolean isPannable;
 
@@ -128,13 +131,16 @@ public class PannableBannerFrameLayout extends FrameLayout implements GestureDet
         isPannable = pannable;
     }
 
+    public void setNestedScrollView(@Nullable ScrollView nestedScrollView) {
+        this.nestedScrollView = nestedScrollView;
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (!isPannable) {
             return super.onInterceptTouchEvent(ev);
         }
         // Detect if the user is panning the view, so that it's possible even when trying to do so on a button
-
         final int action = ev.getAction();
 
         // Touch complete: give control back
@@ -150,6 +156,14 @@ public class PannableBannerFrameLayout extends FrameLayout implements GestureDet
                 {
                     if (isPanning) {
                         return true;
+                    }
+                    if (nestedScrollView != null) {
+                        float yDelta = ev.getY() - initialInterceptYOffset;
+                        if (nestedScrollView.canScrollVertically(1) && yDelta < 0) {
+                            return super.onInterceptTouchEvent(ev);
+                        } else if (nestedScrollView.canScrollVertically(-1) && yDelta > 0) {
+                            return super.onInterceptTouchEvent(ev);
+                        }
                     }
 
                     if (hasYPassedTouchSlop(ev.getY(), initialInterceptYOffset)) {
@@ -212,7 +226,7 @@ public class PannableBannerFrameLayout extends FrameLayout implements GestureDet
                         (dismissDirection == DismissDirection.BOTTOM && translationY < 0) ||
                         (dismissDirection == DismissDirection.TOP && translationY > 0)
                     ) {
-                        translationY *= 0.25;
+                        translationY *= 0.25F;
                     }
                     setTranslationY(translationY);
                     break;

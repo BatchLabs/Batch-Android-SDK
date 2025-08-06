@@ -66,7 +66,7 @@ public class EventTriggerTest extends DITest {
         campaign.startDate = new UTCDate(0);
         campaign.triggers.add(new EventLocalCampaignTrigger("E." + EVENT_NAME_TEST, null));
 
-        CampaignManagerProvider.get().updateCampaignList(Collections.singletonList(campaign));
+        CampaignManagerProvider.get().updateCampaignList(Collections.singletonList(campaign), true);
 
         // Track the event which is linked to the Local Campaign
         Batch.Profile.trackEvent(EVENT_NAME_TEST);
@@ -89,7 +89,7 @@ public class EventTriggerTest extends DITest {
         campaign.startDate = new UTCDate(0);
         campaign.triggers.add(new EventLocalCampaignTrigger("E." + EVENT_NAME_TEST, null));
 
-        CampaignManagerProvider.get().updateCampaignList(Collections.singletonList(campaign));
+        CampaignManagerProvider.get().updateCampaignList(Collections.singletonList(campaign), true);
 
         // Simulate synchro is finished
         LocalCampaignsModuleProvider.get().onLocalCampaignsWebserviceFinished();

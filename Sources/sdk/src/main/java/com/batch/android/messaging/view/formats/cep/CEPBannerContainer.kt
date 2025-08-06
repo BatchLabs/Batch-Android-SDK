@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.os.AsyncTask
 import android.os.SystemClock
 import android.view.View
+import android.widget.ScrollView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -112,6 +113,10 @@ private constructor(
         return BuildableRootView(this.context, this.message, imagesCached).apply {
             actionListener = this@CEPBannerContainer
         }
+    }
+
+    override fun getScrollView(): ScrollView? {
+        return buildableRootView.scrollView
     }
 
     /** Whether the banner can be dismissed by swiping down/up according to the edge. */

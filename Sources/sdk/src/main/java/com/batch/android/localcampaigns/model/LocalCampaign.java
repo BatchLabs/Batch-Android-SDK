@@ -209,5 +209,10 @@ public class LocalCampaign {
         public SyncedJITResult(long timestamp) {
             this.timestamp = timestamp;
         }
+
+        public SyncedJITResult(long timestamp, boolean eligible) {
+            this.timestamp = timestamp;
+            this.eligible = eligible;
+        }
     }
 }
