@@ -57,4 +57,13 @@ public enum AttributeType {
 
         return null;
     }
+
+    public static AttributeType fromTypeChar(char typeChar) {
+        for (AttributeType type : values()) {
+            if (type.getTypeChar() == typeChar) {
+                return type;
+            }
+        }
+        return null;
+    }
 }

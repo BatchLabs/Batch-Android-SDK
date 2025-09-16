@@ -1,5 +1,6 @@
 package com.batch.android.localcampaigns.signal;
 
+import androidx.annotation.NonNull;
 import com.batch.android.localcampaigns.model.LocalCampaign;
 
 /**
@@ -10,5 +11,5 @@ import com.batch.android.localcampaigns.model.LocalCampaign;
  */
 
 public interface Signal {
-    boolean satisfiesTrigger(LocalCampaign.Trigger trigger);
+    boolean satisfiesTrigger(@NonNull LocalCampaign.Trigger trigger);
 }

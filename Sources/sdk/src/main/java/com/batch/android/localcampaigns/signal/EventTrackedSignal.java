@@ -22,10 +22,10 @@ public class EventTrackedSignal implements Signal {
         this.parameters = parameters;
     }
 
-    public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
+    public boolean satisfiesTrigger(@NonNull LocalCampaign.Trigger trigger) {
         return (
             trigger instanceof EventLocalCampaignTrigger &&
-            ((EventLocalCampaignTrigger) trigger).isSatisfied(name, null)
+            ((EventLocalCampaignTrigger) trigger).isSatisfied(name, null, null)
         );
     }
 }

@@ -67,6 +67,7 @@ public final class ParameterKeys
     public final static String ATTR_CHECK_WS_CONNECT_TIMEOUT_KEY		= "ws.attrcheck.connect.timeout";
     public final static String ATTR_CHECK_WS_READ_TIMEOUT_KEY			= "ws.attrcheck.read.timeout";
 
+
     public final static String ATTR_LOCAL_CAMPAIGNS_WS_PROPERTY_KEY					= "ws.localcampaigns.property";
     public final static String ATTR_LOCAL_CAMPAIGNS_WS_URLSORTER_PATTERN_KEY		= "ws.localcampaigns.pattern";
     public final static String ATTR_LOCAL_CAMPAIGNS_WS_CRYPTORTYPE_KEY				= "ws.localcampaigns.getcryptor.type";
@@ -76,6 +77,16 @@ public final class ParameterKeys
     public final static String ATTR_LOCAL_CAMPAIGNS_WS_RETRYCOUNT_KEY				= "ws.localcampaigns.retry";
     public final static String ATTR_LOCAL_CAMPAIGNS_WS_CONNECT_TIMEOUT_KEY			= "ws.localcampaigns.connect.timeout";
     public final static String ATTR_LOCAL_CAMPAIGNS_WS_READ_TIMEOUT_KEY				= "ws.localcampaigns.read.timeout";
+
+    public final static String LOCAL_CAMPAIGNS_JIT_WS_PROPERTY_KEY					= "ws.localcampaignsjit.property";
+    public final static String LOCAL_CAMPAIGNS_JIT_WS_URLSORTER_PATTERN_KEY		    = "ws.localcampaignsjit.pattern";
+    public final static String LOCAL_CAMPAIGNS_JIT_WS_CRYPTORTYPE_KEY				= "ws.localcampaignsjit.getcryptor.type";
+    public final static String LOCAL_CAMPAIGNS_JIT_WS_CRYPTORMODE_KEY				= "ws.localcampaignsjit.getcryptor.mode";
+    public final static String LOCAL_CAMPAIGNS_JIT_WS_POST_CRYPTORTYPE_KEY			= "ws.localcampaignsjit.postcryptor.type";
+    public final static String LOCAL_CAMPAIGNS_JIT_WS_READ_CRYPTORTYPE_KEY			= "ws.localcampaignsjit.readcryptor.type";
+    public final static String LOCAL_CAMPAIGNS_JIT_WS_RETRYCOUNT_KEY	            = "ws.localcampaignsjit.retry";
+    public final static String LOCAL_CAMPAIGNS_JIT_WS_READ_TIMEOUT_KEY              = "ws.localcampaignsjit.read.timeout";
+    public final static String LOCAL_CAMPAIGNS_JIT_WS_CONNECT_TIMEOUT_KEY           = "ws.localcampaignsjit.connect.timeout";
 
     public final static String INBOX_WS_URLSORTER_PATTERN_KEY			= "ws.inbox.pattern";
     public final static String INBOX_WS_READ_CRYPTORTYPE_KEY			= "ws.inbox.readcryptor.type";
@@ -97,9 +108,6 @@ public final class ParameterKeys
     public final static String DISPLAY_RECEIPT_WS_CRYPTORTYPE_KEY	    =   "ws.displayreceipt.getcryptor.type";
     public final static String DISPLAY_RECEIPT_WS_RETRYCOUNT_KEY	    =   "ws.displayreceipt.retry";
     public final static String METRIC_WS_RETRYCOUNT_KEY	                =   "ws.metrics.retry";
-    public final static String LOCAL_CAMPAIGNS_JIT_WS_RETRYCOUNT_KEY	=   "ws.localcampaignsjit.retry";
-    public final static String LOCAL_CAMPAIGNS_JIT_WS_READ_TIMEOUT_KEY  =   "ws.localcampaignsjit.read.timeout";
-    public final static String LOCAL_CAMPAIGNS_JIT_WS_CONNECT_TIMEOUT_KEY = "ws.localcampaignsjit.connect.timeout";
 
     public final static String LOCAL_CAMPAIGNS_WS_INITIAL_DELAY         = "lc.wsdelay.initial";
     public final static String WS_CIPHERV2_LAST_FAILURE_KEY             = "ws.cipherv2.lastfailure";
@@ -136,6 +144,8 @@ public final class ParameterKeys
 
     public final static String LIB_CURRENTVERSION_KEY					= "app.version.current";
     public final static String LIB_PREVIOUSVERSION_KEY					= "app.version.previous";
+
+    public final static String DISPLAY_RECEIPTS_JOB_CANCELLED_KEY	    = "displayreceipts.jobs.already_cancelled";
 
     public final static String SHARED_PREFS_STORAGE_VERSION				= "app.shared_prefs.version";
 

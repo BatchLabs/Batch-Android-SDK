@@ -1,5 +1,6 @@
 package com.batch.android.localcampaigns.signal;
 
+import androidx.annotation.NonNull;
 import com.batch.android.localcampaigns.model.LocalCampaign;
 import com.batch.android.localcampaigns.trigger.NextSessionTrigger;
 
@@ -11,7 +12,7 @@ import com.batch.android.localcampaigns.trigger.NextSessionTrigger;
 public class NewSessionSignal implements Signal {
 
     @Override
-    public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
+    public boolean satisfiesTrigger(@NonNull LocalCampaign.Trigger trigger) {
         return trigger instanceof NextSessionTrigger;
     }
 }

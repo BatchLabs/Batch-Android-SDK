@@ -2,6 +2,8 @@ package com.batch.android.localcampaigns.trigger;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.batch.android.json.JSONObject;
+import com.batch.android.json.JSONUtils;
 import com.batch.android.localcampaigns.model.LocalCampaign;
 import java.util.Locale;
 
@@ -24,15 +26,28 @@ public class EventLocalCampaignTrigger implements LocalCampaign.Trigger {
     @Nullable
     public String label;
 
+    @Nullable
+    public JSONObject attributes;
+
     public EventLocalCampaignTrigger(@NonNull String name, @Nullable String label) {
         this.name = name.toUpperCase(Locale.US);
         this.label = label;
     }
 
+    public EventLocalCampaignTrigger(@NonNull String name, @Nullable String label, @Nullable JSONObject attributes) {
+        this.name = name.toUpperCase(Locale.US);
+        this.label = label;
+        this.attributes = attributes;
+    }
+
     /**
      * Checks if this triggers is satisfied for a given event
      */
-    public boolean isSatisfied(@Nullable String eventName, @Nullable String eventLabel) {
+    public boolean isSatisfied(
+        @Nullable String eventName,
+        @Nullable String eventLabel,
+        @Nullable JSONObject eventAttributes
+    ) {
         if (!this.name.equalsIgnoreCase(eventName)) {
             return false;
         }
@@ -41,6 +56,9 @@ public class EventLocalCampaignTrigger implements LocalCampaign.Trigger {
             return false;
         }
 
+        if (this.attributes != null) {
+            return JSONUtils.jsonObjectContainsValuesFrom(this.attributes, eventAttributes);
+        }
         return true;
     }
 

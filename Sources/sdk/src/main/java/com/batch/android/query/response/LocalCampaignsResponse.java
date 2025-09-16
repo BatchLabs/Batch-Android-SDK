@@ -14,34 +14,45 @@ import java.util.List;
 
 public class LocalCampaignsResponse extends Response {
 
-    private static final String TAG = "LocalCampaignsResponse";
+    /**
+     * Version of the local campaigns (MEP or CEP)
+     */
+    public enum Version {
+        MEP,
+        CEP,
+    }
 
     /**
      * Local campaign response error
      */
+    @Nullable
     private Error error;
+
+    /**
+     * Version of the local campaigns (CEP or MEP)
+     */
+    @NonNull
+    private Version version;
 
     /**
      * List of local campaigns
      */
+    @Nullable
     private List<LocalCampaign> campaigns;
-
-    /**
-     * Optional, time between all campaigns in seconds
-     */
-    private Long minDisplayInterval;
 
     /**
      * Global in-app cappings
      */
+    @Nullable
     private GlobalCappings cappings;
 
-    public LocalCampaignsResponse(String queryID) {
+    public LocalCampaignsResponse(@NonNull String queryID, @NonNull Version version) {
         super(QueryType.LOCAL_CAMPAIGNS, queryID);
+        this.version = version;
     }
 
     public boolean hasCampaigns() {
-        return campaigns != null && campaigns.size() > 0;
+        return campaigns != null && !campaigns.isEmpty();
     }
 
     @NonNull
@@ -63,24 +74,16 @@ public class LocalCampaignsResponse extends Response {
         return campaignsToSave;
     }
 
-    @Nullable
-    public Long getMinDisplayInterval() {
-        return minDisplayInterval;
-    }
-
-    public void setCampaigns(List<LocalCampaign> campaigns) {
+    public void setCampaigns(@Nullable List<LocalCampaign> campaigns) {
         this.campaigns = campaigns;
     }
 
-    public void setMinDisplayInterval(Long minDisplayInterval) {
-        this.minDisplayInterval = minDisplayInterval;
-    }
-
+    @Nullable
     public Error getError() {
         return error;
     }
 
-    public void setError(Error error) {
+    public void setError(@Nullable Error error) {
         this.error = error;
     }
 
@@ -88,12 +91,21 @@ public class LocalCampaignsResponse extends Response {
         return error != null;
     }
 
+    @NonNull
+    public Version getVersion() {
+        return version;
+    }
+
+    public void setVersion(@NonNull Version version) {
+        this.version = version;
+    }
+
     @Nullable
     public GlobalCappings getCappings() {
         return cappings;
     }
 
-    public void setCappings(GlobalCappings cappings) {
+    public void setCappings(@Nullable GlobalCappings cappings) {
         this.cappings = cappings;
     }
 

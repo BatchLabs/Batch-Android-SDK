@@ -149,6 +149,12 @@ class EventAttributesValidatorTest {
                 BatchEventAttributes().apply { put("string_attr", "a_valid_string") }
             )
         Assert.assertTrue(errors.isEmpty())
+
+        errors =
+            EventAttributesValidator.computeValidationErrors(
+                BatchEventAttributes().apply { put("String_Attr", "a_valid_string") }
+            )
+        Assert.assertTrue(errors.isEmpty())
     }
 
     @Test

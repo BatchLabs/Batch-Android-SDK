@@ -3,27 +3,27 @@ package com.batch.android.post;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import com.batch.android.WebserviceParameterUtils;
+import com.batch.android.core.ByteArrayHelper;
 import com.batch.android.core.Logger;
 import com.batch.android.di.providers.CampaignManagerProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.SQLUserDatasourceProvider;
+import com.batch.android.di.providers.UserModuleProvider;
+import com.batch.android.json.JSONArray;
+import com.batch.android.json.JSONException;
+import com.batch.android.json.JSONObject;
 import com.batch.android.localcampaigns.ViewTracker;
 import com.batch.android.localcampaigns.ViewTrackerUnavailableException;
 import com.batch.android.localcampaigns.model.LocalCampaign;
-import com.batch.android.msgpack.MessagePackHelper;
-import com.batch.android.msgpack.core.MessageBufferPacker;
-import com.batch.android.msgpack.core.MessagePack;
-import com.batch.android.msgpack.core.MessageUnpacker;
+import com.batch.android.query.response.LocalCampaignsResponse;
 import com.batch.android.user.SQLUserDatasource;
 import com.batch.android.user.UserAttribute;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LocalCampaignsJITPostDataProvider extends MessagePackPostDataProvider<Collection<LocalCampaign>> {
+public class LocalCampaignsJITPostDataProvider extends JSONPostDataProvider {
 
     private static final String TAG = "LocalCampaignsJITPostDataProvider";
 
@@ -34,96 +34,94 @@ public class LocalCampaignsJITPostDataProvider extends MessagePackPostDataProvid
     private static final String COUNT_KEY = "count";
     private static final String ELIGIBLE_CAMPAIGNS_KEY = "eligibleCampaigns";
 
+    @NonNull
     private final Collection<LocalCampaign> campaigns;
 
-    public LocalCampaignsJITPostDataProvider(Collection<LocalCampaign> campaigns) {
+    @NonNull
+    private final LocalCampaignsResponse.Version version;
+
+    public LocalCampaignsJITPostDataProvider(
+        @NonNull Collection<LocalCampaign> campaigns,
+        @NonNull LocalCampaignsResponse.Version campaignsVersion
+    ) {
         this.campaigns = campaigns;
+        this.version = campaignsVersion;
     }
 
     @Override
-    public Collection<LocalCampaign> getRawData() {
-        return campaigns;
-    }
-
-    @Override
-    byte[] pack() throws IOException {
+    public JSONObject getRawData() {
         ViewTracker viewTracker = CampaignManagerProvider.get().getViewTracker();
-        MessageBufferPacker packer = MessagePack.newDefaultBufferPacker();
 
-        Map<String, Object> postData = new HashMap<>();
+        JSONObject postData = new JSONObject();
 
         // Adding system ids
-        Map<String, Object> ids = new HashMap<>();
+        JSONObject ids = new JSONObject();
+        String customUserId = null;
         Context context = RuntimeManagerProvider.get().getContext();
         if (context != null) {
-            ids = WebserviceParameterUtils.getWebserviceIdsAsMap(context);
+            ids = WebserviceParameterUtils.getWebserviceIdsAsJson(context);
+            customUserId = UserModuleProvider.get().getCustomID(context);
         }
 
         // Adding campaigns ids to check
-        List<String> campaignIds = new ArrayList<>();
+        List<String> campaignIdsList = new ArrayList<>();
         for (LocalCampaign campaign : campaigns) {
-            campaignIds.add(campaign.id);
+            campaignIdsList.add(campaign.id);
         }
+        JSONArray campaignIds = new JSONArray(campaignIdsList);
 
         // Adding views count for each campaign
-        Map<String, Object> views = new HashMap<>();
+        JSONObject views = new JSONObject();
+        Map<String, Integer> counts;
         try {
-            Map<String, Integer> counts = viewTracker.getViewCounts(campaignIds);
+            if (version == LocalCampaignsResponse.Version.CEP) {
+                counts = viewTracker.getViewCountsByCampaignIdsAndCustomUserId(campaignIdsList, customUserId);
+            } else {
+                counts = viewTracker.getViewCountsByCampaignIds(campaignIdsList);
+            }
             for (Map.Entry<String, Integer> entry : counts.entrySet()) {
-                Map<String, Object> countMap = new HashMap<>();
+                JSONObject countMap = new JSONObject();
                 countMap.put(COUNT_KEY, entry.getValue());
                 views.put(entry.getKey(), countMap);
             }
         } catch (ViewTrackerUnavailableException e) {
-            Logger.internal("Could not get view tracker count", e);
+            Logger.internal(TAG, "Could not get view tracker count", e);
+        } catch (JSONException e) {
+            Logger.internal(TAG, "Error while serializing view counts", e);
         }
 
         // Adding attributes
-        final SQLUserDatasource datasource = SQLUserDatasourceProvider.get(context);
-        Map<String, Object> attributes = UserAttribute.getServerMapRepresentation(datasource.getAttributes(), true);
-
-        postData.put(IDS_KEY, ids);
-        postData.put(CAMPAIGNS_KEY, campaignIds);
-        postData.put(ATTRIBUTES_KEY, attributes);
-        postData.put(VIEWS_KEY, views);
-
-        try {
-            MessagePackHelper.packObject(packer, postData);
-        } catch (Exception e) {
-            throw new IOException(e);
-        } finally {
-            packer.close();
-        }
-        return packer.toByteArray();
-    }
-
-    @NonNull
-    public List<String> unpack(byte[] data) {
-        List<String> eligibleCampaigns = new ArrayList<>();
-        MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(data);
-        try {
-            // Unpack root map header
-            unpacker.unpackMapHeader();
-
-            // Unpack "eligibleCampaigns" key
-            String key = unpacker.unpackString();
-
-            if (ELIGIBLE_CAMPAIGNS_KEY.equals(key)) {
-                // Unpack list of campaign id
-                int eligibleCampaignsSize = unpacker.unpackArrayHeader();
-                for (int i = 0; i < eligibleCampaignsSize; i++) {
-                    String campaignId = unpacker.unpackString();
-                    eligibleCampaigns.add(campaignId);
-                }
+        if (version == LocalCampaignsResponse.Version.MEP) {
+            final SQLUserDatasource datasource = SQLUserDatasourceProvider.get(context);
+            Map<String, Object> attributes = UserAttribute.getServerMapRepresentation(datasource.getAttributes(), true);
+            try {
+                postData.put(ATTRIBUTES_KEY, new JSONObject(attributes));
+            } catch (JSONException e) {
+                Logger.internal(TAG, "Error while serializing attributes", e);
             }
-        } catch (IOException e) {
-            Logger.internal(TAG, "Could not unpack campaign jit response.");
         }
-        return eligibleCampaigns;
+
+        try {
+            postData.put(IDS_KEY, ids);
+            postData.put(CAMPAIGNS_KEY, campaignIds);
+            postData.put(VIEWS_KEY, views);
+        } catch (JSONException e) {
+            Logger.internal(TAG, "Error while serializing JIT request", e);
+        }
+        return postData;
     }
 
     @Override
-    public boolean isEmpty() {
-        return campaigns.isEmpty();
+    public byte[] getData() {
+        return ByteArrayHelper.getUTF8Bytes(getRawData().toString());
+    }
+
+    public List<String> deserializeResponse(JSONObject response) throws JSONException {
+        JSONArray campaigns = response.getJSONArray(ELIGIBLE_CAMPAIGNS_KEY);
+        List<String> eligibleCampaigns = new ArrayList<>();
+        for (int i = 0; i < campaigns.length(); i++) {
+            eligibleCampaigns.add(campaigns.getString(i));
+        }
+        return eligibleCampaigns;
     }
 }

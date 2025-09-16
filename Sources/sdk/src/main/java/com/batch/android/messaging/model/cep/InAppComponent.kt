@@ -1,7 +1,15 @@
 package com.batch.android.messaging.model.cep
 
 import android.graphics.Typeface
-import com.batch.android.messaging.model.cep.InAppProperty.*
+import com.batch.android.messaging.model.cep.InAppProperty.Border
+import com.batch.android.messaging.model.cep.InAppProperty.CornerRadius
+import com.batch.android.messaging.model.cep.InAppProperty.FontDecoration
+import com.batch.android.messaging.model.cep.InAppProperty.HorizontalAlignment
+import com.batch.android.messaging.model.cep.InAppProperty.Margin
+import com.batch.android.messaging.model.cep.InAppProperty.Size
+import com.batch.android.messaging.model.cep.InAppProperty.ThemeColors
+import com.batch.android.messaging.model.cep.InAppProperty.VerticalAlignment
+import java.io.Serializable
 
 /**
  * Represents a component within an in-app message.
@@ -20,6 +28,8 @@ sealed class InAppComponent(val type: Type) {
         IMAGE,
         DIVIDER,
         COLUMNS,
+        SPACER,
+        WEBVIEW,
     }
 
     /** Represents a component that can be part of a column layout. */
@@ -126,7 +136,7 @@ sealed class InAppComponent(val type: Type) {
         override val fontDecorations: Set<FontDecoration>,
         val fontSize: Int,
         val maxLines: Int,
-    ) : InAppComponent(Type.TEXT), FontDecorationComponent, Column
+    ) : InAppComponent(Type.TEXT), FontDecorationComponent, Column, Serializable
 
     /**
      * Represents a button component within an in-app message.
@@ -164,7 +174,7 @@ sealed class InAppComponent(val type: Type) {
         override val fontDecorations: Set<FontDecoration>,
         val fontSize: Int,
         val maxLines: Int,
-    ) : InAppComponent(Type.BUTTON), FontDecorationComponent, Column
+    ) : InAppComponent(Type.BUTTON), FontDecorationComponent, Column, Serializable
 
     /**
      * Represents an image component within an in-app message.
@@ -185,7 +195,7 @@ sealed class InAppComponent(val type: Type) {
         val margins: Margin,
         val aspectRatio: AspectRatio,
         val radius: CornerRadius,
-    ) : InAppComponent(Type.IMAGE), Column {
+    ) : InAppComponent(Type.IMAGE), Column, Serializable {
         /** Represents the aspect ratio of the image. */
         enum class AspectRatio {
             FIT,
@@ -219,14 +229,17 @@ sealed class InAppComponent(val type: Type) {
         val width: Size,
         val align: HorizontalAlignment,
         val margins: Margin,
-    ) : InAppComponent(Type.DIVIDER), Column
+    ) : InAppComponent(Type.DIVIDER), Column, Serializable
 
     /** Represents an empty spacer component within n Columns component message. */
-    data class EmptySpacer(val empty: Boolean = true) : Column {
+    data class EmptySpacer(val empty: Boolean = true) : Column, Serializable {
         override fun isEmpty(): Boolean {
             return empty
         }
     }
+
+    /** Represents a vertical spacer component to fill the space available. */
+    data class Spacer(val height: Size) : InAppComponent(Type.SPACER), Column, Serializable {}
 
     /**
      * Represents a column layout component within an in-app message.
@@ -247,13 +260,20 @@ sealed class InAppComponent(val type: Type) {
         val margins: Margin,
         val contentAlign: VerticalAlignment,
         val children: List<Column>,
-    ) : InAppComponent(Type.COLUMNS) {
+    ) : InAppComponent(Type.COLUMNS), Serializable {
 
         init {
             require(children.size == ratios.size) {
                 "Number of ratios must match the number of children"
             }
             require(listOf(1F, 100F).contains(ratios.sum())) { "Sum of ratio must be 1 or 100" }
+        }
+
+        /** Checks if the columns have at least one fill height children. */
+        fun hasOneChildWithFillHeight(): Boolean {
+            return children.any {
+                (it is Image && it.height.isFill()) || (it is Spacer && it.height.isFill())
+            }
         }
 
         override fun equals(other: Any?): Boolean {
@@ -280,4 +300,23 @@ sealed class InAppComponent(val type: Type) {
             return result
         }
     }
+
+    /**
+     * Represents a web view component within an in-app message.
+     *
+     * This class defines the properties for a web view element. It inherits from [InAppComponent].
+     *
+     * @property id The unique identifier for the web view component.
+     * @property timeout The timeout in seconds for loading the web view content.
+     * @property openDeeplinksInApp A boolean indicating whether deeplinks should be opened within
+     *   the app.
+     * @property devMode A boolean indicating whether the web view should be opened in developer
+     *   mode, allowing remote debugging.
+     */
+    data class WebView(
+        val id: String,
+        val timeout: Int,
+        val openDeeplinksInApp: Boolean,
+        val devMode: Boolean,
+    ) : InAppComponent(Type.WEBVIEW), Serializable
 }

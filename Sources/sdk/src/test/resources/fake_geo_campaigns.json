@@ -2,6 +2,7 @@
   "queries": [
     {
       "id": "c2b63fc3-bb8c-4acd-9441-aa8202211884",
+      "campaigns_version": "MEP",
       "cappings": {
         "session": 2,
         "time": [

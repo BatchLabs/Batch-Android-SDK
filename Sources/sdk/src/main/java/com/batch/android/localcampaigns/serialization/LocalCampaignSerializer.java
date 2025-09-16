@@ -4,8 +4,10 @@ import com.batch.android.date.TimezoneAwareDate;
 import com.batch.android.json.JSONArray;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
+import com.batch.android.localcampaigns.model.DayOfWeek;
 import com.batch.android.localcampaigns.model.LocalCampaign;
 import com.batch.android.localcampaigns.output.LandingOutput;
+import com.batch.android.localcampaigns.output.LandingOutputCEP;
 import com.batch.android.localcampaigns.trigger.EventLocalCampaignTrigger;
 import java.util.List;
 
@@ -39,6 +41,7 @@ public class LocalCampaignSerializer {
 
         jsonCampaign.put("priority", Math.max(campaign.priority, 0));
         jsonCampaign.put("minDisplayInterval", Math.max(campaign.minimumDisplayInterval, 0));
+        jsonCampaign.put("displayDelaySec", campaign.displayDelay);
 
         if (campaign.startDate != null) {
             JSONObject startDateJSON = new JSONObject();
@@ -63,6 +66,22 @@ public class LocalCampaignSerializer {
             jsonCampaign.put("customPayload", campaign.customPayload);
         }
         jsonCampaign.put("requireJIT", campaign.requiresJustInTimeSync);
+
+        if (campaign.quietHours != null) {
+            JSONObject jsonQuietHours = new JSONObject();
+            jsonQuietHours.put("startHour", campaign.quietHours.getStartHour());
+            jsonQuietHours.put("startMin", campaign.quietHours.getStartMinute());
+            jsonQuietHours.put("endHour", campaign.quietHours.getEndHour());
+            jsonQuietHours.put("endMin", campaign.quietHours.getEndMinute());
+            if (campaign.quietHours.getDaysOfWeek() != null) {
+                JSONArray jsonDaysOfWeek = new JSONArray();
+                for (DayOfWeek day : campaign.quietHours.getDaysOfWeek()) {
+                    jsonDaysOfWeek.put(day.getValue());
+                }
+                jsonQuietHours.put("quietDaysOfWeek", jsonDaysOfWeek);
+            }
+            jsonCampaign.put("quietHours", jsonQuietHours);
+        }
         return jsonCampaign;
     }
 
@@ -90,7 +109,10 @@ public class LocalCampaignSerializer {
      */
     private JSONObject parseOutput(LocalCampaign.Output output) throws JSONException {
         JSONObject jsonOutput = new JSONObject();
-        if (output instanceof LandingOutput) {
+        if (output instanceof LandingOutputCEP) {
+            jsonOutput.put("type", "LANDING_CEP");
+            jsonOutput.put("payload", output.payload);
+        } else if (output instanceof LandingOutput) {
             jsonOutput.put("type", "LANDING");
             jsonOutput.put("payload", output.payload);
         }
@@ -127,6 +149,7 @@ public class LocalCampaignSerializer {
             EventLocalCampaignTrigger eventTrigger = (EventLocalCampaignTrigger) trigger;
             jsonTrigger.put("event", eventTrigger.name);
             jsonTrigger.put("label", eventTrigger.label);
+            jsonTrigger.put("attributes", eventTrigger.attributes);
         }
         return jsonTrigger;
     }

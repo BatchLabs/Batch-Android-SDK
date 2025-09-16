@@ -12,7 +12,7 @@ public class JSONPostDataProvider implements PostDataProvider<JSONObject> {
     /**
      * The data
      */
-    private JSONObject data;
+    private final JSONObject data;
 
     // ---------------------------------------->
 
@@ -26,7 +26,7 @@ public class JSONPostDataProvider implements PostDataProvider<JSONObject> {
     /**
      * Create a new provider with given data
      *
-     * @param data
+     * @param data The JSON data
      */
     public JSONPostDataProvider(JSONObject data) {
         if (data == null) {

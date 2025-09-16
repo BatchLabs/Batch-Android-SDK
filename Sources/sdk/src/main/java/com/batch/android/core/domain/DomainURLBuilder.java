@@ -52,7 +52,7 @@ public final class DomainURLBuilder {
     /**
      * URL of the local campaigns WS
      */
-    public static final String LOCAL_CAMPAIGNS_WS_URL = buildBaseWebServiceURL(false) + "/local/%s";
+    public static final String LOCAL_CAMPAIGNS_WS_URL = buildBaseWebServiceURL(false) + "/inapp/%s";
     /**
      * URL of the inbox fetch WS
      */
@@ -65,8 +65,14 @@ public final class DomainURLBuilder {
      * URL of the metrics WS
      */
     public static final String METRIC_WS_URL = getDomainURL(DomainService.METRIC, false);
+
     /**
-     * URL of the local campaigns JIT (check just in time) WS
+     * URL of the local campaigns JIT for MEP campaigns (check just in time) WS
      */
-    public static final String LOCAL_CAMPAIGNS_JIT_WS_URL = buildBaseWebServiceURL(false) + "/lc_jit/%s";
+    public static final String LOCAL_CAMPAIGNS_JIT_MEP_WS_URL = buildBaseWebServiceURL(false) + "/inapp_jit_mep/%s";
+
+    /**
+     * URL of the local campaigns JIT for CEP campaigns (check just in time) WS
+     */
+    public static final String LOCAL_CAMPAIGNS_JIT_CEP_WS_URL = buildBaseWebServiceURL(false) + "/inapp_jit_cep/%s";
 }

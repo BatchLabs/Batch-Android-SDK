@@ -37,7 +37,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -56,7 +55,7 @@ public final class UserModule extends BatchModule {
 
     public static final String TAG = "User";
     public static final String PARAMETER_KEY_LABEL = "label";
-    public static final String PARAMETER_KEY_DATA = "data";
+    public static final String PARAMETER_KEY_ATTRIBUTES = "attributes";
     private static final Pattern EVENT_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{1,30}$");
     private static final long LOCATION_UPDATE_MINIMUM_TIME_MS = 30000;
     private static final long CIPHER_FALLBACK_RESET_TIME_MS = 172800000L;

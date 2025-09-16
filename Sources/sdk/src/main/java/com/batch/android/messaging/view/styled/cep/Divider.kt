@@ -51,7 +51,9 @@ class Divider(context: Context) : View(context), Styleable {
                         )
                         .apply { percentLayoutInfo.widthPercent = component.width.floatValue / 100 }
 
-                InAppProperty.Size.Unit.AUTO ->
+                InAppProperty.Size.Unit.AUTO,
+                InAppProperty.Size.Unit.FILL ->
+                    // Since Fill width is not supported, we fallback on auto
                     LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         component.thickness.px,

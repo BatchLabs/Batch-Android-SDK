@@ -3,6 +3,7 @@ package com.batch.android.messaging.model.cep
 import com.batch.android.messaging.model.Action
 import com.batch.android.messaging.model.Message
 import com.batch.android.messaging.model.cep.InAppProperty.*
+import java.io.Serializable
 
 /**
  * Represents an in-app message to be displayed within the application.
@@ -33,6 +34,11 @@ class CEPMessage(
     /** Whether the message is fullscreen. */
     fun isFullscreen(): Boolean {
         return format == Format.FULLSCREEN
+    }
+
+    /** Whether the message is a WebView. */
+    fun isWebView(): Boolean {
+        return format == Format.WEBVIEW
     }
 
     /** Whether the message is a modal. */
@@ -99,6 +105,11 @@ class CEPMessage(
         return getImagesComponents().find { it.id == id }
     }
 
+    /** Get the WebView component in the message. */
+    fun getWebViewComponent(): InAppComponent.WebView? {
+        return rootContainer.children.filterIsInstance<InAppComponent.WebView>().firstOrNull()
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -143,7 +154,7 @@ data class RootContainer(
     val margins: Margin,
     val radius: CornerRadius,
     val border: Border?,
-)
+) : Serializable
 
 /**
  * Represents the options for closing an in-app.
@@ -151,14 +162,14 @@ data class RootContainer(
  * @property auto The automatic closing options, or null if not used.
  * @property button The close button options, or null if not used.
  */
-data class CloseOptions(val auto: Auto? = null, val button: Button? = null) {
+data class CloseOptions(val auto: Auto? = null, val button: Button? = null) : Serializable {
     /**
      * Represents the color and background color options for a close button.
      *
      * @property color The color tuple for light and dark themes.
      * @property backgroundColor The background color tuple for light and dark themes.
      */
-    data class Button(val color: ThemeColors, val backgroundColor: ThemeColors)
+    data class Button(val color: ThemeColors, val backgroundColor: ThemeColors) : Serializable
 
     /**
      * Represents the delay and color options for automatic closing.
@@ -166,5 +177,5 @@ data class CloseOptions(val auto: Auto? = null, val button: Button? = null) {
      * @property delay The delay in seconds before automatic closing.
      * @property color The color tuple for light and dark themes.
      */
-    data class Auto(val delay: Int, val color: ThemeColors)
+    data class Auto(val delay: Int, val color: ThemeColors) : Serializable
 }

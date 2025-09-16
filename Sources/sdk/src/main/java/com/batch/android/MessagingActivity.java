@@ -16,6 +16,9 @@ import com.batch.android.core.Logger;
 import com.batch.android.di.providers.MessagingModuleProvider;
 import com.batch.android.messaging.fragment.DialogEventListener;
 import com.batch.android.messaging.fragment.ListenableDialog;
+import com.batch.android.messaging.model.Message;
+import com.batch.android.messaging.parsing.PayloadParser;
+import com.batch.android.messaging.parsing.PayloadParsingException;
 
 /**
  * Activity that only lives to display a messaging fragment
@@ -25,7 +28,10 @@ public class MessagingActivity extends FragmentActivity implements DialogEventLi
 
     private static final String TAG = "MessagingActivity";
     private static final String ROTATED = "ROTATED";
+    private static final String IS_MEP_EXTRA = "IS_MEP";
     private static final String DIALOG_FRAGMENT_TAG = "batchMessage";
+
+    private boolean isMEPMessage = true;
 
     private final BroadcastReceiver dismissReceiver = new BroadcastReceiver() {
         @Override
@@ -39,11 +45,11 @@ public class MessagingActivity extends FragmentActivity implements DialogEventLi
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         if (savedInstanceState == null || !savedInstanceState.getBoolean(ROTATED, false)) {
             boolean messageDisplayed = false;
             final Intent i = getIntent();
             if (i != null) {
+                isMEPMessage = i.getBooleanExtra(IS_MEP_EXTRA, true);
                 final Bundle b = i.getExtras();
                 if (b != null) {
                     try {
@@ -63,10 +69,11 @@ public class MessagingActivity extends FragmentActivity implements DialogEventLi
                 ((ListenableDialog) f).setDialogEventListener(this);
             }
         }
-
-        LocalBroadcastManager
-            .getInstance(this)
-            .registerReceiver(dismissReceiver, new IntentFilter(ACTION_DISMISS_INTERSTITIAL));
+        if (isMEPMessage) {
+            LocalBroadcastManager
+                .getInstance(this)
+                .registerReceiver(dismissReceiver, new IntentFilter(ACTION_DISMISS_INTERSTITIAL));
+        }
     }
 
     @Override
@@ -90,7 +97,9 @@ public class MessagingActivity extends FragmentActivity implements DialogEventLi
     @Override
     protected void onDestroy() {
         Batch.onDestroy(this);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(dismissReceiver);
+        if (isMEPMessage) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(dismissReceiver);
+        }
         super.onDestroy();
     }
 
@@ -140,12 +149,22 @@ public class MessagingActivity extends FragmentActivity implements DialogEventLi
         if (message == null) {
             return;
         }
-
         final Intent i = new Intent(c, MessagingActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         message.writeToIntent(i);
+
+        boolean isMEP = true;
+        try {
+            Message internalMessage = PayloadParser.parseUnknownLandingMessage(message.getJSON());
+            isMEP = internalMessage.isMEPMessage();
+        } catch (PayloadParsingException e) {
+            Logger.internal(TAG, "Error while parsing the payload message");
+        }
+        i.putExtra(IS_MEP_EXTRA, isMEP);
         c.startActivity(i);
 
-        LocalBroadcastManager.getInstance(c).sendBroadcast(new Intent(ACTION_DISMISS_INTERSTITIAL));
+        if (isMEP) {
+            LocalBroadcastManager.getInstance(c).sendBroadcast(new Intent(ACTION_DISMISS_INTERSTITIAL));
+        }
     }
 }

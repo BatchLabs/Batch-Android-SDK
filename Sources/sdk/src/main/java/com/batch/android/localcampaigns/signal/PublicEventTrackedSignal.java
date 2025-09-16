@@ -3,6 +3,7 @@ package com.batch.android.localcampaigns.signal;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.core.Logger;
+import com.batch.android.json.JSONObject;
 import com.batch.android.localcampaigns.model.LocalCampaign;
 import com.batch.android.localcampaigns.trigger.EventLocalCampaignTrigger;
 import com.batch.android.module.LocalCampaignsModule;
@@ -34,14 +35,18 @@ public class PublicEventTrackedSignal extends EventTrackedSignal {
         }
     }
 
-    public boolean satisfiesTrigger(LocalCampaign.Trigger trigger) {
+    public boolean satisfiesTrigger(@NonNull LocalCampaign.Trigger trigger) {
+        JSONObject attributes = null;
+        if (parameters != null) {
+            attributes = parameters.optJSONObject("attributes");
+        }
         return (
             trigger instanceof EventLocalCampaignTrigger &&
-            ((EventLocalCampaignTrigger) trigger).isSatisfied(name, label)
+            ((EventLocalCampaignTrigger) trigger).isSatisfied(name, label, attributes)
         );
     }
 
     public static boolean isPublic(@NonNull EventTrackedSignal signal) {
-        return signal.name != null && signal.name.startsWith("E.");
+        return signal.name.startsWith("E.");
     }
 }

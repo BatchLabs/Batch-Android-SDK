@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -86,8 +87,7 @@ public class BatchEventAttributes {
             this.label = value;
             return this;
         }
-        attributes.put(key, new EventTypedAttribute(value, AttributeType.STRING));
-        return this;
+        return this.putTypedAttribute(key, new EventTypedAttribute(value, AttributeType.STRING));
     }
 
     /**
@@ -98,8 +98,7 @@ public class BatchEventAttributes {
      * @return Same BatchEventAttributes instance, for chaining
      */
     public BatchEventAttributes put(@NonNull String key, @NonNull URI value) {
-        attributes.put(key, new EventTypedAttribute(value, AttributeType.URL));
-        return this;
+        return this.putTypedAttribute(key, new EventTypedAttribute(value, AttributeType.URL));
     }
 
     /**
@@ -110,8 +109,7 @@ public class BatchEventAttributes {
      * @return Same BatchEventAttributes instance, for chaining
      */
     public BatchEventAttributes put(@NonNull String key, float value) {
-        attributes.put(key, new EventTypedAttribute(value, AttributeType.DOUBLE));
-        return this;
+        return this.putTypedAttribute(key, new EventTypedAttribute(value, AttributeType.DOUBLE));
     }
 
     /**
@@ -122,8 +120,7 @@ public class BatchEventAttributes {
      * @return Same BatchEventAttributes instance, for chaining
      */
     public BatchEventAttributes put(@NonNull String key, double value) {
-        attributes.put(key, new EventTypedAttribute(value, AttributeType.DOUBLE));
-        return this;
+        return this.putTypedAttribute(key, new EventTypedAttribute(value, AttributeType.DOUBLE));
     }
 
     /**
@@ -134,8 +131,7 @@ public class BatchEventAttributes {
      * @return Same BatchEventAttributes instance, for chaining
      */
     public BatchEventAttributes put(@NonNull String key, int value) {
-        attributes.put(key, new EventTypedAttribute(value, AttributeType.LONG));
-        return this;
+        return this.putTypedAttribute(key, new EventTypedAttribute(value, AttributeType.LONG));
     }
 
     /**
@@ -146,8 +142,7 @@ public class BatchEventAttributes {
      * @return Same BatchEventAttributes instance, for chaining
      */
     public BatchEventAttributes put(@NonNull String key, long value) {
-        attributes.put(key, new EventTypedAttribute(value, AttributeType.LONG));
-        return this;
+        return this.putTypedAttribute(key, new EventTypedAttribute(value, AttributeType.LONG));
     }
 
     /**
@@ -158,8 +153,7 @@ public class BatchEventAttributes {
      * @return Same BatchEventAttributes instance, for chaining
      */
     public BatchEventAttributes put(@NonNull String key, boolean value) {
-        attributes.put(key, new EventTypedAttribute(value, AttributeType.BOOL));
-        return this;
+        return this.putTypedAttribute(key, new EventTypedAttribute(value, AttributeType.BOOL));
     }
 
     /**
@@ -170,8 +164,7 @@ public class BatchEventAttributes {
      * @return Same BatchEventAttributes instance, for chaining
      */
     public BatchEventAttributes put(@NonNull String key, @NonNull Date value) {
-        attributes.put(key, new EventTypedAttribute(value.getTime(), AttributeType.DATE));
-        return this;
+        return this.putTypedAttribute(key, new EventTypedAttribute(value.getTime(), AttributeType.DATE));
     }
 
     /**
@@ -182,8 +175,7 @@ public class BatchEventAttributes {
      * @return Same BatchEventAttributes instance, for chaining
      */
     public BatchEventAttributes put(@NonNull String key, @NonNull BatchEventAttributes value) {
-        attributes.put(key, new EventTypedAttribute(value, AttributeType.OBJECT));
-        return this;
+        return this.putTypedAttribute(key, new EventTypedAttribute(value, AttributeType.OBJECT));
     }
 
     /**
@@ -194,8 +186,7 @@ public class BatchEventAttributes {
      * @return Same BatchEventAttributes instance, for chaining
      */
     public BatchEventAttributes putObjectList(@NonNull String key, @NonNull List<BatchEventAttributes> value) {
-        attributes.put(key, new EventTypedAttribute(new ArrayList<>(value), AttributeType.OBJECT_ARRAY));
-        return this;
+        return this.putTypedAttribute(key, new EventTypedAttribute(new ArrayList<>(value), AttributeType.OBJECT_ARRAY));
     }
 
     /**
@@ -210,7 +201,17 @@ public class BatchEventAttributes {
             this.tags = new LinkedHashSet<>(value);
             return this;
         }
-        attributes.put(key, new EventTypedAttribute(new ArrayList<>(value), AttributeType.STRING_ARRAY));
+        return this.putTypedAttribute(key, new EventTypedAttribute(new ArrayList<>(value), AttributeType.STRING_ARRAY));
+    }
+
+    /**
+     * Add EventTypedAttribute and normalize key
+     *
+     * @param key The key to use
+     * @param attribute The attribute to add
+     */
+    private BatchEventAttributes putTypedAttribute(@NonNull String key, @NonNull EventTypedAttribute attribute) {
+        attributes.put(key.toLowerCase(Locale.US), attribute);
         return this;
     }
 

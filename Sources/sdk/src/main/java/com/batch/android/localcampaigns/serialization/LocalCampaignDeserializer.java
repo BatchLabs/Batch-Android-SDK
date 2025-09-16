@@ -1,15 +1,20 @@
 package com.batch.android.localcampaigns.serialization;
 
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.batch.android.core.Logger;
 import com.batch.android.date.TimezoneAwareDate;
 import com.batch.android.date.UTCDate;
 import com.batch.android.di.providers.ActionOutputProvider;
+import com.batch.android.di.providers.LandingOutputCEPProvider;
 import com.batch.android.di.providers.LandingOutputProvider;
 import com.batch.android.json.JSONArray;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
+import com.batch.android.localcampaigns.model.DayOfWeek;
 import com.batch.android.localcampaigns.model.LocalCampaign;
+import com.batch.android.localcampaigns.model.QuietHours;
 import com.batch.android.localcampaigns.output.ActionOutput;
 import com.batch.android.localcampaigns.trigger.EventLocalCampaignTrigger;
 import com.batch.android.localcampaigns.trigger.NextSessionTrigger;
@@ -28,7 +33,7 @@ public class LocalCampaignDeserializer {
      * @return the LocalCampaign
      * @throws JSONException parsing exception
      */
-    public LocalCampaign deserialize(JSONObject json) throws JSONException {
+    public LocalCampaign deserialize(JSONObject json, boolean requireJITFallback) throws JSONException {
         if (json == null) {
             throw new JSONException("Cannot parse a null campaign json");
         }
@@ -109,7 +114,11 @@ public class LocalCampaignDeserializer {
 
         campaign.customPayload = json.optJSONObject("customPayload");
 
-        campaign.requiresJustInTimeSync = json.reallyOptBoolean("requireJIT", false);
+        campaign.requiresJustInTimeSync = json.reallyOptBoolean("requireJIT", requireJITFallback);
+
+        campaign.quietHours = parseQuietHours(json.optJSONObject("quietHours"));
+
+        campaign.displayDelay = json.optInt("displayDelaySec");
 
         return campaign;
     }
@@ -120,13 +129,13 @@ public class LocalCampaignDeserializer {
      * @param json serialized campaigns
      * @return a list of local campaign
      */
-    public List<LocalCampaign> deserializeList(JSONArray json) {
+    public List<LocalCampaign> deserializeList(JSONArray json, boolean requireJITFallback) {
         List<LocalCampaign> campaigns = new ArrayList<>();
         if (json != null) {
             for (int i = 0; i < json.length(); i++) {
                 try {
                     JSONObject campaignJson = json.getJSONObject(i);
-                    LocalCampaign localCampaign = deserialize(campaignJson);
+                    LocalCampaign localCampaign = deserialize(campaignJson, requireJITFallback);
                     campaigns.add(localCampaign);
                 } catch (Exception e) {
                     Logger.internal(TAG, "An error occurred while parsing an In-App Campaign. Skipping.", e);
@@ -153,13 +162,20 @@ public class LocalCampaignDeserializer {
         type = type.toUpperCase(Locale.US);
 
         LocalCampaign.Output output;
+
         JSONObject payload = json.getJSONObject("payload");
-        if ("LANDING".equals(type)) {
-            output = LandingOutputProvider.get(payload);
-        } else if ("ACTION".equals(type)) {
-            output = ActionOutputProvider.get(payload);
-        } else {
-            throw new JSONException("Invalid campaign output type");
+        switch (type) {
+            case "LANDING":
+                output = LandingOutputProvider.get(payload);
+                break;
+            case "LANDING_CEP":
+                output = LandingOutputCEPProvider.get(payload);
+                break;
+            case "ACTION":
+                output = ActionOutputProvider.get(payload);
+                break;
+            default:
+                throw new JSONException("Invalid campaign output type");
         }
         return output;
     }
@@ -214,9 +230,31 @@ public class LocalCampaignDeserializer {
                 if (TextUtils.isEmpty(type)) {
                     throw new JSONException("Invalid campaign event trigger name");
                 }
-                return new EventLocalCampaignTrigger(eventName, json.reallyOptString("label", null));
+                return new EventLocalCampaignTrigger(
+                    eventName,
+                    json.reallyOptString("label", null),
+                    json.optJSONObject("attributes")
+                );
             default:
                 throw new JSONException("Unknown campaign triggers \"" + type + "\"");
         }
+    }
+
+    @Nullable
+    private QuietHours parseQuietHours(@Nullable JSONObject json) throws JSONException {
+        if (json == null) {
+            return null;
+        }
+        int startHour = json.optInt("startHour");
+        int startMinutes = json.optInt("startMin");
+        int endHour = json.optInt("endHour");
+        int endMinutes = json.optInt("endMin");
+        JSONArray quietDaysArray = json.getJSONArray("quietDaysOfWeek");
+
+        List<DayOfWeek> quietDays = new ArrayList<>(quietDaysArray.length());
+        for (int i = 0; i < quietDaysArray.length(); ++i) {
+            quietDays.add(DayOfWeek.valueOf(quietDaysArray.getInt(i)));
+        }
+        return new QuietHours(startHour, startMinutes, endHour, endMinutes, quietDays);
     }
 }

@@ -735,11 +735,11 @@ public class StyleHelper {
         return Color.HSVToColor(color, hsv);
     }
 
-    public static Spanned textFromHTML(String html) {
+    public static Spanned textFromHTML(@Nullable String html) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            return Html.fromHtml(html, 0);
+            return Html.fromHtml(html != null ? html : "", 0);
         } else {
-            return Html.fromHtml(html);
+            return Html.fromHtml(html != null ? html : "");
         }
     }
 

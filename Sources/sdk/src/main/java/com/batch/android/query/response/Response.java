@@ -1,5 +1,6 @@
 package com.batch.android.query.response;
 
+import androidx.annotation.NonNull;
 import com.batch.android.query.QueryType;
 
 /**
@@ -10,17 +11,21 @@ public abstract class Response {
     /**
      * ID of the query
      */
-    private String queryID;
+    @NonNull
+    private final String queryID;
+
     /**
      * Type of the query
      */
-    private QueryType queryType;
+    @NonNull
+    private final QueryType queryType;
 
     /**
-     * @param queryType
-     * @param queryID
+     * @param queryType Type of the query
+     * @param queryID   ID of the query
      */
-    public Response(QueryType queryType, String queryID) {
+    @SuppressWarnings("ConstantConditions")
+    public Response(@NonNull QueryType queryType, @NonNull String queryID) {
         if (queryID == null) {
             throw new NullPointerException("queryID==null");
         }
@@ -36,8 +41,9 @@ public abstract class Response {
     /**
      * Get the ID of the query the response is for
      *
-     * @return
+     * @return The query ID
      */
+    @NonNull
     public String getQueryID() {
         return queryID;
     }
@@ -45,8 +51,9 @@ public abstract class Response {
     /**
      * Get the type of the query the response is for
      *
-     * @return
+     * @return The query type
      */
+    @NonNull
     public QueryType getQueryType() {
         return queryType;
     }

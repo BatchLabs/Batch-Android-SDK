@@ -29,6 +29,18 @@ class CEPMessageTest {
     }
 
     @Test
+    fun testIsWebview() {
+        assertTrue(
+            buildMock(InAppProperty.Format.WEBVIEW, InAppProperty.VerticalAlignment.CENTER)
+                .isWebView()
+        )
+        assertFalse(
+            buildMock(InAppProperty.Format.MODAL, InAppProperty.VerticalAlignment.CENTER)
+                .isWebView()
+        )
+    }
+
+    @Test
     fun testIsModal() {
         assertTrue(
             buildMock(InAppProperty.Format.MODAL, InAppProperty.VerticalAlignment.CENTER).isModal()
@@ -322,7 +334,7 @@ class CEPMessageTest {
         )
     }
 
-    private val componentListMock =
+    private val componentListMock: List<InAppComponent> =
         listOf(
             InAppComponent.Image(
                 "IMG_1",

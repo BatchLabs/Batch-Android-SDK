@@ -2,12 +2,14 @@ package com.batch.android.query;
 
 import android.content.Context;
 import com.batch.android.core.Logger;
+import com.batch.android.di.providers.UserModuleProvider;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.localcampaigns.CampaignManager;
 import com.batch.android.localcampaigns.ViewTracker;
 import com.batch.android.localcampaigns.ViewTrackerUnavailableException;
 import com.batch.android.localcampaigns.model.LocalCampaign;
+import com.batch.android.query.response.LocalCampaignsResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +40,14 @@ public class LocalCampaignsQuery extends Query {
         }
 
         try {
-            capping.putAll(viewTracker.getViewCounts(campaignsIds));
+            Map<String, Integer> counts;
+            if (campaignManager.getCampaignsVersion() == LocalCampaignsResponse.Version.CEP) {
+                String customUserId = UserModuleProvider.get().getCustomID(context);
+                counts = viewTracker.getViewCountsByCampaignIdsAndCustomUserId(campaignsIds, customUserId);
+            } else {
+                counts = viewTracker.getViewCountsByCampaignIds(campaignsIds);
+            }
+            capping.putAll(counts);
         } catch (ViewTrackerUnavailableException e) {
             Logger.internal(TAG, "View tracker unavailable: can't send view counts to the backend.");
         }

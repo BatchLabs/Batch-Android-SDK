@@ -10,6 +10,7 @@ import com.batch.android.event.Event;
 import com.batch.android.localcampaigns.model.LocalCampaign;
 import com.batch.android.post.LocalCampaignsJITPostDataProvider;
 import com.batch.android.post.MetricPostDataProvider;
+import com.batch.android.query.response.LocalCampaignsResponse;
 import com.batch.android.runtime.RuntimeManager;
 import com.batch.android.webservice.listener.LocalCampaignsJITWebserviceListener;
 import com.batch.android.webservice.listener.MetricWebserviceListener;
@@ -209,13 +210,28 @@ public final class WebserviceLauncher {
     public static boolean launchLocalCampaignsJITWebservice(
         RuntimeManager runtimeManager,
         List<LocalCampaign> campaigns,
+        LocalCampaignsResponse.Version campaignsVersion,
         LocalCampaignsJITWebserviceListener listener
     ) {
-        LocalCampaignsJITPostDataProvider dataProvider = new LocalCampaignsJITPostDataProvider(campaigns);
+        if (runtimeManager == null || runtimeManager.getContext() == null) {
+            Logger.internal(TAG, "Error while initializing Local Campaigns JIT WS: context is null.");
+            return false;
+        }
+        LocalCampaignsJITPostDataProvider dataProvider = new LocalCampaignsJITPostDataProvider(
+            campaigns,
+            campaignsVersion
+        );
         try {
             TaskExecutorProvider
                 .get(runtimeManager.getContext())
-                .submit(new LocalCampaignsJITWebservice(runtimeManager.getContext(), listener, dataProvider));
+                .submit(
+                    new LocalCampaignsJITWebservice(
+                        runtimeManager.getContext(),
+                        listener,
+                        dataProvider,
+                        campaignsVersion
+                    )
+                );
             return true;
         } catch (Exception e) {
             Logger.internal(TAG, "Error while initializing Local Campaigns JIT WS", e);

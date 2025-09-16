@@ -16,6 +16,7 @@ import com.batch.android.di.providers.OptOutModuleProvider;
 import com.batch.android.di.providers.ParametersProvider;
 import com.batch.android.di.providers.PushModuleProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
+import com.batch.android.di.providers.UserModuleProvider;
 import com.batch.android.event.CollapsibleEvent;
 import com.batch.android.event.Event;
 import com.batch.android.event.EventSender;
@@ -262,9 +263,14 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
         if (vt == null) {
             return;
         }
+        Context context = RuntimeManagerProvider.get().getContext();
+        if (context == null) {
+            return;
+        }
+        String customUserId = UserModuleProvider.get().getCustomID(context);
         ViewTracker.CountedViewEvent ev;
         try {
-            ev = vt.trackViewEvent(campaignID);
+            ev = vt.trackViewEvent(campaignID, customUserId);
         } catch (ViewTrackerUnavailableException e) {
             Logger.internal(TAG, "View tracker not available, not tracking view");
             return;

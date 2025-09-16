@@ -15,7 +15,7 @@ import com.batch.android.processor.Provide;
 @Module
 public class LandingOutput extends LocalCampaign.Output {
 
-    private MessagingModule messagingModule;
+    private final MessagingModule messagingModule;
 
     public LandingOutput(MessagingModule messagingModule, @NonNull JSONObject payload) {
         super(payload);
@@ -32,7 +32,11 @@ public class LandingOutput extends LocalCampaign.Output {
         try {
             // Copy event data before making the BatchInAppMessage
             JSONObject mergedPayload = new JSONObject(payload);
-            mergedPayload.put("ed", campaign.eventData);
+            if (this instanceof LandingOutputCEP) {
+                mergedPayload.put("eventData", campaign.eventData);
+            } else {
+                mergedPayload.put("ed", campaign.eventData);
+            }
             JSONObject customPayload = new JSONObject(
                 campaign.customPayload != null ? new JSONObject(campaign.customPayload) : new JSONObject()
             );

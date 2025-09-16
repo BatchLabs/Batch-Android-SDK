@@ -18,9 +18,12 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat as AndroidxViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.batch.android.BatchMessage
+import com.batch.android.BatchMessagingWebViewJavascriptBridge
 import com.batch.android.R
 import com.batch.android.core.Logger
 import com.batch.android.messaging.AsyncImageDownloadTask
+import com.batch.android.messaging.WebViewActionListener
 import com.batch.android.messaging.model.CTA
 import com.batch.android.messaging.model.MessagingError
 import com.batch.android.messaging.model.cep.CEPMessage
@@ -35,14 +38,30 @@ import com.batch.android.messaging.view.styled.cep.Button
 import com.batch.android.messaging.view.styled.cep.ColumnsView
 import com.batch.android.messaging.view.styled.cep.Divider
 import com.batch.android.messaging.view.styled.cep.ProgressImageView
+import com.batch.android.messaging.view.styled.cep.Spacer
 import com.batch.android.messaging.view.styled.cep.TextView
+import com.batch.android.messaging.view.styled.cep.WebView
 import com.batch.android.module.MessagingModule
 
 /** Root view for the message. */
 class BuildableRootView(
+    /** Context for the view. */
     context: Context,
+
+    /** Message model */
     private val message: CEPMessage,
+
+    /** Public payload message */
+    private val payloadMessage: BatchMessage,
+
+    /** Images in cache (already downloaded) */
     private val imagesCached: MutableMap<String, AsyncImageDownloadTask.Result<*>>,
+
+    /** Interface for handling CTAs */
+    private val actionListener: OnActionListener,
+
+    /** Interface for handling webview actions */
+    private val webViewActionListener: WebViewActionListener?,
 ) : RelativeLayout(context), OnApplyWindowInsetsListener {
 
     /** Countdown view for auto dismiss */
@@ -50,9 +69,6 @@ class BuildableRootView(
 
     /** Images view instances */
     private var imageViews = mutableMapOf<String, ProgressImageView>()
-
-    /** Listener for CTA actions */
-    var actionListener: OnActionListener? = null
 
     /** The scroll view that contains the message content. */
     var scrollView = ScrollView(context)
@@ -96,23 +112,18 @@ class BuildableRootView(
         if (message.isAttachedBottomBanner()) {
             // Handle navigation bar insets
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            view.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom + insets.bottom)
+            view.setPadding(paddingLeft, paddingTop, paddingRight, insets.bottom)
         }
         if (message.isAttachedTopBanner()) {
             // Handle status bar insets
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars())
-            view.setPadding(paddingLeft, paddingTop + insets.top, paddingRight, paddingBottom)
+            view.setPadding(paddingLeft, insets.top, paddingRight, paddingBottom)
         }
 
-        if (message.isFullscreen()) {
+        if (message.isFullscreen() || message.isWebView()) {
             // Handle system bars insets
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(
-                paddingLeft + insets.left,
-                paddingTop + insets.top,
-                paddingRight + insets.right,
-                paddingBottom + insets.bottom,
-            )
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
         }
         return WindowInsetsCompat.CONSUMED
     }
@@ -226,9 +237,11 @@ class BuildableRootView(
             InAppComponent.Type.IMAGE -> addImageToView(component as InAppComponent.Image, view)
             InAppComponent.Type.DIVIDER ->
                 addDividerToView(component as InAppComponent.Divider, view)
-
             InAppComponent.Type.COLUMNS ->
                 addColumnsToView(component as InAppComponent.Columns, view)
+            InAppComponent.Type.SPACER -> addSpacerToView(component as InAppComponent.Spacer, view)
+            InAppComponent.Type.WEBVIEW ->
+                addWebviewToView(component as InAppComponent.WebView, view)
         }
     }
 
@@ -254,7 +267,7 @@ class BuildableRootView(
 
                 // Add listener to handle Actions
                 setOnClickListener {
-                    actionListener?.onCTAAction(
+                    actionListener.onCTAAction(
                         component.id,
                         "button",
                         CTA(
@@ -272,7 +285,7 @@ class BuildableRootView(
                 layoutParams =
                     PercentRelativeLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
                     )
                 // Re-set gravity since button is not in the same container
                 gravity = component.align.toGravity()
@@ -291,7 +304,7 @@ class BuildableRootView(
                 setImageContentDescription(contentDescription)
                 message.actions[component.id]?.let { imageAction ->
                     setOnClickListener {
-                        actionListener?.onCTAAction(
+                        actionListener.onCTAAction(
                             component.id,
                             "image",
                             CTA(contentDescription, imageAction.action, imageAction.args),
@@ -325,6 +338,30 @@ class BuildableRootView(
         )
         // Add image to the view
         view.addView(progressImageLayout)
+    }
+
+    /** Add a spacer component to the view. */
+    private fun addSpacerToView(component: InAppComponent.Spacer, view: ViewGroup) {
+        val spacer = Spacer(context, view).apply { applyComponentStyle(component) }
+        view.addView(spacer)
+    }
+
+    /** Add a webview component to the view. */
+    private fun addWebviewToView(component: InAppComponent.WebView, view: ViewGroup) {
+        val webView =
+            WebView(context).apply {
+                applyComponentStyle(component)
+                initWebSettings(payloadMessage, webViewActionListener)
+                message.urls[component.id]?.let { startLoading(it) }
+                    ?: run {
+                        webViewActionListener?.onErrorAction(
+                            BatchMessagingWebViewJavascriptBridge.DevelopmentErrorCause.UNKNOWN,
+                            MessagingError.UNKNOWN,
+                            "No webview's url has been provided",
+                        )
+                    }
+            }
+        view.addView(webView)
     }
 
     /** Start the download of an image. */
@@ -406,13 +443,11 @@ class BuildableRootView(
                     StyleHelper.parseColor(it?.backgroundColor?.getColorForTheme(context))
                 )
                 layoutParams =
-                    LayoutParams(
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                        )
-                        .apply { addRule(ALIGN_PARENT_RIGHT) }
+                    LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+                        addRule(ALIGN_PARENT_RIGHT)
+                    }
             }
-            closeButton.setOnClickListener { actionListener?.onCloseAction() }
+            closeButton.setOnClickListener { actionListener.onCloseAction() }
             addView(closeButton)
         }
         // Add auto dismiss close option

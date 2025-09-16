@@ -7,9 +7,12 @@ import com.batch.android.json.JSONArray;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.localcampaigns.LocalCampaignsResponseFactory;
+import com.batch.android.localcampaigns.model.DayOfWeek;
 import com.batch.android.localcampaigns.model.LocalCampaign;
 import com.batch.android.localcampaigns.output.ActionOutput;
 import com.batch.android.localcampaigns.output.LandingOutput;
+import com.batch.android.localcampaigns.output.LandingOutputCEP;
+import com.batch.android.localcampaigns.trigger.EventLocalCampaignTrigger;
 import com.batch.android.query.response.LocalCampaignsResponse;
 import com.batch.android.query.serialization.deserializers.LocalCampaignsResponseDeserializer;
 import com.batch.android.query.serialization.serializers.LocalCampaignsResponseSerializer;
@@ -31,13 +34,15 @@ public class LocalCampaignsResponseSerializationTest {
     }
 
     @Test
-    public void testValidSerialization() throws JSONException {
-        LocalCampaignsResponse response = factory.createLocalCampaignsResponse();
+    public void testValidSerializationMEP() throws JSONException {
+        LocalCampaignsResponse response = factory.createLocalCampaignsResponse(LocalCampaignsResponse.Version.MEP);
         LocalCampaignsResponseSerializer serializer = new LocalCampaignsResponseSerializer();
         JSONObject serializedResponse = serializer.serialize(response);
 
         Assert.assertEquals(response.getQueryID(), serializedResponse.getString("id"));
-        Assert.assertFalse(serializedResponse.has("minDisplayInterval"));
+
+        // Version
+        Assert.assertEquals(serializedResponse.getString("campaigns_version"), response.getVersion().toString());
 
         // Global cappings
         LocalCampaignsResponse.GlobalCappings cappings = response.getCappings();
@@ -90,8 +95,104 @@ public class LocalCampaignsResponseSerializationTest {
     }
 
     @Test
-    public void testValidDeserialization() throws JSONException, IOException {
-        JSONObject validJsonCampaignsResponse = factory.createValidJsonResponse();
+    public void testValidSerializationCEP() throws JSONException {
+        LocalCampaignsResponse response = factory.createLocalCampaignsResponse(LocalCampaignsResponse.Version.CEP);
+        LocalCampaignsResponseSerializer serializer = new LocalCampaignsResponseSerializer();
+        JSONObject serializedResponse = serializer.serialize(response);
+
+        Assert.assertEquals(response.getQueryID(), serializedResponse.getString("id"));
+
+        // Version
+        Assert.assertEquals(response.getVersion().toString(), serializedResponse.getString("campaigns_version"));
+
+        // Global cappings
+        Assert.assertFalse(serializedResponse.hasNonNull("cappings"));
+
+        // Local campaigns
+        Assert.assertTrue(serializedResponse.hasNonNull("campaigns"));
+        LocalCampaign campaign = response.getCampaigns().get(0);
+        JSONObject serializedCampaign = serializedResponse.getJSONArray("campaigns").getJSONObject(0);
+        Assert.assertEquals(campaign.id, serializedCampaign.getString("campaignId"));
+        Assert.assertEquals(campaign.publicToken, serializedCampaign.getString("campaignToken"));
+        Assert.assertNotNull(campaign.capping);
+        Assert.assertEquals(campaign.capping, Integer.valueOf(serializedCampaign.getInt("capping")));
+        Assert.assertEquals(campaign.eventData, serializedCampaign.getJSONObject("eventData"));
+        Assert.assertNotNull(campaign.minimumAPILevel);
+        Assert.assertEquals(campaign.minimumAPILevel, Integer.valueOf(serializedCampaign.getInt("minimumApiLevel")));
+        Assert.assertNotNull(campaign.maximumAPILevel);
+        Assert.assertEquals(campaign.maximumAPILevel, Integer.valueOf(serializedCampaign.getInt("maximumApiLevel")));
+        Assert.assertEquals(campaign.priority, serializedCampaign.getInt("priority"));
+        Assert.assertEquals(campaign.minimumDisplayInterval, serializedCampaign.getInt("minDisplayInterval"));
+        Assert.assertEquals(campaign.displayDelay, serializedCampaign.getInt("displayDelaySec"));
+        Assert.assertNotNull(campaign.startDate);
+
+        Assert.assertNotNull(campaign.quietHours);
+        Assert.assertEquals(
+            campaign.quietHours.getStartHour(),
+            serializedCampaign.getJSONObject("quietHours").getInt("startHour")
+        );
+        Assert.assertEquals(
+            campaign.quietHours.getStartMinute(),
+            serializedCampaign.getJSONObject("quietHours").getInt("startMin")
+        );
+        Assert.assertEquals(
+            campaign.quietHours.getEndHour(),
+            serializedCampaign.getJSONObject("quietHours").getInt("endHour")
+        );
+        Assert.assertEquals(
+            campaign.quietHours.getEndMinute(),
+            serializedCampaign.getJSONObject("quietHours").getInt("endMin")
+        );
+
+        Assert.assertNotNull(campaign.quietHours.getDaysOfWeek());
+        JSONArray actualDaysOfWeek = serializedCampaign.getJSONObject("quietHours").getJSONArray("quietDaysOfWeek");
+        Assert.assertEquals(campaign.quietHours.getDaysOfWeek().size(), actualDaysOfWeek.length());
+        for (int i = 0; i < actualDaysOfWeek.length(); i++) {
+            int expectedDayOfWeek = actualDaysOfWeek.getInt(i);
+            Assert.assertTrue(campaign.quietHours.getDaysOfWeek().contains(DayOfWeek.valueOf(expectedDayOfWeek)));
+        }
+
+        Assert.assertEquals(campaign.startDate.getTime(), serializedCampaign.getJSONObject("startDate").getLong("ts"));
+        Assert.assertEquals(
+            campaign.startDate instanceof TimezoneAwareDate,
+            serializedCampaign.getJSONObject("startDate").getBoolean("userTZ")
+        );
+        Assert.assertNotNull(campaign.endDate);
+        Assert.assertEquals(campaign.endDate.getTime(), serializedCampaign.getJSONObject("endDate").getLong("ts"));
+        Assert.assertEquals(
+            campaign.endDate instanceof TimezoneAwareDate,
+            serializedCampaign.getJSONObject("endDate").getBoolean("userTZ")
+        );
+        JSONArray jsonTriggers = serializedCampaign.getJSONArray("triggers");
+        Assert.assertNotNull(jsonTriggers);
+        JSONObject jsonTrigger = jsonTriggers.getJSONObject(0);
+        Assert.assertNotNull(jsonTrigger);
+        Assert.assertEquals(campaign.triggers.get(0).getType(), jsonTrigger.getString("type"));
+        Assert.assertTrue(campaign.triggers.get(0) instanceof EventLocalCampaignTrigger);
+        Assert.assertEquals(
+            ((EventLocalCampaignTrigger) campaign.triggers.get(0)).name,
+            jsonTrigger.getString("event")
+        );
+        Assert.assertEquals(
+            ((EventLocalCampaignTrigger) campaign.triggers.get(0)).label,
+            jsonTrigger.reallyOptString("label", null)
+        );
+        Assert.assertEquals(
+            ((EventLocalCampaignTrigger) campaign.triggers.get(0)).attributes,
+            jsonTrigger.getJSONObject("attributes")
+        );
+
+        Assert.assertTrue(campaign.output instanceof LandingOutput);
+        Assert.assertEquals(
+            campaign.output.payload,
+            serializedCampaign.getJSONObject("output").getJSONObject("payload")
+        );
+        Assert.assertTrue(serializedCampaign.getBoolean("requireJIT"));
+    }
+
+    @Test
+    public void testValidDeserializationMEP() throws JSONException, IOException {
+        JSONObject validJsonCampaignsResponse = factory.createValidJsonResponse(LocalCampaignsResponse.Version.MEP);
         LocalCampaignsResponseDeserializer deserializer = new LocalCampaignsResponseDeserializer(
             validJsonCampaignsResponse
         );
@@ -99,7 +200,6 @@ public class LocalCampaignsResponseSerializationTest {
         Assert.assertEquals(validJsonCampaignsResponse.getString("id"), response.getQueryID());
         Assert.assertFalse(response.hasError());
         Assert.assertTrue(response.hasCampaigns());
-        Assert.assertNull(response.getMinDisplayInterval());
         Assert.assertEquals(response.getCampaigns().size(), 2);
 
         // Global cappings
@@ -157,6 +257,108 @@ public class LocalCampaignsResponseSerializationTest {
         campaign = response.getCampaigns().get(1);
         Assert.assertTrue(campaign.output instanceof ActionOutput);
         Assert.assertEquals(jsonCampaign.getJSONObject("output").getJSONObject("payload"), campaign.output.payload);
+    }
+
+    @Test
+    public void testValidDeserializationCEP() throws JSONException, IOException {
+        JSONObject validJsonCampaignsResponse = factory.createValidJsonResponse(LocalCampaignsResponse.Version.CEP);
+        LocalCampaignsResponseDeserializer deserializer = new LocalCampaignsResponseDeserializer(
+            validJsonCampaignsResponse
+        );
+        LocalCampaignsResponse response = deserializer.deserialize();
+        Assert.assertEquals(validJsonCampaignsResponse.getString("id"), response.getQueryID());
+        Assert.assertFalse(response.hasError());
+        Assert.assertNull(response.getCappings());
+        Assert.assertTrue(response.hasCampaigns());
+        Assert.assertEquals(
+            validJsonCampaignsResponse.getJSONArray("campaigns").length(),
+            response.getCampaigns().size()
+        );
+
+        // Local Campaign
+        JSONObject jsonCampaign = validJsonCampaignsResponse.getJSONArray("campaigns").getJSONObject(0);
+        LocalCampaign campaign = response.getCampaigns().get(0);
+        Assert.assertEquals(jsonCampaign.getString("campaignId"), campaign.id);
+        Assert.assertEquals(jsonCampaign.getString("campaignToken"), campaign.publicToken);
+        Assert.assertNotNull(campaign.capping);
+        Assert.assertEquals(jsonCampaign.getInt("displayDelaySec"), campaign.displayDelay);
+        Assert.assertNotNull(campaign.quietHours);
+        Assert.assertEquals(
+            campaign.quietHours.getStartHour(),
+            jsonCampaign.getJSONObject("quietHours").getInt("startHour")
+        );
+        Assert.assertEquals(
+            campaign.quietHours.getStartMinute(),
+            jsonCampaign.getJSONObject("quietHours").getInt("startMin")
+        );
+        Assert.assertEquals(
+            campaign.quietHours.getEndHour(),
+            jsonCampaign.getJSONObject("quietHours").getInt("endHour")
+        );
+        Assert.assertEquals(
+            campaign.quietHours.getEndMinute(),
+            jsonCampaign.getJSONObject("quietHours").getInt("endMin")
+        );
+        Assert.assertNotNull(campaign.quietHours.getDaysOfWeek());
+        for (DayOfWeek dayOfWeek : campaign.quietHours.getDaysOfWeek()) {
+            Assert.assertTrue(dayOfWeek.getValue() >= 0 && dayOfWeek.getValue() <= 6);
+        }
+
+        JSONArray expectedDaysOfWeek = jsonCampaign.getJSONObject("quietHours").getJSONArray("quietDaysOfWeek");
+        for (int i = 0; i < expectedDaysOfWeek.length(); i++) {
+            int expectedDayOfWeek = expectedDaysOfWeek.getInt(i);
+            Assert.assertTrue(campaign.quietHours.getDaysOfWeek().contains(DayOfWeek.valueOf(expectedDayOfWeek)));
+        }
+        Assert.assertEquals(Integer.valueOf(jsonCampaign.getInt("capping")), campaign.capping);
+        Assert.assertEquals(jsonCampaign.getJSONObject("eventData"), campaign.eventData);
+        Assert.assertNotNull(campaign.minimumAPILevel);
+        Assert.assertEquals(Integer.valueOf(jsonCampaign.getInt("minimumApiLevel")), campaign.minimumAPILevel);
+        Assert.assertNotNull(campaign.maximumAPILevel);
+        Assert.assertEquals(Integer.valueOf(jsonCampaign.getInt("maximumApiLevel")), campaign.maximumAPILevel);
+        Assert.assertEquals(jsonCampaign.getInt("priority"), campaign.priority);
+        Assert.assertEquals(jsonCampaign.getInt("minDisplayInterval"), campaign.minimumDisplayInterval);
+        Assert.assertNotNull(campaign.startDate);
+        Assert.assertEquals(jsonCampaign.getJSONObject("startDate").getLong("ts"), campaign.startDate.getTime());
+        Assert.assertEquals(
+            jsonCampaign.getJSONObject("startDate").getBoolean("userTZ"),
+            campaign.startDate instanceof TimezoneAwareDate
+        );
+        Assert.assertNotNull(campaign.endDate);
+        Assert.assertEquals(jsonCampaign.getJSONObject("endDate").getLong("ts"), campaign.endDate.getTime());
+        Assert.assertEquals(
+            jsonCampaign.getJSONObject("endDate").getBoolean("userTZ"),
+            campaign.endDate instanceof TimezoneAwareDate
+        );
+        JSONArray jsonTriggers = jsonCampaign.getJSONArray("triggers");
+        Assert.assertNotNull(jsonTriggers);
+        Assert.assertEquals(jsonTriggers.getJSONObject(0).getString("type"), campaign.triggers.get(0).getType());
+        Assert.assertTrue(campaign.output instanceof LandingOutputCEP);
+        Assert.assertEquals(jsonCampaign.getJSONObject("output").getJSONObject("payload"), campaign.output.payload);
+        Assert.assertTrue(campaign.requiresJustInTimeSync);
+
+        // Test ACTION deserialization
+        jsonCampaign = validJsonCampaignsResponse.getJSONArray("campaigns").getJSONObject(1);
+        campaign = response.getCampaigns().get(1);
+        Assert.assertTrue(campaign.output instanceof ActionOutput);
+        Assert.assertEquals(jsonCampaign.getJSONObject("output").getJSONObject("payload"), campaign.output.payload);
+    }
+
+    @Test
+    public void testRequireJITFallbackCEP() throws JSONException, IOException {
+        JSONObject jsonResponse = factory.createValidJsonResponse(LocalCampaignsResponse.Version.CEP);
+        jsonResponse.getJSONArray("campaigns").getJSONObject(0).remove("requireJIT");
+        LocalCampaignsResponseDeserializer deserializer = new LocalCampaignsResponseDeserializer(jsonResponse);
+        LocalCampaignsResponse response = deserializer.deserialize();
+        Assert.assertTrue(response.getCampaigns().get(0).requiresJustInTimeSync);
+    }
+
+    @Test
+    public void testRequireJITFallbackMEP() throws JSONException, IOException {
+        JSONObject jsonResponse = factory.createValidJsonResponse(LocalCampaignsResponse.Version.MEP);
+        jsonResponse.getJSONArray("campaigns").getJSONObject(0).remove("requireJIT");
+        LocalCampaignsResponseDeserializer deserializer = new LocalCampaignsResponseDeserializer(jsonResponse);
+        LocalCampaignsResponse response = deserializer.deserialize();
+        Assert.assertFalse(response.getCampaigns().get(0).requiresJustInTimeSync);
     }
 
     @Test

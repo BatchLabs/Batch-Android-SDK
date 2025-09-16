@@ -7,6 +7,7 @@ import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import androidx.core.net.toUri
@@ -80,8 +81,6 @@ class ProgressImageView(context: Context) : RelativeLayout(context), Styleable {
 
     /** Initializes the layout. */
     init {
-        layoutParams =
-            LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         gravity = Gravity.CENTER
         addView(progressBar)
         percentLayout.addView(imageView)
@@ -91,14 +90,19 @@ class ProgressImageView(context: Context) : RelativeLayout(context), Styleable {
     /** Set the image in the [ImageView]. */
     fun setImage(component: InAppComponent.Image, result: AsyncImageDownloadTask.Result<*>?) {
         // Apply image size
-        setImageSize(component)
+        if (component.height.isFill()) {
+            // Set the image size with the computed weight size from the parent
+            setImageSize(component, height)
+        } else {
+            setImageSize(component)
+        }
 
         // Set image
         if (result == null) {
             imageView.setImageDrawable(null)
             return
         }
-        if (component.height.isAuto()) {
+        if (component.height.isAuto() || component.height.isFill()) {
             ImageHelper.setDownloadResultInImageWithResize(
                 imageView,
                 result,
@@ -115,8 +119,6 @@ class ProgressImageView(context: Context) : RelativeLayout(context), Styleable {
      */
     fun setImageHint(component: InAppComponent.Image, url: String?) {
         if (url == null) return
-
-        Logger.warning(url)
 
         val imageUri = url.toUri()
         val heightHint = imageUri.getQueryParameter("h")?.toFloatOrNull() ?: 0f
@@ -156,6 +158,12 @@ class ProgressImageView(context: Context) : RelativeLayout(context), Styleable {
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             height ?: ViewGroup.LayoutParams.WRAP_CONTENT,
                         )
+
+                    InAppProperty.Size.Unit.FILL ->
+                        LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                        )
                 }
         }
     }
@@ -167,6 +175,15 @@ class ProgressImageView(context: Context) : RelativeLayout(context), Styleable {
             Logger.internal(MessagingModule.TAG, "Trying to apply a non-image style")
             return
         }
+
+        layoutParams =
+            if (component.height.isFill()) {
+                // When image should fill the space, we use weight for the parent layout
+                LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, 0, 1.0f)
+            } else {
+                // else we use the image size
+                LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+            }
         imageView.scaleType = component.aspectRatio.toScaleType()
         percentLayout.layoutParams =
             PercentRelativeLayout.LayoutParams(

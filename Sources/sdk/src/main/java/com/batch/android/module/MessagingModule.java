@@ -503,7 +503,7 @@ public class MessagingModule extends BatchModule {
     ) {
         try {
             final JSONObject parameters = generateBaseEventParameters(message, MESSAGING_EVENT_NAME_WEBVIEW_CLICK);
-            parameters.put("actionName", buttonAnalyticsID);
+            parameters.put(message.isCEPMessage() ? "action" : "actionName", actionName);
             if (!TextUtils.isEmpty(buttonAnalyticsID)) {
                 parameters.put("analyticsID", buttonAnalyticsID);
             }

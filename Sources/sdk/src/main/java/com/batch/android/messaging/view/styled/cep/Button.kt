@@ -82,7 +82,9 @@ class Button(context: Context) : AppCompatButton(context), Styleable {
                             )
                             .apply { percentLayoutInfo.widthPercent = it.floatValue / 100 }
 
-                    InAppProperty.Size.Unit.AUTO ->
+                    InAppProperty.Size.Unit.AUTO,
+                    InAppProperty.Size.Unit.FILL ->
+                        // Since Fill width is not supported, we fallback on auto
                         LinearLayout.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.WRAP_CONTENT,

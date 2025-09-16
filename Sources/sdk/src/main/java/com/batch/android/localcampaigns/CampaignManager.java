@@ -8,7 +8,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
-import com.batch.android.FailReason;
 import com.batch.android.LoggerLevel;
 import com.batch.android.WebserviceLauncher;
 import com.batch.android.core.DateProvider;
@@ -19,8 +18,10 @@ import com.batch.android.core.Webservice;
 import com.batch.android.date.BatchDate;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.TaskExecutorProvider;
+import com.batch.android.di.providers.UserModuleProvider;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
+import com.batch.android.localcampaigns.model.DayOfWeek;
 import com.batch.android.localcampaigns.model.LocalCampaign;
 import com.batch.android.localcampaigns.persistence.LocalCampaignsFilePersistence;
 import com.batch.android.localcampaigns.persistence.LocalCampaignsPersistence;
@@ -36,7 +37,9 @@ import com.batch.android.query.serialization.serializers.LocalCampaignsResponseS
 import com.batch.android.webservice.listener.LocalCampaignsJITWebserviceListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -75,7 +78,7 @@ public class CampaignManager {
     /**
      * Max number of campaigns to send to the server for JIT sync.
      */
-    private static final int MAX_CAMPAIGNS_JIT_THRESHOLD = 5;
+    private static final int MAX_CAMPAIGNS_JIT_THRESHOLD = 10;
 
     /**
      * Min delay between two JIT sync (in ms)
@@ -92,13 +95,31 @@ public class CampaignManager {
      */
     private final DateProvider dateProvider = new SystemDateProvider();
 
+    /**
+     * View tracker
+     */
     private final LocalCampaignsTracker viewTracker;
 
-    private LocalCampaignsPersistence persistor = new LocalCampaignsFilePersistence();
+    /**
+     * Local campaigns persistor
+     */
+    private final LocalCampaignsPersistence persistor = new LocalCampaignsFilePersistence();
 
+    /**
+     * List of campaigns
+     */
     private final List<LocalCampaign> campaignList = new ArrayList<>();
 
+    /**
+     * Global in-app cappings  (MEP only)
+     */
     private LocalCampaignsResponse.GlobalCappings cappings;
+
+    /**
+     * Version of the local campaigns (MEP or CEP)
+     */
+    @Nullable
+    private LocalCampaignsResponse.Version campaignsVersion;
 
     private final Object campaignListLock = new Object();
 
@@ -122,6 +143,7 @@ public class CampaignManager {
     /**
      * Cached list of synced JIT campaigns
      */
+    @NonNull
     private final Map<String, SyncedJITResult> syncedJITCampaignsCached = new HashMap<>();
 
     public CampaignManager(@NonNull LocalCampaignsTracker viewTracker) {
@@ -131,6 +153,19 @@ public class CampaignManager {
     @Provide
     public static CampaignManager provide() {
         return new CampaignManager(new LocalCampaignsTracker());
+    }
+
+    /**
+     * Handle the response from the local campaigns webservice
+     *
+     * @param response Local campaigns response
+     */
+    public void handleLocalCampaignsResponse(@NonNull LocalCampaignsResponse response) {
+        synchronized (this.campaignListLock) {
+            this.campaignsVersion = response.getVersion();
+            this.cappings = response.getCappings();
+            updateCampaignList(response.getCampaigns(), true);
+        }
     }
 
     /**
@@ -169,7 +204,7 @@ public class CampaignManager {
                     }
                 }
 
-                if (watchedEventNames.size() == 0) {
+                if (watchedEventNames.isEmpty()) {
                     Logger.internal(TAG, "No events to watch");
                 } else {
                     Logger.internal(TAG, "Watching events: ");
@@ -307,9 +342,10 @@ public class CampaignManager {
         WebserviceLauncher.launchLocalCampaignsJITWebservice(
             RuntimeManagerProvider.get(),
             eligibleCampaignsRequiringSync,
+            campaignsVersion,
             new LocalCampaignsJITWebserviceListener() {
                 @Override
-                public void onSuccess(List<String> eligibleCampaignIds) {
+                public void onSuccess(@NonNull List<String> eligibleCampaignIds) {
                     // Saving next jit available timestamp
                     setNextAvailableJITTimestampWithDefaultDelay();
 
@@ -319,7 +355,6 @@ public class CampaignManager {
                     } else {
                         updateSyncedJITCampaignsCached(eligibleCampaignsRequiringSync, eligibleCampaignIds, true);
                         if (eligibleCampaignsRequiringSync.isEmpty()) {
-                            // Should not happen
                             listener.onCampaignElected(null);
                         } else {
                             listener.onCampaignElected(eligibleCampaignsRequiringSync.get(0));
@@ -328,13 +363,23 @@ public class CampaignManager {
                 }
 
                 @Override
-                public void onFailure(Webservice.WebserviceError error) {
-                    // Saving next jit available timestamp
-                    setNextAvailableJITTimestampWithCustomDelay(error.getRetryAfterInMillis());
+                public void onFailure(@Nullable Webservice.WebserviceError error) {
+                    if (error != null) {
+                        // Saving next jit available timestamp
+                        setNextAvailableJITTimestampWithCustomDelay(error.getRetryAfterInMillis());
+                    }
                     listener.onCampaignElected(null);
                 }
             }
         );
+    }
+
+    @VisibleForTesting
+    @NonNull
+    protected Map<String, SyncedJITResult> getSyncedJITCampaignsCached() {
+        synchronized (syncedJITCampaignsCached) {
+            return syncedJITCampaignsCached;
+        }
     }
 
     /**
@@ -367,8 +412,17 @@ public class CampaignManager {
     }
 
     /**
+     * Clear the synced JIT campaigns cache
+     */
+    public void clearSyncedJITCampaignsCached() {
+        synchronized (syncedJITCampaignsCached) {
+            syncedJITCampaignsCached.clear();
+        }
+    }
+
+    /**
      * Check if JIT sync is available
-     *
+     * <p>
      * Meaning MIN_DELAY_BETWEEN_JIT_SYNC or last 'retryAfter' time respond by server is passed.
      * @return true if JIT service is available
      */
@@ -421,18 +475,26 @@ public class CampaignManager {
 
     /**
      * Get the global in-app cappings
-     * @return cappings
+     *
+     * @return The global in-app cappings
      */
+    @Nullable
     public LocalCampaignsResponse.GlobalCappings getCappings() {
-        return cappings;
+        synchronized (this.campaignListLock) {
+            return cappings;
+        }
     }
 
     /**
-     * Set the global in-app cappings
-     * @param cappings
+     * Get the campaigns version
+     *
+     * @return The campaigns version
      */
-    public void setCappings(LocalCampaignsResponse.GlobalCappings cappings) {
-        this.cappings = cappings;
+    @Nullable
+    public LocalCampaignsResponse.Version getCampaignsVersion() {
+        synchronized (this.campaignListLock) {
+            return campaignsVersion;
+        }
     }
 
     /**
@@ -469,7 +531,11 @@ public class CampaignManager {
             }
 
             // Exclude campaigns that are over the max api level
-            if (campaign.maximumAPILevel != null && Parameters.MESSAGING_API_LEVEL > campaign.maximumAPILevel) {
+            if (
+                campaign.maximumAPILevel != null &&
+                campaign.maximumAPILevel > 0 &&
+                Parameters.MESSAGING_API_LEVEL > campaign.maximumAPILevel
+            ) {
                 Logger.internal(TAG, "Campaign " + campaign.id + " is over max API level");
                 continue;
             }
@@ -486,7 +552,17 @@ public class CampaignManager {
     @VisibleForTesting
     protected boolean isCampaignOverCapping(LocalCampaign campaign, boolean ignoreMinInterval)
         throws ViewTrackerUnavailableException {
-        ViewTracker.CountedViewEvent ev = viewTracker.getViewEvent(campaign.id);
+        ViewTracker.CountedViewEvent ev;
+        if (campaignsVersion == LocalCampaignsResponse.Version.CEP) {
+            Context context = RuntimeManagerProvider.get().getContext();
+            if (context == null) {
+                return false;
+            }
+            String customUserId = UserModuleProvider.get().getCustomID(context);
+            ev = viewTracker.getViewEventByCampaignIdAndCustomId(campaign.id, customUserId);
+        } else {
+            ev = viewTracker.getViewEventByCampaignId(campaign.id);
+        }
 
         if (campaign.capping != null && campaign.capping > 0) {
             if (ev.count >= campaign.capping) {
@@ -545,7 +621,11 @@ public class CampaignManager {
         }
 
         // Exclude campaigns that are over the max api level
-        if (campaign.maximumAPILevel != null && Parameters.MESSAGING_API_LEVEL > campaign.maximumAPILevel) {
+        if (
+            campaign.maximumAPILevel != null &&
+            campaign.maximumAPILevel > 0 &&
+            Parameters.MESSAGING_API_LEVEL > campaign.maximumAPILevel
+        ) {
             Logger.internal(TAG, "Campaign " + campaign.id + " is over max API level");
             return false;
         }
@@ -553,6 +633,11 @@ public class CampaignManager {
         // Exclude campaigns that have a too high min api level
         if (campaign.minimumAPILevel != null && Parameters.MESSAGING_API_LEVEL < campaign.minimumAPILevel) {
             Logger.internal(TAG, "Campaign " + campaign.id + " has a minimum API level too high");
+            return false;
+        }
+
+        if (campaign.quietHours != null && isCampaignWithinQuietHours(campaign)) {
+            Logger.internal(TAG, "Campaign " + campaign.id + " is within quiet hours");
             return false;
         }
 
@@ -598,25 +683,79 @@ public class CampaignManager {
     }
 
     /**
+     * Check if the campaign is within quiet hours
+     * @param campaign to check
+     * @return true if the campaign is within quiet hours
+     */
+    @VisibleForTesting
+    protected boolean isCampaignWithinQuietHours(@NonNull LocalCampaign campaign) {
+        if (campaign.quietHours == null) {
+            return false;
+        }
+        // Init date and time
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date(dateProvider.getCurrentDate().getTime()));
+
+        // If the current day is designated as a quiet day, then the entire day is quiet.
+        DayOfWeek currentDay = DayOfWeek.fromCalendar(calendar);
+        boolean isTodayAQuietDay =
+            campaign.quietHours.getDaysOfWeek() != null && campaign.quietHours.getDaysOfWeek().contains(currentDay);
+        if (isTodayAQuietDay) {
+            return true;
+        }
+
+        // --- Check for Time-Based Quiet Hours ---
+        // If we've reached this point, it's not a full quiet day. Now check the specific time range.
+        int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+        int currentMinute = calendar.get(Calendar.MINUTE);
+
+        // To make comparisons easier, convert all times to total minutes from midnight.
+        int currentTimeInMinutes = (currentHour * 60) + currentMinute;
+        int startTimeInMinutes = (campaign.quietHours.getStartHour() * 60) + campaign.quietHours.getStartMinute();
+        int endTimeInMinutes = (campaign.quietHours.getEndHour() * 60) + campaign.quietHours.getEndMinute();
+
+        // This logic handles two scenarios for the quiet hours interval:
+        // 1. Overnight (e.g., 22:00 to 07:00), where start time is greater than end time.
+        // 2. Same-day (e.g., 09:00 to 17:00), where start time is less than or equal to end time.
+
+        // Determine if the quiet period is overnight
+        boolean isOvernight = startTimeInMinutes > endTimeInMinutes;
+
+        if (isOvernight) {
+            // For an overnight period, it's a quiet time if the current time is either:
+            // 1. After the start time (e.g., between 22:00 and midnight).
+            // OR
+            // 2. Before the end time (e.g., between midnight and 07:00).
+            return currentTimeInMinutes >= startTimeInMinutes || currentTimeInMinutes < endTimeInMinutes;
+        } else {
+            // For a same-day period, it is quiet time if the current time is within the interval.
+            return currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes < endTimeInMinutes;
+        }
+    }
+
+    /**
      * Update the set of watched event names
      * This method is not thread safe: do not call it without some kind of lock
      */
     private void updateWatchedEventNames() {
         Set<String> newWatchedEvents = new HashSet<>();
-        for (LocalCampaign campaign : campaignList) {
-            for (LocalCampaign.Trigger trigger : campaign.triggers) {
-                if (trigger != null && trigger instanceof EventLocalCampaignTrigger) {
-                    newWatchedEvents.add(((EventLocalCampaignTrigger) trigger).name.toUpperCase(Locale.US));
+        synchronized (this.campaignListLock) {
+            for (LocalCampaign campaign : campaignList) {
+                for (LocalCampaign.Trigger trigger : campaign.triggers) {
+                    if (trigger instanceof EventLocalCampaignTrigger) {
+                        newWatchedEvents.add(((EventLocalCampaignTrigger) trigger).name.toUpperCase(Locale.US));
+                    }
                 }
             }
+            watchedEventNames = newWatchedEvents;
         }
-        watchedEventNames = newWatchedEvents;
     }
 
     public void saveCampaigns(@NonNull Context context, @NonNull LocalCampaignsResponse response) {
         try {
             LocalCampaignsResponseSerializer serializer = new LocalCampaignsResponseSerializer();
             JSONObject jsonData = new JSONObject();
+            jsonData.put("campaigns_version", response.getVersion());
             jsonData.put("campaigns", serializer.serializeCampaigns(response.getCampaignsToSave()));
             jsonData.putOpt("cappings", serializer.serializeCappings(response.getCappings()));
             jsonData.putOpt("cache_date", dateProvider.getCurrentDate().getTime());
@@ -625,7 +764,6 @@ public class CampaignManager {
             Logger.internal(TAG, "Can't persist local campaigns response", e);
         } catch (JSONException e) {
             Logger.internal(TAG, "Can't serialize local campaigns response before the save operation", e);
-            e.printStackTrace();
         }
     }
 
@@ -654,17 +792,17 @@ public class CampaignManager {
         }
     }
 
-    public boolean loadSavedCampaignResponse(@NonNull final Context context) {
+    public void loadSavedCampaignResponse(@NonNull final Context context) {
         JSONObject campaignsRawData;
         try {
             campaignsRawData = persistor.loadData(context, PERSISTENCE_LOCAL_CAMPAIGNS_FILE_NAME);
         } catch (PersistenceException | IOException e) {
             Logger.internal(TAG, "Can't load saved local campaigns", e);
-            return false;
+            return;
         }
 
         if (campaignsRawData == null) {
-            return false;
+            return;
         }
 
         // Ensure cache is not too old.
@@ -674,22 +812,26 @@ public class CampaignManager {
             if (expirationDate <= dateProvider.getCurrentDate().getTime()) {
                 Logger.internal(TAG, "Local campaign cache is too old, deleting it.");
                 deleteSavedCampaignsAsync(context);
-                return false;
+                return;
             }
         }
 
         LocalCampaignsResponseDeserializer localCampaignResponseDeserializer = new LocalCampaignsResponseDeserializer(
             campaignsRawData
         );
-        try {
-            List<LocalCampaign> campaigns = localCampaignResponseDeserializer.deserializeCampaigns();
-            cappings = localCampaignResponseDeserializer.deserializeCappings();
-            updateCampaignList(campaigns, false);
-        } catch (Exception ex) {
-            Logger.internal(TAG, "Can't convert json to LocalCampaignsResponse : " + ex.toString());
-            return false;
+        synchronized (this.campaignListLock) {
+            try {
+                campaignsVersion = localCampaignResponseDeserializer.deserializeVersion();
+                cappings = localCampaignResponseDeserializer.deserializeCappings();
+                boolean requireJITFallback = campaignsVersion == LocalCampaignsResponse.Version.CEP;
+                List<LocalCampaign> campaigns = localCampaignResponseDeserializer.deserializeCampaigns(
+                    requireJITFallback
+                );
+                updateCampaignList(campaigns, false);
+            } catch (Exception ex) {
+                Logger.internal(TAG, "Can't convert json to LocalCampaignsResponse : " + ex);
+            }
         }
-        return true;
     }
 
     public boolean areCampaignsLoaded() {
@@ -697,18 +839,18 @@ public class CampaignManager {
     }
 
     public void openViewTracker() {
+        //noinspection ConstantConditions
         if (viewTracker != null) {
             Context context = RuntimeManagerProvider.get().getContext();
             if (context != null && !viewTracker.isOpen()) {
                 viewTracker.open(context);
-            } else {
-                // BatchModule#batchDidStart javadoc lied
             }
         }
     }
 
     public void closeViewTracker() {
         try {
+            //noinspection ConstantConditions
             if (viewTracker != null && viewTracker.isOpen()) {
                 viewTracker.close();
             }

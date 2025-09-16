@@ -8,6 +8,7 @@ import com.batch.android.Batch;
 import com.batch.android.BatchEventAttributes;
 import com.batch.android.BatchMigration;
 import com.batch.android.core.Logger;
+import com.batch.android.di.providers.CampaignManagerProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.SQLUserDatasourceProvider;
 import com.batch.android.di.providers.TaskExecutorProvider;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -103,6 +105,11 @@ public final class ProfileModule extends BatchModule {
         if (context == null) {
             Logger.error(TAG, "Batch does not have a context yet. Make sure Batch is started.");
             return;
+        }
+
+        // Reset local campaigns JIT in cache when the user changes
+        if (!Objects.equals(Batch.User.getIdentifier(context), identifier)) {
+            CampaignManagerProvider.get().clearSyncedJITCampaignsCached();
         }
 
         // Saving the custom identifier locally

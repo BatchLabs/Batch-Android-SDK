@@ -41,6 +41,9 @@ object CEPPayloadParser {
     /** Default values for thickness */
     private const val DEFAULT_THICKNESS: Int = 0
 
+    /** Default values for timeout */
+    const val DEFAULT_WEBVIEW_TIMEOUT: Int = 10
+
     /**
      * Parses a JSON payload representing an in-app message into a `Message` object.
      *
@@ -68,7 +71,7 @@ object CEPPayloadParser {
                 throw PayloadParsingException("SDK too old")
             }
             val format = Format.valueOf(payload.getString("format").uppercase())
-            val rootContainer = parseRootContainer(payload.getJSONObject("root"))
+            val rootContainer = parseRootContainer(payload.getJSONObject("root"), format)
             val position =
                 VerticalAlignment.valueOf(payload.reallyOptString("position", "center").uppercase())
             val closeOptions = parseCloseOptions(payload.optJSONObject("closeOptions"))
@@ -98,10 +101,10 @@ object CEPPayloadParser {
      * @throws JSONException if there are issues with parsing the json array or json object.
      */
     @VisibleForTesting
-    fun parseRootContainer(payload: JSONObject?): RootContainer {
+    fun parseRootContainer(payload: JSONObject?, format: Format): RootContainer {
         if (payload == null) throw PayloadParsingException("Root container cannot be null")
         return RootContainer(
-            parseComponents(payload.getJSONArray("children")),
+            parseComponents(payload.getJSONArray("children"), format),
             parseColor(payload.optJSONArray("backgroundColor")),
             parseMargin(payload.optJSONArray("margin")),
             parseRadius(payload.optJSONArray("radius")),
@@ -123,13 +126,13 @@ object CEPPayloadParser {
      * @throws Exception if parseComponent throws exception
      */
     @VisibleForTesting
-    fun parseComponents(payload: JSONArray?): List<InAppComponent> {
+    fun parseComponents(payload: JSONArray?, format: Format): List<InAppComponent> {
         if (payload == null || payload.length() == 0)
             throw PayloadParsingException("children cannot be null or empty")
         val result = mutableListOf<InAppComponent>()
         for (i in 0 until payload.length()) {
             val child = payload.getJSONObject(i)
-            result.add(parseComponent(child))
+            result.add(parseComponent(child, format))
         }
         return result.toList()
     }
@@ -143,7 +146,7 @@ object CEPPayloadParser {
      * @return A list of `InAppComponent.Column` objects parsed from the input JSONArray.
      */
     @VisibleForTesting
-    fun parseColumnsChildren(payload: JSONArray?): List<InAppComponent.Column> {
+    fun parseColumnsChildren(payload: JSONArray?, format: Format): List<InAppComponent.Column> {
         if (payload == null || payload.length() == 0)
             throw PayloadParsingException("children cannot be null or empty")
         val result = mutableListOf<InAppComponent.Column>()
@@ -156,7 +159,7 @@ object CEPPayloadParser {
             if (child.getString("type") == "columns") {
                 throw PayloadParsingException("Columns component cannot have columns children")
             }
-            result.add(parseComponent(child) as InAppComponent.Column)
+            result.add(parseComponent(child, format) as InAppComponent.Column)
         }
         return result.toList()
     }
@@ -176,14 +179,16 @@ object CEPPayloadParser {
      *   the component type is unknown.
      */
     @VisibleForTesting
-    fun parseComponent(payload: JSONObject?): InAppComponent {
+    fun parseComponent(payload: JSONObject?, format: Format): InAppComponent {
         if (payload == null) throw PayloadParsingException("Component cannot be null")
         return when (payload.getString("type")) {
             "text" -> parseText(payload)
             "button" -> parseButton(payload)
-            "image" -> parseImage(payload)
+            "image" -> parseImage(payload, format)
             "divider" -> parseDivider(payload)
-            "columns" -> parseColumns(payload)
+            "columns" -> parseColumns(payload, format)
+            "spacer" -> parseSpacer(payload, format)
+            "webview" -> parseWebView(payload)
             else ->
                 throw PayloadParsingException(
                     "Unknown component type: ${payload.getString("type")}"
@@ -257,11 +262,17 @@ object CEPPayloadParser {
      * @throws JSONException If there is any error while accessing the json object
      */
     @VisibleForTesting
-    fun parseImage(payload: JSONObject?): InAppComponent.Image {
+    fun parseImage(payload: JSONObject?, format: Format): InAppComponent.Image {
         if (payload == null) throw PayloadParsingException("Image cannot be null")
+
+        val size = Size(payload.getString("height"))
+        if (format == Format.MODAL && size.isFill()) {
+            throw PayloadParsingException("Image cannot have fill value in a Modal format")
+        }
+
         return InAppComponent.Image(
             payload.getString("id"),
-            Size(payload.getString("height")),
+            size,
             parseMargin(payload.optJSONArray("margin")),
             InAppComponent.Image.AspectRatio.valueOf(
                 payload
@@ -303,7 +314,7 @@ object CEPPayloadParser {
      * @throws IllegalArgumentException If an invalid value is provided for "align"
      */
     @VisibleForTesting
-    fun parseColumns(payload: JSONObject?): InAppComponent.Columns {
+    fun parseColumns(payload: JSONObject?, format: Format): InAppComponent.Columns {
         if (payload == null) throw PayloadParsingException("Columns cannot be null")
         return InAppComponent.Columns(
             parseColumnRatio(payload.optJSONArray("ratios")),
@@ -312,7 +323,44 @@ object CEPPayloadParser {
             VerticalAlignment.valueOf(
                 payload.reallyOptString("contentAlign", "center").uppercase()
             ),
-            parseColumnsChildren(payload.optJSONArray("children")),
+            parseColumnsChildren(payload.optJSONArray("children"), format),
+        )
+    }
+
+    /**
+     * Parses a JSON payload to create an InAppComponent.Spacer object.
+     *
+     * @param payload The JSON object containing the spacer's configuration.
+     * @return An InAppComponent.Spacer object representing the parsed spacer.
+     * @throws PayloadParsingException If the payload is null, or if mandatory fields in JSON Object
+     *   are missing
+     */
+    @VisibleForTesting
+    fun parseSpacer(payload: JSONObject?, format: Format): InAppComponent.Spacer {
+        if (payload == null) throw PayloadParsingException("Columns cannot be null")
+        val size = Size(payload.getString("height"))
+        if (format == Format.MODAL && size.isFill()) {
+            throw PayloadParsingException("Spacer cannot have fill value in a Modal format")
+        }
+        return InAppComponent.Spacer(size)
+    }
+
+    /**
+     * Parses a JSON payload to create an InAppComponent.WebView object.
+     *
+     * @param payload The JSON object containing the webview's configuration.
+     * @return An InAppComponent.WebView object representing the parsed webview.
+     * @throws PayloadParsingException If the payload is null, or if mandatory fields in JSON Object
+     *   are missing
+     */
+    @VisibleForTesting
+    fun parseWebView(payload: JSONObject?): InAppComponent.WebView {
+        if (payload == null) throw PayloadParsingException("WebView cannot be null")
+        return InAppComponent.WebView(
+            payload.getString("id"),
+            payload.reallyOptInteger("timeout", DEFAULT_WEBVIEW_TIMEOUT),
+            payload.optBoolean("inAppDeeplinks", true),
+            payload.optBoolean("devMode", false),
         )
     }
 

@@ -110,9 +110,14 @@ private constructor(
 
     /** Make the banner view. */
     override fun makeBannerView(): BuildableRootView {
-        return BuildableRootView(this.context, this.message, imagesCached).apply {
-            actionListener = this@CEPBannerContainer
-        }
+        return BuildableRootView(
+            this.context,
+            this.message,
+            this.payloadMessage,
+            imagesCached,
+            this,
+            null,
+        )
     }
 
     override fun getScrollView(): ScrollView? {

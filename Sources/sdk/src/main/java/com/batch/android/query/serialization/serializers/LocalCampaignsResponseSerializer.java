@@ -33,12 +33,13 @@ public class LocalCampaignsResponseSerializer {
         }
         JSONObject jsonLocalCampaignResponse = new JSONObject();
         jsonLocalCampaignResponse.put("id", response.getQueryID());
-        jsonLocalCampaignResponse.put("minDisplayInterval", response.getMinDisplayInterval());
         if (response.getCampaigns().isEmpty()) {
             throw new JSONException("Cannot serialize an empty campaigns list");
         }
         JSONArray jsonCampaigns = localCampaignSerializer.serializeList(response.getCampaigns());
         jsonLocalCampaignResponse.put("campaigns", jsonCampaigns);
+
+        jsonLocalCampaignResponse.put("campaigns_version", response.getVersion().toString());
 
         JSONObject jsonCappings = serializeCappings(response.getCappings());
         jsonLocalCampaignResponse.putOpt("cappings", jsonCappings);

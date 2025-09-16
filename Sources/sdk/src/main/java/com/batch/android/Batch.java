@@ -2041,6 +2041,11 @@ public final class Batch {
                     updateVersionManagement(applicationContext);
 
                     /*
+                     * Ensure that we have no pending display receipts job scheduled.
+                     * (this will run only once)
+                     */
+                    ensureDisplayReceiptJobsCancelled(applicationContext);
+                    /*
                      * Check that we have mandatory permissions
                      */
                     if (!GenericHelper.checkPermission("android.permission.INTERNET", applicationContext)) {
@@ -2407,24 +2412,29 @@ public final class Batch {
 
     private static void handleNewVersionMigration(Context context, String savedVersion, String currentVersion) {
         Logger.internal("New version detected : " + savedVersion + " -> " + currentVersion);
-
-        int savedMajorVersion = VersionHelper.getMajor(savedVersion);
-        int currentMajorVersion = VersionHelper.getMajor(currentVersion);
-
-        if (savedMajorVersion <= 2 && currentMajorVersion == 3) {
-            removeOldPendingDisplayReceiptJobs(context);
-        }
+        //        int savedMajorVersion = VersionHelper.getMajor(savedVersion);
+        //        int currentMajorVersion = VersionHelper.getMajor(currentVersion);
     }
 
     /**
-     * Removes all pending display receipt jobs from the JobScheduler.
+     * Cancel all pending display receipt jobs from the JobScheduler.
      * <p>
      * This method is used to clean up any leftover display receipt jobs that might have been scheduled
      * by older versions of the SDK, which could potentially cause issues with newer versions.
+     * <p>
+     * This method will run only once.
      *
      * @param context The application context.
      */
-    private static void removeOldPendingDisplayReceiptJobs(Context context) {
+    private static void ensureDisplayReceiptJobsCancelled(Context context) {
+        // Ensure that we only remove the jobs once
+        boolean jobsAlreadyCancelled = Boolean.parseBoolean(
+            ParametersProvider.get(context).get(ParameterKeys.DISPLAY_RECEIPTS_JOB_CANCELLED_KEY, "false")
+        );
+        if (jobsAlreadyCancelled) {
+            return;
+        }
+
         JobScheduler scheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
 
         if (scheduler == null) {
@@ -2440,6 +2450,7 @@ public final class Batch {
                 );
             }
         }
+        ParametersProvider.get(context).set(ParameterKeys.DISPLAY_RECEIPTS_JOB_CANCELLED_KEY, "true", true);
     }
 
     private static class InternalBroadcastReceiver extends BroadcastReceiver {

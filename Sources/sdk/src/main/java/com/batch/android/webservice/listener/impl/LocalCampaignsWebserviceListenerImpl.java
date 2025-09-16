@@ -1,5 +1,6 @@
 package com.batch.android.webservice.listener.impl;
 
+import androidx.annotation.NonNull;
 import com.batch.android.FailReason;
 import com.batch.android.core.Logger;
 import com.batch.android.di.providers.CampaignManagerProvider;
@@ -52,9 +53,8 @@ public class LocalCampaignsWebserviceListenerImpl implements LocalCampaignsWebse
         localCampaignsModule.onLocalCampaignsWebserviceFinished();
     }
 
-    private void handleInAppResponse(LocalCampaignsResponse response) {
-        campaignManager.setCappings(response.getCappings());
-        campaignManager.updateCampaignList(response.getCampaigns(), true);
+    private void handleInAppResponse(@NonNull LocalCampaignsResponse response) {
+        campaignManager.handleLocalCampaignsResponse(response);
         localCampaignsModule.onLocalCampaignsWebserviceFinished();
     }
 }

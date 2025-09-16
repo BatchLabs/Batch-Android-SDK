@@ -45,18 +45,15 @@ public class LocalCampaignsResponseDeserializer extends ResponseDeserializer {
             throw new JSONException("Cannot deserialize a null json object");
         }
 
-        LocalCampaignsResponse response = new LocalCampaignsResponse(getId());
+        LocalCampaignsResponse response = new LocalCampaignsResponse(getId(), deserializeVersion());
 
         LocalCampaignsResponse.Error error = parseError();
         response.setError(error);
 
-        Long minDisplayInterval = json.reallyOptLong("minDisplayInterval", null);
-
+        boolean requireJITFallback = response.getVersion() == LocalCampaignsResponse.Version.CEP;
         JSONArray jsonCampaigns = json.optJSONArray("campaigns");
-        List<LocalCampaign> campaigns = localCampaignDeserializer.deserializeList(jsonCampaigns);
+        List<LocalCampaign> campaigns = localCampaignDeserializer.deserializeList(jsonCampaigns, requireJITFallback);
         response.setCampaigns(campaigns);
-
-        response.setMinDisplayInterval(minDisplayInterval);
 
         LocalCampaignsResponse.GlobalCappings cappings = deserializeCappings();
         response.setCappings(cappings);
@@ -64,14 +61,19 @@ public class LocalCampaignsResponseDeserializer extends ResponseDeserializer {
         return response;
     }
 
+    @NonNull
+    public LocalCampaignsResponse.Version deserializeVersion() throws JSONException {
+        return LocalCampaignsResponse.Version.valueOf(json.getString("campaigns_version"));
+    }
+
     /**
      * Only deserialize the local campaigns from the json response
      * @return A list of LocalCampaign
      */
     @NonNull
-    public List<LocalCampaign> deserializeCampaigns() {
+    public List<LocalCampaign> deserializeCampaigns(boolean requireJITFallback) {
         JSONArray jsonCampaigns = json.optJSONArray("campaigns");
-        return localCampaignDeserializer.deserializeList(jsonCampaigns);
+        return localCampaignDeserializer.deserializeList(jsonCampaigns, requireJITFallback);
     }
 
     /**

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.view.Gravity
 import com.batch.android.messaging.view.helper.StyleHelper
+import java.io.Serializable
 
 typealias Padding = InAppProperty.Margin
 
@@ -12,6 +13,7 @@ abstract class InAppProperty {
     enum class Format {
         MODAL,
         FULLSCREEN,
+        WEBVIEW,
     }
 
     /** Represents a vertical alignment like the position of an in-app message in fullscreen. */
@@ -58,7 +60,7 @@ abstract class InAppProperty {
      * @property light The color to use in light theme.
      * @property dark The color to use in dark theme.
      */
-    data class ThemeColors(val light: String, val dark: String) {
+    data class ThemeColors(val light: String, val dark: String) : Serializable {
         fun getColorForTheme(context: Context): String {
             val nightModeFlags =
                 context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
@@ -73,7 +75,7 @@ abstract class InAppProperty {
     }
 
     /** Represents border properties. */
-    data class Border(val width: Int = 0, val color: ThemeColors)
+    data class Border(val width: Int = 0, val color: ThemeColors) : Serializable
 
     /**
      * Represents a size object.
@@ -81,10 +83,11 @@ abstract class InAppProperty {
      * @property value The string representation of the size. Can be in px, percentage or auto.
      * @throws IllegalArgumentException If the value is not in a valid format.
      */
-    data class Size(val value: String) {
+    data class Size(val value: String) : Serializable {
 
         companion object {
             private const val AUTO = "auto"
+            private const val FILL = "fill"
             private const val PERCENTAGE = "%"
             private const val PIXEL = "px"
         }
@@ -93,6 +96,7 @@ abstract class InAppProperty {
             PIXEL,
             PERCENTAGE,
             AUTO,
+            FILL,
         }
 
         var unit: Unit =
@@ -100,10 +104,15 @@ abstract class InAppProperty {
                 value.endsWith(PERCENTAGE) -> Unit.PERCENTAGE
                 value.endsWith(PIXEL) -> Unit.PIXEL
                 value == AUTO -> Unit.AUTO
+                value == FILL -> Unit.FILL
                 else -> throw IllegalArgumentException("Invalid size value: $value")
             }
 
+        fun isFill(): Boolean = unit == Unit.FILL
+
         fun isAuto(): Boolean = unit == Unit.AUTO
+
+        fun isPixel(): Boolean = unit == Unit.PIXEL
 
         fun isPercentage(): Boolean = unit == Unit.PERCENTAGE
 
@@ -119,11 +128,12 @@ abstract class InAppProperty {
                     }
 
                     Unit.AUTO -> 0f
+                    Unit.FILL -> 0f
                 }
     }
 
     /** Represents a margin object. */
-    data class Margin(val value: IntArray = intArrayOf(0, 0, 0, 0)) {
+    data class Margin(val value: IntArray = intArrayOf(0, 0, 0, 0)) : Serializable {
         constructor(value: Int) : this(generateSequence { value }.take(4).toList().toIntArray())
 
         constructor(
@@ -166,7 +176,7 @@ abstract class InAppProperty {
     }
 
     /** Represents a corner radius object. */
-    data class CornerRadius(val value: IntArray = intArrayOf(4, 4, 4, 4)) {
+    data class CornerRadius(val value: IntArray = intArrayOf(4, 4, 4, 4)) : Serializable {
         constructor(value: Int) : this(generateSequence { value }.take(4).toList().toIntArray())
 
         constructor(

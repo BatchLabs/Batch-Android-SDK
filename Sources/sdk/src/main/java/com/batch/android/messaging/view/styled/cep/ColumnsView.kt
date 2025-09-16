@@ -33,15 +33,21 @@ class ColumnsView(context: Context) : LinearLayout(context), Styleable {
 
         clipChildren = false
         layoutParams =
-            LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                .apply {
-                    setMargins(
-                        component.margins.left.px,
-                        component.margins.top.px,
-                        component.margins.right.px,
-                        component.margins.bottom.px,
+            when (component.hasOneChildWithFillHeight()) {
+                true -> LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1.0f)
+                false ->
+                    LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
                     )
-                }
+            }.apply {
+                setMargins(
+                    component.margins.left.px,
+                    component.margins.top.px,
+                    component.margins.right.px,
+                    component.margins.bottom.px,
+                )
+            }
         gravity = component.contentAlign.toGravity()
     }
 

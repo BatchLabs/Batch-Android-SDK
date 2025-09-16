@@ -116,9 +116,20 @@ public class LocalCampaign {
     public boolean persist = false;
 
     /**
-     * Dashboard campaign token
+     * Dashboard campaign token (Or the Orchestration id on CEP)
      */
     public String publicToken = null;
+
+    /**
+     * Quiet hours (Hours and Days when the in-app campaign should not be displayed)
+     */
+    @Nullable
+    public QuietHours quietHours;
+
+    /**
+     * Delay to wait before displaying the campaign
+     */
+    public int displayDelay = 0; // (In seconds)
 
     /**
      * Custom payload
@@ -137,6 +148,15 @@ public class LocalCampaign {
         } catch (JSONException e) {
             Logger.internal(TAG, "Could not generate occurrence id in event data", e);
         }
+    }
+
+    /**
+     * Whether this campaign should be display with delay after been triggered
+     *
+     * @return true if it should be delayed, false otherwise.
+     */
+    public boolean shouldBeDelayed() {
+        return displayDelay != 0;
     }
 
     /**

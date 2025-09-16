@@ -1,6 +1,7 @@
 package com.batch.android.localcampaigns;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public final class LocalCampaignsTracker extends LocalCampaignsSQLTracker {
 
@@ -32,8 +33,9 @@ public final class LocalCampaignsTracker extends LocalCampaignsSQLTracker {
      * @throws ViewTrackerUnavailableException
      */
     @Override
-    public CountedViewEvent trackViewEvent(@NonNull String campaignID) throws ViewTrackerUnavailableException {
+    public CountedViewEvent trackViewEvent(@NonNull String campaignID, @Nullable String customUserId)
+        throws ViewTrackerUnavailableException {
         sessionViewsCount++;
-        return super.trackViewEvent(campaignID);
+        return super.trackViewEvent(campaignID, customUserId);
     }
 }
