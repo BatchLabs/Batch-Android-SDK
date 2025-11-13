@@ -14,12 +14,27 @@ public class ProfilePartialUpdateAttribute {
     private List<String> removed;
 
     public ProfilePartialUpdateAttribute(@Nullable List<String> add) {
-        this.added = add;
+        if (add != null) {
+            this.added = add;
+        }
     }
 
     public ProfilePartialUpdateAttribute(@Nullable List<String> add, @Nullable List<String> remove) {
-        this.added = add;
-        this.removed = remove;
+        if (add != null) {
+            this.added = new ArrayList<>(add);
+        }
+        if (remove != null) {
+            this.removed = new ArrayList<>(remove);
+        }
+    }
+
+    public ProfilePartialUpdateAttribute(@NonNull ProfilePartialUpdateAttribute update) {
+        if (update.added != null) {
+            this.added = new ArrayList<>(update.added);
+        }
+        if (update.removed != null) {
+            this.removed = new ArrayList<>(update.removed);
+        }
     }
 
     @Nullable

@@ -39,14 +39,43 @@ class BatchProfileAttributeEditorTest : DITest() {
             setEmailMarketingSubscription(BatchEmailSubscriptionState.SUBSCRIBED)
             setSMSMarketingSubscription(BatchSMSSubscriptionState.SUBSCRIBED)
             setAttribute("string_att", "hello")
+            // this attribute should not be sent from the install data changed event since it more
+            // than 64 chars
+            setAttribute(
+                "string_att_cep",
+                "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque.",
+            )
             setAttribute("int_att", 3)
             setAttribute("double_att", 3.6)
             setAttribute("date_att", Date(1596975143943L))
             setAttribute("url_att", URI("https://batch.com/pricing"))
             setAttribute("array_att", listOf("michelle", "bresil"))
-            addToArray("array_partial", listOf("i", "don't"))
+            // this one should not be sent from the install data changed event since items have more
+            // than 64 chars
+            setAttribute(
+                "array_att_cep",
+                listOf(
+                    "Pellentesque habitant morbi tristique senectus et netus et malesuada",
+                    "Pellentesqua habitanti morbi tristique senectus et netus et malesuada",
+                ),
+            )
+            addToArray(
+                "array_partial",
+                listOf(
+                    "i",
+                    "don't",
+                    "Pellentesque habitant morbi tristique senectus et netus et malesuada",
+                ),
+            )
             removeFromArray("array_partial", "know")
-            removeFromArray("array_partial_2", listOf("i", "don't"))
+            removeFromArray(
+                "array_partial_2",
+                listOf(
+                    "i",
+                    "don't",
+                    "Pellentesque habitant morbi tristique senectus et netus et malesuada",
+                ),
+            )
             addToArray("array_partial_2", "know")
             save()
         }
@@ -63,6 +92,10 @@ class BatchProfileAttributeEditorTest : DITest() {
                     "custom_attributes",
                     JSONObject().apply {
                         put("string_att.s", "hello")
+                        put(
+                            "string_att_cep.s",
+                            "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque.",
+                        )
                         put("int_att.i", 3L)
                         put("double_att.f", 3.6)
                         put("date_att.t", 1596975143943L)
@@ -75,6 +108,17 @@ class BatchProfileAttributeEditorTest : DITest() {
                             },
                         )
                         put(
+                            "array_att_cep.a",
+                            JSONArray().apply {
+                                put(
+                                    "Pellentesque habitant morbi tristique senectus et netus et malesuada"
+                                )
+                                put(
+                                    "Pellentesqua habitanti morbi tristique senectus et netus et malesuada"
+                                )
+                            },
+                        )
+                        put(
                             "array_partial.a",
                             JSONObject().apply {
                                 put(
@@ -82,6 +126,9 @@ class BatchProfileAttributeEditorTest : DITest() {
                                     JSONArray().apply {
                                         put("i")
                                         put("don't")
+                                        put(
+                                            "Pellentesque habitant morbi tristique senectus et netus et malesuada"
+                                        )
                                     },
                                 )
                                 put("\$remove", JSONArray().apply { put("know") })
@@ -95,6 +142,9 @@ class BatchProfileAttributeEditorTest : DITest() {
                                     JSONArray().apply {
                                         put("i")
                                         put("don't")
+                                        put(
+                                            "Pellentesque habitant morbi tristique senectus et netus et malesuada"
+                                        )
                                     },
                                 )
                                 put("\$add", JSONArray().apply { put("know") })

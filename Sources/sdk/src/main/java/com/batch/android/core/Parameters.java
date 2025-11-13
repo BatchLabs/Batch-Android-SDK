@@ -119,9 +119,14 @@ public final class Parameters {
         appParameters.put(ParameterKeys.LOCAL_CAMPAIGNS_JIT_WS_READ_TIMEOUT_KEY, 	    "1000");
         appParameters.put(ParameterKeys.LOCAL_CAMPAIGNS_JIT_WS_CONNECT_TIMEOUT_KEY, 	"1000");
 
-        appParameters.put(ParameterKeys.DISPLAY_RECEIPT_WS_CRYPTORTYPE_KEY,                "5");
-        appParameters.put(ParameterKeys.DISPLAY_RECEIPT_WS_RETRYCOUNT_KEY, 		           "0");
-        appParameters.put(ParameterKeys.METRIC_WS_RETRYCOUNT_KEY, 		                   "0");
+        appParameters.put(ParameterKeys.METRIC_WS_POST_CRYPTORTYPE_KEY, 	"5");
+        appParameters.put(ParameterKeys.METRIC_WS_CRYPTORTYPE_KEY,        	"5");
+        appParameters.put(ParameterKeys.METRIC_WS_READ_TIMEOUT_KEY, 	    "1000");
+        appParameters.put(ParameterKeys.METRIC_WS_CONNECT_TIMEOUT_KEY, 	    "1000");
+
+        appParameters.put(ParameterKeys.DISPLAY_RECEIPT_WS_CRYPTORTYPE_KEY, "5");
+        appParameters.put(ParameterKeys.DISPLAY_RECEIPT_WS_RETRYCOUNT_KEY, 	"0");
+        appParameters.put(ParameterKeys.METRIC_WS_RETRYCOUNT_KEY, 		    "0");
 
         appParameters.put(ParameterKeys.LOCAL_CAMPAIGNS_WS_INITIAL_DELAY, 	"5");
         appParameters.put(ParameterKeys.EVENT_TRACKER_INITIAL_DELAY, 		"10000");

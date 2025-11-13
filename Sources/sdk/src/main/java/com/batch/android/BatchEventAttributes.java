@@ -79,7 +79,7 @@ public class BatchEventAttributes {
      * Add a string attribute for the specified key
      *
      * @param key   Attribute key. Should be made of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.
-     * @param value String value to add. Can't be longer than 64 characters, and can't be empty or null. For better results, you should trim/lowercase your strings, and use slugs when possible.
+     * @param value String value to add. Can't be longer than 300 characters, and can't be empty or null. For better results, you should trim/lowercase your strings, and use slugs when possible.
      * @return Same BatchEventAttributes instance, for chaining
      */
     public BatchEventAttributes put(@NonNull String key, @NonNull String value) {

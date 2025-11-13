@@ -1,16 +1,22 @@
 package com.batch.android.post;
 
+import com.batch.android.core.ByteArrayHelper;
+import com.batch.android.core.Logger;
+import com.batch.android.json.JSONArray;
+import com.batch.android.json.JSONException;
 import com.batch.android.metrics.model.Metric;
-import com.batch.android.msgpack.core.MessageBufferPacker;
-import com.batch.android.msgpack.core.MessagePack;
-import java.io.IOException;
 import java.util.Collection;
 
-public class MetricPostDataProvider extends MessagePackPostDataProvider<Collection<Metric<?>>> {
+public class MetricPostDataProvider implements PostDataProvider<Collection<Metric<?>>> {
+
+    private static final String TAG = "MetricPostDataProvider";
 
     private final Collection<Metric<?>> metrics;
 
     public MetricPostDataProvider(Collection<Metric<?>> metrics) {
+        if (metrics == null) {
+            throw new NullPointerException("Metrics collection is null");
+        }
         this.metrics = metrics;
     }
 
@@ -20,19 +26,23 @@ public class MetricPostDataProvider extends MessagePackPostDataProvider<Collecti
     }
 
     @Override
-    byte[] pack() throws IOException {
-        MessageBufferPacker packer = MessagePack.newDefaultBufferPacker();
-        packer.packArrayHeader(metrics.size());
+    public byte[] getData() {
+        JSONArray payload = new JSONArray();
         try {
-            for (Metric<?> data : metrics) {
-                data.pack(packer);
+            for (Metric<?> metric : metrics) {
+                payload.put(metric.toJson());
             }
-        } catch (Exception e) {
-            throw new IOException(e);
-        } finally {
-            packer.close();
+            String payloadString = payload.toString();
+            return ByteArrayHelper.getUTF8Bytes(payloadString);
+        } catch (JSONException e) {
+            Logger.internal(TAG, "Could not serialize metrics payload to JSON", e);
+            return new byte[0];
         }
-        return packer.toByteArray();
+    }
+
+    @Override
+    public String getContentType() {
+        return "application/json";
     }
 
     @Override

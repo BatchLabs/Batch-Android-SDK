@@ -38,9 +38,14 @@ public class ProfileDataHelper {
     public static final Pattern ATTR_KEY_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{1,30}$");
 
     /**
-     * The string attribute and tag values max length authorized
+     * The string attribute and tag values max length authorized on the MEP
      */
-    public static final int ATTR_STRING_MAX_LENGTH = 64;
+    public static final int ATTR_STRING_MAX_LENGTH_MEP = 64;
+
+    /**
+     * The string attribute and tag values max length authorized on the CEP
+     */
+    public static final int ATTR_STRING_MAX_LENGTH_CEP = 300;
 
     /**
      * Max size of an array of string
@@ -129,13 +134,38 @@ public class ProfileDataHelper {
     }
 
     /**
-     * Whether the given string attribute is NOT valid.
+     * Ensure the given string attribute is valid.
      *
      * @param value The value to check
+     * @param maxLength The max length of the string
      * @return true if NOT valid, false otherwise
      */
-    public static boolean isNotValidStringValue(@Nullable String value) {
-        return value == null || value.length() > ATTR_STRING_MAX_LENGTH;
+    public static boolean isNotValidStringValue(@Nullable String value, int maxLength) {
+        return value == null || value.trim().isEmpty() || value.length() > maxLength;
+    }
+
+    /**
+     * Ensure the given string attribute is valid for the MEP.
+     *
+     * @param value The value to check
+     * @throws AttributeValidationException Validation exception
+     */
+    public static void validateMEPStringValue(@Nullable String value) throws AttributeValidationException {
+        if (isNotValidStringValue(value, ATTR_STRING_MAX_LENGTH_MEP)) {
+            throw new AttributeValidationException(AttributeValidationException.Type.INVALID_MEP_STRING_ITEM);
+        }
+    }
+
+    /**
+     * Ensure the given string attribute is valid for the CEP.
+     *
+     * @param value The value to check
+     * @throws AttributeValidationException Validation exception
+     */
+    public static void validateCEPStringValue(@Nullable String value) throws AttributeValidationException {
+        if (isNotValidStringValue(value, ATTR_STRING_MAX_LENGTH_CEP)) {
+            throw new AttributeValidationException(AttributeValidationException.Type.INVALID_CEP_STRING_ITEM);
+        }
     }
 
     /**
@@ -159,21 +189,18 @@ public class ProfileDataHelper {
     }
 
     /**
-     * Whether the given List of string attribute is NOT valid.
+     * Whether the given List of string attribute is valid for the CEP
      *
      * @param values The value to check
-     * @return true if NOT valid, false otherwise
+     * @throws AttributeValidationException Validation exception
      */
-    public static boolean isNotValidStringArray(@NonNull List<String> values) {
-        if (values.size() > ATTR_STRING_ARRAY_MAX_SIZE) {
-            return true;
+    public static void validateStringArray(@NonNull List<String> values) throws AttributeValidationException {
+        if (values.isEmpty() || values.size() > ATTR_STRING_ARRAY_MAX_SIZE) {
+            throw new AttributeValidationException(AttributeValidationException.Type.INVALID_STRING_ARRAY);
         }
         for (String value : values) {
-            if (value.trim().isEmpty() || value.length() > ATTR_STRING_MAX_LENGTH) {
-                return true;
-            }
+            validateCEPStringValue(value);
         }
-        return false;
     }
 
     /**
@@ -197,8 +224,8 @@ public class ProfileDataHelper {
      * @throws AttributeValidationException Validation exception
      */
     public static String normalizeTagValue(final String value) throws AttributeValidationException {
-        if (TextUtils.isEmpty(value) || value.length() > ProfileDataHelper.ATTR_STRING_MAX_LENGTH) {
-            throw new AttributeValidationException(AttributeValidationException.Type.INVALID_STRING_ITEM);
+        if (TextUtils.isEmpty(value) || value.length() > ProfileDataHelper.ATTR_STRING_MAX_LENGTH_MEP) {
+            throw new AttributeValidationException(AttributeValidationException.Type.INVALID_MEP_STRING_ITEM);
         }
         return value.toLowerCase(Locale.US);
     }
@@ -222,7 +249,9 @@ public class ProfileDataHelper {
 
         public enum Type {
             INVALID_KEY,
-            INVALID_STRING_ITEM,
+            INVALID_CEP_STRING_ITEM,
+            INVALID_MEP_STRING_ITEM,
+            INVALID_STRING_ARRAY,
             NULL_VALUE,
         }
 
@@ -246,6 +275,36 @@ public class ProfileDataHelper {
                         "Invalid key. Please make sure that the key is made of letters, underscores and numbers only (a-zA-Z0-9_). It also can't be longer than 30 characters. Ignoring attribute '" +
                         key +
                         "'."
+                    );
+                    break;
+                case INVALID_CEP_STRING_ITEM:
+                    Logger.error(
+                        tag,
+                        "String attributes can't be null, empty or longer than " +
+                        ATTR_STRING_MAX_LENGTH_CEP +
+                        " characters. Ignoring attribute '" +
+                        key +
+                        "'"
+                    );
+                    break;
+                case INVALID_MEP_STRING_ITEM:
+                    Logger.error(
+                        tag,
+                        "String attributes (MEP) can't be null, empty or longer than " +
+                        ATTR_STRING_MAX_LENGTH_MEP +
+                        " characters. Ignoring attribute '" +
+                        key +
+                        "'"
+                    );
+                    break;
+                case INVALID_STRING_ARRAY:
+                    Logger.error(
+                        tag,
+                        "Array of string attributes must not be empty or longer than " +
+                        ATTR_STRING_ARRAY_MAX_SIZE +
+                        " items, only values of type String and must respect the string attribute limitations. Ignoring attribute '" +
+                        key +
+                        "'"
                     );
                     break;
             }

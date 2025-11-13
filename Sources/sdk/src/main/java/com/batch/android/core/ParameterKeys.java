@@ -95,15 +95,14 @@ public final class ParameterKeys
     public final static String INBOX_WS_CONNECT_TIMEOUT_KEY				= "ws.inbox.connect.timeout";
     public final static String INBOX_WS_READ_TIMEOUT_KEY				= "ws.inbox.read.timeout";
 
-    // Default MsgPack webservice parameters
-    public final static String MESSAGE_PACK_WS_POST_CRYPTORTYPE_KEY	    = "ws.msgpack.postcryptor.type";
-    public final static String MESSAGE_PACK_WS_READ_CRYPTORTYPE_KEY		= "ws.msgpack.readcryptor.type";
-    public final static String MESSAGE_PACK_WS_URLSORTER_PATTERN_KEY	= "ws.msgpack.pattern";
-    public final static String MESSAGE_PACK_WS_CRYPTORTYPE_KEY	        = "ws.msgpack.getcryptor.type";
-    public final static String MESSAGE_PACK_WS_CRYPTORMODE_KEY          = "ws.msgpack.getcryptor.mode";
-    public final static String MESSAGE_PACK_WS_RETRYCOUNT_KEY			= "ws.msgpack.retry";
-    public final static String MESSAGE_PACK_WS_CONNECT_TIMEOUT_KEY		= "ws.msgpack.connect.timeout";
-    public final static String MESSAGE_PACK_WS_READ_TIMEOUT_KEY			= "ws.msgpack.read.timeout";
+    // Default Metric JSON webservice parameters
+    public final static String METRIC_WS_URLSORTER_PATTERN_KEY		    = "ws.metric.json.pattern";
+    public final static String METRIC_WS_CRYPTORTYPE_KEY				= "ws.metric.json.getcryptor.type";
+    public final static String METRIC_WS_CRYPTORMODE_KEY				= "ws.metric.json.getcryptor.mode";
+    public final static String METRIC_WS_POST_CRYPTORTYPE_KEY			= "ws.metric.json.postcryptor.type";
+    public final static String METRIC_WS_READ_CRYPTORTYPE_KEY			= "ws.metric.json.readcryptor.type";
+    public final static String METRIC_WS_READ_TIMEOUT_KEY              = "ws.metric.json.read.timeout";
+    public final static String METRIC_WS_CONNECT_TIMEOUT_KEY           = "ws.metric.json.connect.timeout";
 
     public final static String DISPLAY_RECEIPT_WS_CRYPTORTYPE_KEY	    =   "ws.displayreceipt.getcryptor.type";
     public final static String DISPLAY_RECEIPT_WS_RETRYCOUNT_KEY	    =   "ws.displayreceipt.retry";

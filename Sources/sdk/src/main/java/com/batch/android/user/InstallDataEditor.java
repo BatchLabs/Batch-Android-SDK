@@ -164,17 +164,7 @@ public class InstallDataEditor {
         try {
             ProfileDataHelper.assertNotNull(value);
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
-            if (ProfileDataHelper.isNotValidStringValue(value)) {
-                Logger.error(
-                    TAG,
-                    "String attributes can't be null or longer than " +
-                    ProfileDataHelper.ATTR_STRING_MAX_LENGTH +
-                    " characters. Ignoring attribute '" +
-                    key +
-                    "'"
-                );
-                return this;
-            }
+            ProfileDataHelper.validateMEPStringValue(value);
             operationQueue.addOperation(datasource -> datasource.setAttribute(normalizedKey, value));
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
@@ -264,7 +254,7 @@ public class InstallDataEditor {
             Logger.error(
                 TAG,
                 String.format(
-                    "Invalid tag. Please make sure that the tag is made of letters, underscores and numbers only (a-zA-Z0-9_). It also can't be longer than 255 characters. Ignoring tag '%s' for collection '%s'.",
+                    "Invalid tag for the Mobile Engagement Platform (MEP). Please make sure that the tag is made of letters, underscores and numbers only (a-zA-Z0-9_). It also can't be longer than 64 characters. Ignoring tag '%s' for collection '%s'.",
                     collection,
                     tag
                 )
@@ -298,7 +288,7 @@ public class InstallDataEditor {
             Logger.error(
                 TAG,
                 String.format(
-                    "Invalid tag. Please make sure that the tag is made of letters, underscores and numbers only (a-zA-Z0-9_). It also can't be longer than 255 characters. Ignoring tag '%s' for collection '%s'.",
+                    "Invalid tag for the Mobile Engagement Platform (MEP). Please make sure that the tag is made of letters, underscores and numbers only (a-zA-Z0-9_). It also can't be longer than 64 characters. Ignoring tag '%s' for collection '%s'.",
                     collection,
                     tag
                 )

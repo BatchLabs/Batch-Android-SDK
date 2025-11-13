@@ -275,24 +275,14 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
      * Set a custom profile attribute for a key.
      *
      * @param key   Attribute key, can't be null. It should be made of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.
-     * @param value Attribute value, can't be null or empty. Must be a string not longer than 64 characters. For better results, you should make them upper/lowercase and trim the whitespaces.
+     * @param value Attribute value, can't be null or empty. Must be a string not longer than 300 characters. For better results, you should make them upper/lowercase and trim the whitespaces.
      * @return This object instance, for method chaining
      */
     public BatchProfileAttributeEditor setAttribute(final @NonNull String key, final @NonNull String value) {
         try {
             ProfileDataHelper.assertNotNull(value);
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
-            if (ProfileDataHelper.isNotValidStringValue(value)) {
-                Logger.error(
-                    TAG,
-                    "String attributes can't be null or longer than " +
-                    ProfileDataHelper.ATTR_STRING_MAX_LENGTH +
-                    " characters. Ignoring attribute '" +
-                    key +
-                    "'"
-                );
-                return this;
-            }
+            ProfileDataHelper.validateCEPStringValue(value);
             this.profileUpdateOperation.addAttribute(normalizedKey, new UserAttribute(value, AttributeType.STRING));
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
@@ -349,21 +339,13 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
      * Set a custom profile attribute for a key.
      *
      * @param key   Attribute key, can't be null. It should be made of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.
-     * @param value Attribute value, can't be null or empty. Must be a valid List not longer than X items.
+     * @param value Attribute value, can't be null or empty. Must be a valid List not longer than 25 items.
      * @return This object instance, for method chaining
      */
     public BatchProfileAttributeEditor setAttribute(final @NonNull String key, final @NonNull List<String> value) {
         try {
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
-            if (ProfileDataHelper.isNotValidStringArray(value)) {
-                Logger.error(
-                    TAG,
-                    "Array of string attributes must not be longer than 25 items, only values of type String and must respect the string attribute limitations. Ignoring attribute '" +
-                    key +
-                    "'"
-                );
-                return this;
-            }
+            ProfileDataHelper.validateStringArray(value);
             this.profileUpdateOperation.addAttribute(
                     normalizedKey,
                     new UserAttribute(new ArrayList<>(value), AttributeType.STRING_ARRAY)
@@ -406,23 +388,12 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
      * Add a string value in the specified array attribute. If empty, the collection will automatically be created.
      *
      * @param key The array attribute to add the value to. Cannot be null. Must be a string of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.
-     * @param value The value to add. Cannot be null or empty. Must be a string no longer than 64 characters.
+     * @param value The value to add. Cannot be null or empty. Must be a string no longer than 300 characters.
      * @return This object instance, for method chaining
      */
     public BatchProfileAttributeEditor addToArray(final @NonNull String key, final @NonNull String value) {
         try {
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
-            if (ProfileDataHelper.isNotValidStringValue(value)) {
-                Logger.error(
-                    TAG,
-                    "Strings in Array attributes can't be null or longer than " +
-                    ProfileDataHelper.ATTR_STRING_MAX_LENGTH +
-                    " characters. Ignoring attribute '" +
-                    key +
-                    "'"
-                );
-                return this;
-            }
             this.profileUpdateOperation.addToList(normalizedKey, new ArrayList<>(Collections.singletonList(value)));
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
@@ -436,21 +407,12 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
      * Add a list of strings in the specified array attribute. If empty, the collection will automatically be created.
      *
      * @param key The array attribute to add the value to. Cannot be null. Must be a string of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.
-     * @param values The strings to add. Cannot be null or empty. Must be strings no longer than 64 characters and max 25 items
+     * @param values The strings to add. Cannot be null or empty. Must be strings no longer than 300 characters and max 25 items
      * @return This object instance, for method chaining
      */
     public BatchProfileAttributeEditor addToArray(final @NonNull String key, final @NonNull List<String> values) {
         try {
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
-            if (ProfileDataHelper.isNotValidStringArray(values)) {
-                Logger.error(
-                    TAG,
-                    "Array of string attributes must not be longer than 25 items, only values of type String and must respect the string attribute limitations. Ignoring attribute '" +
-                    key +
-                    "'"
-                );
-                return this;
-            }
             this.profileUpdateOperation.addToList(normalizedKey, new ArrayList<>(values));
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
@@ -464,26 +426,15 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
 
     /**
      * Removes a string from an array attribute.
-     * Does nothing if the tag does not exist.
+     * Does nothing if the value does not exist.
      *
-     * @param key Array attribute name
-     * @param value The value to remove
+     * @param key The array attribute to remove the value to. Cannot be null. Must be a string of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.
+     * @param value The value to remove. Cannot be null or empty. Must be a string no longer than 300 characters.
      * @return This object instance, for method chaining
      */
     public BatchProfileAttributeEditor removeFromArray(final @NonNull String key, final @NonNull String value) {
         try {
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
-            if (ProfileDataHelper.isNotValidStringValue(value)) {
-                Logger.error(
-                    TAG,
-                    "Strings in Array attributes can't be null or longer than " +
-                    ProfileDataHelper.ATTR_STRING_MAX_LENGTH +
-                    " characters. Ignoring attribute '" +
-                    key +
-                    "'"
-                );
-                return this;
-            }
             this.profileUpdateOperation.removeFromList(
                     normalizedKey,
                     new ArrayList<>(Collections.singletonList(value))
@@ -498,24 +449,15 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
 
     /**
      * Removes a list of strings from an array attribute.
-     * Does nothing if the tag does not exist.
+     * Does nothing if an item does not exist.
      *
-     * @param key Array attribute name
-     * @param values The values to remove
+     * @param key The array attribute to remove the value from. Cannot be null. Must be a string of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.
+     * @param values The strings to remove. Cannot be null or empty. Must be strings no longer than 300 characters and max 25 items
      * @return This object instance, for method chaining
      */
     public BatchProfileAttributeEditor removeFromArray(final @NonNull String key, final @NonNull List<String> values) {
         try {
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
-            if (ProfileDataHelper.isNotValidStringArray(values)) {
-                Logger.error(
-                    TAG,
-                    "Array of string attributes must not be longer than 25 items, only values of type String and must respect the string attribute limitations. Ignoring attribute '" +
-                    key +
-                    "'"
-                );
-                return this;
-            }
             this.profileUpdateOperation.removeFromList(normalizedKey, new ArrayList<>(values));
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);

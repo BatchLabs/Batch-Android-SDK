@@ -1,12 +1,11 @@
 package com.batch.android.metrics.model;
 
 import com.batch.android.di.providers.MetricManagerProvider;
-import com.batch.android.msgpack.MessagePackHelper;
-import com.batch.android.msgpack.core.MessageBufferPacker;
+import com.batch.android.json.JSONArray;
+import com.batch.android.json.JSONException;
+import com.batch.android.json.JSONObject;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -57,19 +56,42 @@ public abstract class Metric<Child> {
 
     protected abstract Child newChild(List<String> labels);
 
-    public void pack(MessageBufferPacker packer) throws Exception {
-        Map<String, Object> objectMap = new HashMap<>();
-        objectMap.put("name", name);
-        objectMap.put("type", type);
-        objectMap.put("values", values);
-        if (labelNames != null && labelValues != null && labelNames.size() == labelValues.size()) {
-            Map<String, String> labels = new HashMap<>();
-            for (int i = 0; i < labelNames.size(); i++) {
-                labels.put(labelNames.get(i), labelValues.get(i));
+    public JSONObject toJson() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("name", name);
+        json.put("type", type);
+
+        JSONArray valuesArray = new JSONArray();
+        if (values != null) {
+            for (Float value : values) {
+                if (value != null) {
+                    valuesArray.put(value.doubleValue());
+                }
             }
-            objectMap.put("labels", labels);
         }
-        MessagePackHelper.packObject(packer, objectMap);
+        json.put("values", valuesArray);
+
+        if (
+            labelNames != null &&
+            labelValues != null &&
+            labelNames.size() == labelValues.size() &&
+            !labelNames.isEmpty()
+        ) {
+            JSONObject labels = new JSONObject();
+            for (int i = 0; i < labelNames.size(); i++) {
+                String key = labelNames.get(i);
+                String value = labelValues.get(i);
+                if (key != null && value != null) {
+                    labels.put(key, value);
+                }
+            }
+
+            if (labels.length() > 0) {
+                json.put("labels", labels);
+            }
+        }
+
+        return json;
     }
 
     protected void update() {

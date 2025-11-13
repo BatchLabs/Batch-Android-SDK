@@ -122,12 +122,12 @@ class EventAttributesValidatorTest {
                 BatchEventAttributes().apply {
                     put(
                         "string_attr",
-                        "a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_",
+                        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque.\n",
                     )
                 }
             )
         Assert.assertTrue(
-            errors[0].equals("string_attr: string attribute cannot be longer than 200 characters")
+            errors[0].equals("string_attr: string attribute cannot be longer than 300 characters")
         )
 
         errors =
@@ -315,14 +315,14 @@ class EventAttributesValidatorTest {
                         listOf(
                             "a",
                             "b",
-                            "a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_a_way_too_long_label_",
+                            "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque.\n",
                         ),
                     )
                 }
             )
         Assert.assertTrue(
             errors[0].equals(
-                "string_array_attr[2]: string attribute cannot be longer than 200 characters"
+                "string_array_attr[2]: string attribute cannot be longer than 300 characters"
             )
         )
 

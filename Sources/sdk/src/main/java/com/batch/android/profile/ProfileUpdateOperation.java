@@ -183,29 +183,39 @@ public class ProfileUpdateOperation {
      * @param key The key of the array attributes
      * @param values Values to add
      */
-    public void addToList(@NonNull String key, @NonNull List<String> values) {
+    @SuppressWarnings("unchecked")
+    public void addToList(@NonNull String key, @NonNull List<String> values)
+        throws ProfileDataHelper.AttributeValidationException {
         UserAttribute targetAttribute = this.customAttributes.get(key);
-
         // Case: Array attribute already exist and is a List (meaning setAttribute(string, list)
         // has already been called on this key
         if (targetAttribute != null && targetAttribute.value instanceof List) {
-            ArrayList<String> targetList = (ArrayList<String>) targetAttribute.value;
-            targetList.addAll(values);
+            List<String> updatedList = new ArrayList<>((List<String>) targetAttribute.value);
+            updatedList.addAll(values);
+            ProfileDataHelper.validateStringArray(updatedList);
+            this.customAttributes.put(key, new UserAttribute(updatedList, AttributeType.STRING_ARRAY));
         }
         // Case: Array attribute already exist and is a Partial Update object ($add/$remove)
         // (meaning addToArray(string, array) has already been called on this key
         else if (targetAttribute != null && targetAttribute.value instanceof ProfilePartialUpdateAttribute) {
-            ProfilePartialUpdateAttribute targetPartialUpdate = (ProfilePartialUpdateAttribute) targetAttribute.value;
-            targetPartialUpdate.putInAdded(values);
+            ProfilePartialUpdateAttribute partialUpdateAttribute = new ProfilePartialUpdateAttribute(
+                (ProfilePartialUpdateAttribute) targetAttribute.value
+            );
+            partialUpdateAttribute.putInAdded(values);
+            ProfileDataHelper.assertNotNull(partialUpdateAttribute.getAdded()); // Should never be null since putInAdded is called beforehand but remove warning on getAdded
+            ProfileDataHelper.validateStringArray(partialUpdateAttribute.getAdded());
+            this.customAttributes.put(key, new UserAttribute(partialUpdateAttribute, AttributeType.STRING_ARRAY));
         }
         // Case: Array attribute already exist and is null (meaning removeAttribute(string, list)
         // has already been called on this key)
         else if (targetAttribute != null && targetAttribute.value == null) {
+            ProfileDataHelper.validateStringArray(values);
             this.customAttributes.put(key, new UserAttribute(values, AttributeType.STRING_ARRAY));
         }
         // Case: Array attribute doesn't exist
         // (meaning, this key has never been used on this editor instance)
         else {
+            ProfileDataHelper.validateStringArray(values);
             UserAttribute newAttribute = new UserAttribute(
                 new ProfilePartialUpdateAttribute(values),
                 AttributeType.STRING_ARRAY
@@ -227,24 +237,33 @@ public class ProfileUpdateOperation {
      * @param key The key of the array attributes
      * @param values Values to remove
      */
-    public void removeFromList(@NonNull String key, @NonNull List<String> values) {
+    @SuppressWarnings("unchecked")
+    public void removeFromList(@NonNull String key, @NonNull List<String> values)
+        throws ProfileDataHelper.AttributeValidationException {
         UserAttribute targetAttribute = this.customAttributes.get(key);
 
         // Case: Array attribute already exist and is a List (meaning setAttribute(string, list)
         // has already been called on this key
         if (targetAttribute != null && targetAttribute.value instanceof List) {
-            ArrayList<String> targetList = (ArrayList<String>) targetAttribute.value;
-            ArrayList<String> value = (ArrayList<String>) values;
-            targetList.removeAll(value);
-            if (targetList.isEmpty()) {
+            List<String> updatedList = new ArrayList<>((List<String>) targetAttribute.value);
+            updatedList.removeAll(values);
+            if (updatedList.isEmpty()) {
                 this.customAttributes.remove(key);
+            } else {
+                ProfileDataHelper.validateStringArray(updatedList);
+                this.customAttributes.put(key, new UserAttribute(updatedList, AttributeType.STRING_ARRAY));
             }
         }
         // Case: Array attribute already exist and is a Partial Update object ($add/$remove)
         // (meaning addTo/removeFromArray(string, array) has already been called on this key
         else if (targetAttribute != null && targetAttribute.value instanceof ProfilePartialUpdateAttribute) {
-            ProfilePartialUpdateAttribute targetPartialUpdate = (ProfilePartialUpdateAttribute) targetAttribute.value;
-            targetPartialUpdate.putInRemoved(values);
+            ProfilePartialUpdateAttribute partialUpdateAttribute = new ProfilePartialUpdateAttribute(
+                (ProfilePartialUpdateAttribute) targetAttribute.value
+            );
+            partialUpdateAttribute.putInRemoved(values);
+            ProfileDataHelper.assertNotNull(partialUpdateAttribute.getRemoved()); // Should never be null since putInRemoved is called beforehand but remove warning on getRemoved
+            ProfileDataHelper.validateStringArray(partialUpdateAttribute.getRemoved());
+            this.customAttributes.put(key, new UserAttribute(partialUpdateAttribute, AttributeType.STRING_ARRAY));
         }
         // Case: Array attribute already exist and is null (meaning removeAttribute(string, list)
         // has already been called on this key)
@@ -254,6 +273,7 @@ public class ProfileUpdateOperation {
         // Case: Array attribute doesn't exist
         // (meaning, this key has never been used on this editor instance)
         else {
+            ProfileDataHelper.validateStringArray(values);
             UserAttribute newAttribute = new UserAttribute(
                 new ProfilePartialUpdateAttribute(null, values),
                 AttributeType.STRING_ARRAY

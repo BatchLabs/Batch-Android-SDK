@@ -76,7 +76,7 @@ public class EventAttributesValidator {
     private static final int TAGS_MAX_COUNT = 10;
     private static final int ATTRIBUTES_MAX_COUNT = 20;
     private static final int URL_MAX_LENGTH = 2048;
-    private static final int STRING_MAX_LENGTH = 200;
+    private static final int STRING_MAX_LENGTH = 300;
     private static final int ARRAY_ITEMS_MAX_COUNT = 25;
     private static final Pattern attributeNameRegexp = Pattern.compile("^[a-zA-Z0-9_]{1,30}$");
 

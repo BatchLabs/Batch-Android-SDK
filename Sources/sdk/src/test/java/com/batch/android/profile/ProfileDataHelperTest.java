@@ -1,5 +1,6 @@
 package com.batch.android.profile;
 
+import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -74,6 +75,18 @@ public class ProfileDataHelperTest {
     }
 
     @Test
+    public void testNormalizeTagValue() throws ProfileDataHelper.AttributeValidationException {
+        Assert.assertEquals("normalized_tag", ProfileDataHelper.normalizeTagValue("Normalized_Tag"));
+        Assert.assertThrows(
+            ProfileDataHelper.AttributeValidationException.class,
+            () ->
+                ProfileDataHelper.normalizeTagValue(
+                    "Pellentesque habitant morbi tristique senectus et netus et males !"
+                )
+        );
+    }
+
+    @Test
     public void testIsNotValidPhoneNumber() {
         // Valid use case
         Assert.assertFalse(ProfileDataHelper.isNotValidPhoneNumber("+2901234"));
@@ -88,5 +101,84 @@ public class ProfileDataHelperTest {
         Assert.assertTrue(ProfileDataHelper.isNotValidPhoneNumber("+33-6-12-34-56-78")); // with dashes
         Assert.assertTrue(ProfileDataHelper.isNotValidPhoneNumber("+33 6 12 34 56 78")); // with spaces
         Assert.assertTrue(ProfileDataHelper.isNotValidPhoneNumber("")); // empty
+    }
+
+    @Test
+    public void testIsNotValidMEPStringValue() throws ProfileDataHelper.AttributeValidationException {
+        ProfileDataHelper.validateMEPStringValue("foo");
+        ProfileDataHelper.validateMEPStringValue("Pellentesque habitant morbi tristique senectus et netus et males");
+        Assert.assertThrows(
+            ProfileDataHelper.AttributeValidationException.class,
+            () ->
+                ProfileDataHelper.validateMEPStringValue(
+                    "Pellentesque habitant morbi tristique senectus et netus et males !"
+                )
+        );
+    }
+
+    @Test
+    public void testValidateCEPStringValue() throws ProfileDataHelper.AttributeValidationException {
+        ProfileDataHelper.validateCEPStringValue("foo");
+        ProfileDataHelper.validateCEPStringValue(
+            "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque."
+        );
+        Assert.assertThrows(
+            ProfileDataHelper.AttributeValidationException.class,
+            () ->
+                ProfileDataHelper.validateCEPStringValue(
+                    "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque !"
+                )
+        );
+    }
+
+    @Test
+    public void testValidateArrayStringValue() throws ProfileDataHelper.AttributeValidationException {
+        ProfileDataHelper.validateStringArray(Arrays.asList("foo", "bar"));
+        Assert.assertThrows(
+            ProfileDataHelper.AttributeValidationException.class,
+            () ->
+                ProfileDataHelper.validateStringArray(
+                    Arrays.asList(
+                        "0",
+                        "1",
+                        "2",
+                        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque !"
+                    )
+                )
+        );
+        Assert.assertThrows(
+            ProfileDataHelper.AttributeValidationException.class,
+            () ->
+                ProfileDataHelper.validateStringArray(
+                    Arrays.asList(
+                        "0",
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "14",
+                        "15",
+                        "16",
+                        "17",
+                        "18",
+                        "19",
+                        "20",
+                        "21",
+                        "22",
+                        "23",
+                        "24",
+                        "25"
+                    )
+                )
+        );
     }
 }
