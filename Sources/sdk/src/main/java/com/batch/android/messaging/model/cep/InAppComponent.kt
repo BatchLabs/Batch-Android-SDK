@@ -20,7 +20,7 @@ import java.io.Serializable
  * @property type The type of the component. Determines the specific nature of the component (e.g.,
  *   Text, Button, Image). This is defined by the [Type] enum.
  */
-sealed class InAppComponent(val type: Type) {
+sealed class InAppComponent(val type: Type) : Serializable {
     /** Represents the type of the component. */
     enum class Type {
         TEXT,
