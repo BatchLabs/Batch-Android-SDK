@@ -485,7 +485,7 @@ public class BannerView
     public void onImageDownloadStart() {}
 
     @Override
-    public void onImageDownloadSuccess(AsyncImageDownloadTask.Result result) {
+    public void onImageDownloadSuccess(@NonNull AsyncImageDownloadTask.Result result) {
         // Add image in cache then display it
         if (imageCache != null) {
             imageCache.put(result);

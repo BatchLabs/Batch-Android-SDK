@@ -2,6 +2,7 @@ package com.batch.android.core;
 
 import android.util.Base64;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -118,8 +119,8 @@ public class ByteArrayHelper {
     /**
      * Return the base64 encoded SHA1 digest of a string
      *
-     * @param s
-     * @return
+     * @param bytes bytes
+     * @return base64 string
      */
     public static String SHA1Base64Encoded(byte[] bytes) {
         if (bytes == null) {
@@ -134,6 +135,7 @@ public class ByteArrayHelper {
         }
     }
 
+    @NonNull
     public static byte[] fromInputStream(@NonNull InputStream inputStream) throws IOException {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             byte[] buffer = new byte[8192];

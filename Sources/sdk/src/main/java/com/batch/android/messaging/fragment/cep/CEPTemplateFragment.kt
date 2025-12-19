@@ -134,11 +134,9 @@ class CEPTemplateFragment :
                         rootView.startDownloadImage(component.id)
                     }
 
-                    override fun onImageDownloadSuccess(result: AsyncImageDownloadTask.Result<*>?) {
-                        if (result != null) {
-                            imagesCached[component.id] = result
-                            rootView.setDownloadedImage(component.id, result)
-                        }
+                    override fun onImageDownloadSuccess(result: AsyncImageDownloadTask.Result<*>) {
+                        imagesCached[component.id] = result
+                        rootView.setDownloadedImage(component.id, result)
                     }
 
                     override fun onImageDownloadError(errorCause: MessagingError) {

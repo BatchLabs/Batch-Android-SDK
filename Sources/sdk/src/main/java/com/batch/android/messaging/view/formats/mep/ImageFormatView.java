@@ -332,7 +332,7 @@ public class ImageFormatView extends FrameLayout implements AsyncImageDownloadTa
     public void onImageDownloadStart() {}
 
     @Override
-    public void onImageDownloadSuccess(AsyncImageDownloadTask.Result result) {
+    public void onImageDownloadSuccess(@NonNull AsyncImageDownloadTask.Result result) {
         // Add image in cache then display it
         imageCache.put(result);
         displayImage(result);

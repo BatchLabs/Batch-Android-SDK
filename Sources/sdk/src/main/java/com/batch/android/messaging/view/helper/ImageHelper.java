@@ -44,11 +44,25 @@ public class ImageHelper {
      */
     public static void setDownloadResultInImageWithResize(
         @NonNull ImageView targetImage,
-        @NonNull AsyncImageDownloadTask.Result result,
+        @NonNull AsyncImageDownloadTask.Result<?> result,
         float width
     ) {
         if (result instanceof AsyncImageDownloadTask.BitmapResult) {
             Bitmap bitmap = ((AsyncImageDownloadTask.BitmapResult) result).get();
+
+            //noinspection ConstantConditions
+            if (bitmap == null) {
+                // should never happen here
+                Logger.internal(MessagingModule.TAG, "Could not display AsyncImageDownloadTask.Result: bitmap is null");
+                return;
+            }
+            if (bitmap.getWidth() == 0) {
+                Logger.internal(
+                    MessagingModule.TAG,
+                    "Could not display AsyncImageDownloadTask.Result: bitmap width is 0"
+                );
+                return;
+            }
             float computedHeight = (width / (float) bitmap.getWidth()) * (float) bitmap.getHeight();
             if (width > 0 && computedHeight > 0) {
                 Bitmap resizedImage = Bitmap.createScaledBitmap(bitmap, (int) width, (int) computedHeight, true);

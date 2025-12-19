@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.batch.android.core.ByteArrayHelper;
 import com.batch.android.core.ForwardReadableInputStream;
 import com.batch.android.core.Logger;
@@ -29,7 +30,7 @@ import javax.net.ssl.SSLException;
  * No need for all of Batch's Webservice stuff here, simply download the image and call it a day.
  *
  */
-public class AsyncImageDownloadTask extends AsyncTask<String, Void, AsyncImageDownloadTask.Result> {
+public class AsyncImageDownloadTask extends AsyncTask<String, Void, AsyncImageDownloadTask.Result<?>> {
 
     private static final String TAG = "AsyncImageDownloadTask";
     //region Inner classes/interfaces
@@ -40,18 +41,23 @@ public class AsyncImageDownloadTask extends AsyncTask<String, Void, AsyncImageDo
 
     public abstract static class Result<T> {
 
-        private String key;
-        private T value;
+        @NonNull
+        private final String key;
 
-        Result(String key, T value) {
+        @NonNull
+        private final T value;
+
+        Result(@NonNull String key, @NonNull T value) {
             this.key = key;
             this.value = value;
         }
 
+        @NonNull
         public String getKey() {
             return key;
         }
 
+        @NonNull
         public T get() {
             return value;
         }
@@ -59,14 +65,14 @@ public class AsyncImageDownloadTask extends AsyncTask<String, Void, AsyncImageDo
 
     public static class BitmapResult extends Result<Bitmap> {
 
-        BitmapResult(String key, Bitmap value) {
+        BitmapResult(@NonNull String key, @NonNull Bitmap value) {
             super(key, value);
         }
     }
 
     public static class GIFResult extends Result<byte[]> {
 
-        GIFResult(String key, byte[] value) {
+        GIFResult(@NonNull String key, @NonNull byte[] value) {
             super(key, value);
         }
     }
@@ -74,7 +80,7 @@ public class AsyncImageDownloadTask extends AsyncTask<String, Void, AsyncImageDo
     public interface ImageDownloadListener {
         void onImageDownloadStart();
 
-        void onImageDownloadSuccess(Result result);
+        void onImageDownloadSuccess(@NonNull Result<?> result);
 
         void onImageDownloadError(@NonNull MessagingError errorCause);
     }
@@ -97,7 +103,7 @@ public class AsyncImageDownloadTask extends AsyncTask<String, Void, AsyncImageDo
     }
 
     @Override
-    protected Result doInBackground(String... params) {
+    protected Result<?> doInBackground(String... params) {
         if (params == null || params[0] == null) {
             return null;
         }
@@ -141,7 +147,12 @@ public class AsyncImageDownloadTask extends AsyncTask<String, Void, AsyncImageDo
                     return new GIFResult(params[0], ByteArrayHelper.fromInputStream(fris));
                 } else {
                     try {
-                        return new BitmapResult(params[0], BitmapFactory.decodeStream(fris));
+                        Bitmap bitmap = BitmapFactory.decodeStream(fris);
+                        if (bitmap == null) {
+                            Logger.internal(TAG, "Error while creating the bitmap");
+                            return null;
+                        }
+                        return new BitmapResult(params[0], bitmap);
                     } catch (OutOfMemoryError e) {
                         Logger.internal(TAG, "Out of memory while creating the bitmap", e);
                         return null;
@@ -182,7 +193,7 @@ public class AsyncImageDownloadTask extends AsyncTask<String, Void, AsyncImageDo
     }
 
     @Override
-    protected void onPostExecute(Result result) {
+    protected void onPostExecute(@Nullable Result result) {
         ImageDownloadListener listener = weakListener.get();
         if (listener != null) {
             if (result != null) {
