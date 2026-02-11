@@ -5,6 +5,8 @@ import android.content.res.ColorStateList
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.text.TextUtils
+import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -26,7 +28,10 @@ import com.batch.android.module.MessagingModule
  *
  * @constructor Creates a new instance of the `Button` View.
  */
-class Button(context: Context) : AppCompatButton(context), Styleable {
+class Button
+@JvmOverloads
+constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+    AppCompatButton(context, attrs, defStyleAttr), Styleable {
 
     override fun applyComponentStyle(component: InAppComponent) {
 
@@ -58,6 +63,8 @@ class Button(context: Context) : AppCompatButton(context), Styleable {
         // Remove default min height from theme
         minHeight = 0
         minimumHeight = 0
+        minWidth = 0
+        minimumWidth = 0
 
         // Remove default uppercase text
         isAllCaps = false
@@ -113,11 +120,15 @@ class Button(context: Context) : AppCompatButton(context), Styleable {
         val rippleDrawable =
             RippleDrawable(ColorStateList.valueOf(rippleColor), background, background)
 
+        backgroundTintList = null
+        backgroundTintMode = null
+
         // Set background
         setBackground(rippleDrawable)
 
-        // Set text color
+        // Set text color and size
         setTextColor(StyleHelper.parseColor(component.textColor.getColorForTheme(context)))
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, component.fontSize.toFloat())
 
         // Add max lines if needed
         if (component.maxLines > 0) {

@@ -11,7 +11,6 @@ import androidx.annotation.Nullable;
 import com.batch.android.Batch;
 import com.batch.android.core.InternalPushData;
 import com.batch.android.core.Logger;
-import com.batch.android.core.NamedThreadFactory;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.processor.Module;
@@ -30,7 +29,10 @@ import java.util.Map;
 public final class InboxDatasource {
 
     private static final String TAG = "InboxDatasource";
-
+    /**
+     * Synchronization lock
+     */
+    private final Object dbLock = new Object();
     /**
      * The SQLLite DB
      */
@@ -51,121 +53,132 @@ public final class InboxDatasource {
     }
 
     private void open() {
-        database = databaseHelper.getWritableDatabase();
+        synchronized (dbLock) {
+            database = databaseHelper.getWritableDatabase();
+        }
     }
 
     /**
      * Clear all content
      */
     public void wipeData() {
-        if (database == null) {
-            Logger.internal(TAG, "Attempted to wipe data on a closed database");
-            open();
-        }
+        synchronized (dbLock) {
+            if (database == null) {
+                Logger.internal(TAG, "Attempted to wipe data on a closed database");
+                open();
+            }
 
-        database.delete(InboxDatabaseHelper.TABLE_NOTIFICATIONS, null, null);
-        database.delete(InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS, null, null);
-        database.delete(InboxDatabaseHelper.TABLE_FETCHERS, null, null);
+            database.delete(InboxDatabaseHelper.TABLE_NOTIFICATIONS, null, null);
+            database.delete(InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS, null, null);
+            database.delete(InboxDatabaseHelper.TABLE_FETCHERS, null, null);
+        }
     }
 
     /**
      * Close the datasource. You should not make any other call to this datasource once this has been called.
      */
     public void close() {
-        if (database != null) {
-            database.close();
-            database = null;
+        synchronized (dbLock) {
+            if (database != null) {
+                database.close();
+                database = null;
+            }
         }
     }
 
     /**
      * Get database (for test purpose)
      *
-     * @return
+     * @return the database
      */
     protected SQLiteDatabase getDatabase() {
-        return database;
+        synchronized (dbLock) {
+            return database;
+        }
     }
 
     public List<InboxNotificationContentInternal> getNotifications(List<String> notificationIds, long fetcherId) {
-        final List<InboxNotificationContentInternal> notifications = new ArrayList<>();
+        synchronized (dbLock) {
+            final List<InboxNotificationContentInternal> notifications = new ArrayList<>();
+            String query =
+                "SELECT * " +
+                " FROM " +
+                InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
+                " INNER JOIN " +
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS +
+                " ON " +
+                InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
+                "." +
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
+                " = " +
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS +
+                "." +
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
+                " WHERE " +
+                InboxDatabaseHelper.COLUMN_FETCHER_ID +
+                " = ?" +
+                " AND " +
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS +
+                "." +
+                InboxDatabaseHelper.COLUMN_DELETED +
+                "= 0" +
+                " AND " +
+                InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
+                "." +
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
+                " IN (" +
+                createInClause(notificationIds.size()) +
+                ")" +
+                " ORDER BY " +
+                InboxDatabaseHelper.COLUMN_DATE +
+                " DESC";
 
-        String query =
-            "SELECT * " +
-            " FROM " +
-            InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
-            " INNER JOIN " +
-            InboxDatabaseHelper.TABLE_NOTIFICATIONS +
-            " ON " +
-            InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
-            "." +
-            InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
-            " = " +
-            InboxDatabaseHelper.TABLE_NOTIFICATIONS +
-            "." +
-            InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
-            " WHERE " +
-            InboxDatabaseHelper.COLUMN_FETCHER_ID +
-            " = ?" +
-            " AND " +
-            InboxDatabaseHelper.TABLE_NOTIFICATIONS +
-            "." +
-            InboxDatabaseHelper.COLUMN_DELETED +
-            "= 0" +
-            " AND " +
-            InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
-            "." +
-            InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
-            " IN (" +
-            createInClause(notificationIds.size()) +
-            ")" +
-            " ORDER BY " +
-            InboxDatabaseHelper.COLUMN_DATE +
-            " DESC";
+            String[] args = new String[notificationIds.size() + 1];
+            args[0] = Long.toString(fetcherId);
+            int i = 1;
+            for (String notificationId : notificationIds) {
+                args[i] = notificationId;
+                ++i;
+            }
 
-        String[] args = new String[notificationIds.size() + 1];
-        args[0] = Long.toString(fetcherId);
-        int i = 1;
-        for (String notificationId : notificationIds) {
-            args[i] = notificationId;
-            ++i;
-        }
+            try (Cursor cursor = database.rawQuery(query, args)) {
+                while (cursor.moveToNext()) {
+                    InboxNotificationContentInternal notification = parseNotification(cursor);
+                    notifications.add(notification);
+                }
 
-        try (Cursor cursor = database.rawQuery(query, args)) {
-            while (cursor.moveToNext()) {
-                InboxNotificationContentInternal notification = parseNotification(cursor);
-                notifications.add(notification);
+                return notifications;
+            } catch (Exception e) {
+                Logger.internal(TAG, "Could not get notifications", e);
             }
 
             return notifications;
-        } catch (Exception e) {
-            Logger.internal(TAG, "Could not get notifications", e);
         }
-
-        return notifications;
     }
 
     protected long getNotificationTime(String notificationId) {
-        try (
-            Cursor cursor = database.query(
-                InboxDatabaseHelper.TABLE_NOTIFICATIONS,
-                new String[] { InboxDatabaseHelper.COLUMN_DATE },
-                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " =?",
-                new String[] { notificationId },
-                null,
-                null,
-                null,
-                "1"
-            )
-        ) {
-            if (cursor.moveToFirst()) {
-                return cursor.getLong(cursor.getColumnIndexOrThrow(InboxDatabaseHelper.COLUMN_DATE));
+        synchronized (dbLock) {
+            try (
+                Cursor cursor = database.query(
+                    InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                    new String[] { InboxDatabaseHelper.COLUMN_DATE },
+                    InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " =?",
+                    new String[] { notificationId },
+                    null,
+                    null,
+                    null,
+                    "1"
+                )
+            ) {
+                if (cursor.moveToFirst()) {
+                    return cursor.getLong(cursor.getColumnIndexOrThrow(InboxDatabaseHelper.COLUMN_DATE));
+                }
+            } catch (Exception e) {
+                Logger.internal(TAG, "Could not get notification time", e);
             }
-        } catch (Exception e) {
-            Logger.internal(TAG, "Could not get notification time", e);
-        }
 
-        return -1;
+            return -1;
+        }
     }
 
     /**
@@ -177,55 +190,57 @@ public final class InboxDatasource {
      * @return The fetcher identifier
      */
     public long getFetcherID(FetcherType type, String identifier) {
-        if (TextUtils.isEmpty(identifier)) {
-            return -1;
-        }
-
-        if (database == null) {
-            Logger.internal(TAG, "Attempted to get/insert a fetcher to a closed database");
-            open();
-        }
-
-        final ContentValues values = new ContentValues();
-        values.put(InboxDatabaseHelper.COLUMN_FETCHER_TYPE, type.getValue());
-        values.put(InboxDatabaseHelper.COLUMN_FETCHER_IDENTIFIER, identifier);
-
-        try {
-            return database.insertWithOnConflict(
-                InboxDatabaseHelper.TABLE_FETCHERS,
-                null,
-                values,
-                SQLiteDatabase.CONFLICT_ABORT
-            );
-        } catch (SQLiteConstraintException e) {
-            // Constraint (uniqueness of fetcher IDs) failed
-            // The fetcher already exists in db
-            try (
-                Cursor cursor = database.query(
-                    InboxDatabaseHelper.TABLE_FETCHERS,
-                    new String[] { InboxDatabaseHelper.COLUMN_DB_ID },
-                    InboxDatabaseHelper.COLUMN_FETCHER_TYPE +
-                    "=? and " +
-                    InboxDatabaseHelper.COLUMN_FETCHER_IDENTIFIER +
-                    "=?",
-                    new String[] { Integer.toString(type.getValue()), identifier },
-                    null,
-                    null,
-                    null,
-                    "1"
-                )
-            ) {
-                if (cursor.moveToFirst()) {
-                    return cursor.getLong(cursor.getColumnIndexOrThrow(InboxDatabaseHelper.COLUMN_DB_ID));
-                }
-            } catch (Exception ex) {
-                Logger.internal(TAG, "Error when getting fetcher id", ex);
+        synchronized (dbLock) {
+            if (TextUtils.isEmpty(identifier)) {
                 return -1;
             }
-        }
 
-        Logger.internal(TAG, "Could not find or create fetcher");
-        return -1;
+            if (database == null) {
+                Logger.internal(TAG, "Attempted to get/insert a fetcher to a closed database");
+                open();
+            }
+
+            final ContentValues values = new ContentValues();
+            values.put(InboxDatabaseHelper.COLUMN_FETCHER_TYPE, type.getValue());
+            values.put(InboxDatabaseHelper.COLUMN_FETCHER_IDENTIFIER, identifier);
+
+            try {
+                return database.insertWithOnConflict(
+                    InboxDatabaseHelper.TABLE_FETCHERS,
+                    null,
+                    values,
+                    SQLiteDatabase.CONFLICT_ABORT
+                );
+            } catch (SQLiteConstraintException e) {
+                // Constraint (uniqueness of fetcher IDs) failed
+                // The fetcher already exists in db
+                try (
+                    Cursor cursor = database.query(
+                        InboxDatabaseHelper.TABLE_FETCHERS,
+                        new String[] { InboxDatabaseHelper.COLUMN_DB_ID },
+                        InboxDatabaseHelper.COLUMN_FETCHER_TYPE +
+                        "=? and " +
+                        InboxDatabaseHelper.COLUMN_FETCHER_IDENTIFIER +
+                        "=?",
+                        new String[] { Integer.toString(type.getValue()), identifier },
+                        null,
+                        null,
+                        null,
+                        "1"
+                    )
+                ) {
+                    if (cursor.moveToFirst()) {
+                        return cursor.getLong(cursor.getColumnIndexOrThrow(InboxDatabaseHelper.COLUMN_DB_ID));
+                    }
+                } catch (Exception ex) {
+                    Logger.internal(TAG, "Error when getting fetcher id", ex);
+                    return -1;
+                }
+            }
+
+            Logger.internal(TAG, "Could not find or create fetcher");
+            return -1;
+        }
     }
 
     /**
@@ -240,11 +255,60 @@ public final class InboxDatasource {
         int limit,
         long fetcherId
     ) {
-        List<InboxCandidateNotificationInternal> candidates = new ArrayList<>();
-
-        if (!TextUtils.isEmpty(cursor)) {
-            long cursorTime = getNotificationTime(cursor);
-            if (cursorTime != -1) {
+        synchronized (dbLock) {
+            List<InboxCandidateNotificationInternal> candidates = new ArrayList<>();
+            if (!TextUtils.isEmpty(cursor)) {
+                long cursorTime = getNotificationTime(cursor);
+                if (cursorTime != -1) {
+                    String query =
+                        "SELECT " +
+                        InboxDatabaseHelper.COLUMN_FETCHER_ID +
+                        ", " +
+                        InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
+                        "." +
+                        InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
+                        ", " +
+                        InboxDatabaseHelper.COLUMN_UNREAD +
+                        ", " +
+                        InboxDatabaseHelper.COLUMN_DATE +
+                        " FROM " +
+                        InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
+                        " INNER JOIN " +
+                        InboxDatabaseHelper.TABLE_NOTIFICATIONS +
+                        " ON " +
+                        InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
+                        "." +
+                        InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
+                        " = " +
+                        InboxDatabaseHelper.TABLE_NOTIFICATIONS +
+                        "." +
+                        InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
+                        " WHERE " +
+                        InboxDatabaseHelper.COLUMN_DATE +
+                        " < ?" +
+                        " AND " +
+                        InboxDatabaseHelper.COLUMN_FETCHER_ID +
+                        " = ?" +
+                        " ORDER BY " +
+                        InboxDatabaseHelper.COLUMN_DATE +
+                        " DESC" +
+                        " LIMIT " +
+                        limit;
+                    try (
+                        Cursor result = database.rawQuery(
+                            query,
+                            new String[] { Long.toString(cursorTime), Long.toString(fetcherId) }
+                        )
+                    ) {
+                        while (result.moveToNext()) {
+                            InboxCandidateNotificationInternal candidate = parseCandidateNotification(result);
+                            candidates.add(candidate);
+                        }
+                    } catch (Exception e) {
+                        Logger.internal(TAG, "Could not get candidates notifications", e);
+                    }
+                }
+            } else {
                 String query =
                     "SELECT " +
                     InboxDatabaseHelper.COLUMN_FETCHER_ID +
@@ -269,9 +333,6 @@ public final class InboxDatasource {
                     "." +
                     InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
                     " WHERE " +
-                    InboxDatabaseHelper.COLUMN_DATE +
-                    " < ?" +
-                    " AND " +
                     InboxDatabaseHelper.COLUMN_FETCHER_ID +
                     " = ?" +
                     " ORDER BY " +
@@ -279,12 +340,7 @@ public final class InboxDatasource {
                     " DESC" +
                     " LIMIT " +
                     limit;
-                try (
-                    Cursor result = database.rawQuery(
-                        query,
-                        new String[] { Long.toString(cursorTime), Long.toString(fetcherId) }
-                    )
-                ) {
+                try (Cursor result = database.rawQuery(query, new String[] { Long.toString(fetcherId) })) {
                     while (result.moveToNext()) {
                         InboxCandidateNotificationInternal candidate = parseCandidateNotification(result);
                         candidates.add(candidate);
@@ -293,67 +349,24 @@ public final class InboxDatasource {
                     Logger.internal(TAG, "Could not get candidates notifications", e);
                 }
             }
-        } else {
-            String query =
-                "SELECT " +
-                InboxDatabaseHelper.COLUMN_FETCHER_ID +
-                ", " +
-                InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
-                "." +
-                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
-                ", " +
-                InboxDatabaseHelper.COLUMN_UNREAD +
-                ", " +
-                InboxDatabaseHelper.COLUMN_DATE +
-                " FROM " +
-                InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
-                " INNER JOIN " +
-                InboxDatabaseHelper.TABLE_NOTIFICATIONS +
-                " ON " +
-                InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
-                "." +
-                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
-                " = " +
-                InboxDatabaseHelper.TABLE_NOTIFICATIONS +
-                "." +
-                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
-                " WHERE " +
-                InboxDatabaseHelper.COLUMN_FETCHER_ID +
-                " = ?" +
-                " ORDER BY " +
-                InboxDatabaseHelper.COLUMN_DATE +
-                " DESC" +
-                " LIMIT " +
-                limit;
-            try (Cursor result = database.rawQuery(query, new String[] { Long.toString(fetcherId) })) {
-                while (result.moveToNext()) {
-                    InboxCandidateNotificationInternal candidate = parseCandidateNotification(result);
-                    candidates.add(candidate);
-                }
-            } catch (Exception e) {
-                Logger.internal(TAG, "Could not get candidates notifications", e);
-            }
+            return candidates;
         }
-        return candidates;
     }
 
     /**
      * Add a response's notification to the database
      *
      * @param response  response to add
-     * @param fetcherId
+     * @param fetcherId fetcher identifier
      */
-    public boolean insertResponse(InboxWebserviceResponse response, long fetcherId) {
+    public void insertResponse(InboxWebserviceResponse response, long fetcherId) {
         if (response == null || fetcherId <= 0) {
-            return false;
+            return;
         }
-
         for (InboxNotificationContentInternal notification : response.notifications) {
             Logger.internal(TAG, "Add notification in DB: " + notification.identifiers.identifier);
             insert(notification, fetcherId);
         }
-
-        return true;
     }
 
     /**
@@ -364,190 +377,193 @@ public final class InboxDatasource {
      * @return If the insert succeeded or not
      */
     protected boolean insert(InboxNotificationContentInternal notification, long fetcherId) {
-        if (database == null) {
-            Logger.internal(TAG, "Attempted to insert a notification to a closed database");
-            open();
-        }
-
-        if (notification == null) {
-            throw new NullPointerException("notification==null");
-        }
-
-        try {
-            final ContentValues values = new ContentValues();
-            values.put(InboxDatabaseHelper.COLUMN_NOTIFICATION_ID, notification.identifiers.identifier);
-            values.put(InboxDatabaseHelper.COLUMN_SEND_ID, notification.identifiers.sendID);
-            values.put(InboxDatabaseHelper.COLUMN_TITLE, notification.title != null ? notification.title : "");
-            values.put(InboxDatabaseHelper.COLUMN_BODY, notification.body != null ? notification.body : "");
-            values.put(InboxDatabaseHelper.COLUMN_UNREAD, notification.isUnread ? 1 : 0);
-            values.put(InboxDatabaseHelper.COLUMN_DATE, notification.date.getTime());
-
-            values.put(InboxDatabaseHelper.COLUMN_PAYLOAD, new JSONObject(notification.payload).toString());
-
-            ContentValues linkValues = new ContentValues();
-            linkValues.put(InboxDatabaseHelper.COLUMN_NOTIFICATION_ID, notification.identifiers.identifier);
-            linkValues.put(InboxDatabaseHelper.COLUMN_FETCHER_ID, fetcherId);
-            linkValues.put(InboxDatabaseHelper.COLUMN_INSTALL_ID, notification.identifiers.installID);
-            linkValues.put(InboxDatabaseHelper.COLUMN_CUSTOM_ID, notification.identifiers.customID);
-
-            database.beginTransactionNonExclusive();
-            try {
-                database.insertWithOnConflict(
-                    InboxDatabaseHelper.TABLE_NOTIFICATIONS,
-                    null,
-                    values,
-                    SQLiteDatabase.CONFLICT_REPLACE
-                );
-
-                database.insertWithOnConflict(
-                    InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS,
-                    null,
-                    linkValues,
-                    SQLiteDatabase.CONFLICT_REPLACE
-                );
-
-                database.setTransactionSuccessful();
-            } finally {
-                database.endTransaction();
+        synchronized (dbLock) {
+            if (database == null) {
+                Logger.internal(TAG, "Attempted to insert a notification to a closed database");
+                open();
             }
 
-            Logger.internal(
-                TAG,
-                "Successfully inserted notification " + notification.identifiers.identifier + " into DB"
-            );
-            return true;
-        } catch (Exception e) {
-            Logger.internal(TAG, "Error while writing event to SQLite.", e);
-        }
+            if (notification == null) {
+                throw new NullPointerException("notification==null");
+            }
 
-        return false;
+            try {
+                final ContentValues values = new ContentValues();
+                values.put(InboxDatabaseHelper.COLUMN_NOTIFICATION_ID, notification.identifiers.identifier);
+                values.put(InboxDatabaseHelper.COLUMN_SEND_ID, notification.identifiers.sendID);
+                values.put(InboxDatabaseHelper.COLUMN_TITLE, notification.title != null ? notification.title : "");
+                values.put(InboxDatabaseHelper.COLUMN_BODY, notification.body != null ? notification.body : "");
+                values.put(InboxDatabaseHelper.COLUMN_UNREAD, notification.isUnread ? 1 : 0);
+                values.put(InboxDatabaseHelper.COLUMN_DATE, notification.date.getTime());
+
+                values.put(InboxDatabaseHelper.COLUMN_PAYLOAD, new JSONObject(notification.payload).toString());
+
+                ContentValues linkValues = new ContentValues();
+                linkValues.put(InboxDatabaseHelper.COLUMN_NOTIFICATION_ID, notification.identifiers.identifier);
+                linkValues.put(InboxDatabaseHelper.COLUMN_FETCHER_ID, fetcherId);
+                linkValues.put(InboxDatabaseHelper.COLUMN_INSTALL_ID, notification.identifiers.installID);
+                linkValues.put(InboxDatabaseHelper.COLUMN_CUSTOM_ID, notification.identifiers.customID);
+
+                database.beginTransactionNonExclusive();
+                try {
+                    database.insertWithOnConflict(
+                        InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                        null,
+                        values,
+                        SQLiteDatabase.CONFLICT_REPLACE
+                    );
+
+                    database.insertWithOnConflict(
+                        InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS,
+                        null,
+                        linkValues,
+                        SQLiteDatabase.CONFLICT_REPLACE
+                    );
+
+                    database.setTransactionSuccessful();
+                } finally {
+                    database.endTransaction();
+                }
+
+                Logger.internal(
+                    TAG,
+                    "Successfully inserted notification " + notification.identifiers.identifier + " into DB"
+                );
+                return true;
+            } catch (Exception e) {
+                Logger.internal(TAG, "Error while writing event to SQLite.", e);
+            }
+            return false;
+        }
     }
 
     /**
      * Read the notification object and update the row in database
      * We update different values depending on what the server actually sent
      *
-     * @param notification
-     * @param fetcherId
-     * @return
+     * @param notification Notification to update
+     * @param fetcherId Fetcher id
+     * @return Notification identifier
      */
     public String updateNotification(JSONObject notification, long fetcherId) {
-        try {
-            String notificationId = notification.getString("notificationId");
-
-            ContentValues notificationsValues = new ContentValues();
-            ContentValues values = new ContentValues();
-            for (String key : notification.keySet()) {
-                switch (key) {
-                    case "sendId":
-                        String sendId = notification.getString("sendId");
-                        notificationsValues.put(InboxDatabaseHelper.COLUMN_SEND_ID, sendId);
-                        break;
-                    case Batch.Push.TITLE_KEY:
-                        String title = notification.getString(Batch.Push.TITLE_KEY);
-                        notificationsValues.put(InboxDatabaseHelper.COLUMN_TITLE, title);
-                        break;
-                    case Batch.Push.BODY_KEY:
-                        String body = notification.getString(Batch.Push.BODY_KEY);
-                        notificationsValues.put(InboxDatabaseHelper.COLUMN_BODY, body);
-                        break;
-                    case "read":
-                        boolean unread =
-                            !notification.reallyOptBoolean("read", false) &&
-                            !notification.reallyOptBoolean("opened", false);
-                        notificationsValues.put(InboxDatabaseHelper.COLUMN_UNREAD, unread ? 1 : 0);
-                        break;
-                    case "notificationTime":
-                        Date date = new Date(notification.getLong("notificationTime"));
-                        notificationsValues.put(InboxDatabaseHelper.COLUMN_DATE, date.getTime());
-                        break;
-                    case InboxDatabaseHelper.COLUMN_PAYLOAD:
-                        JSONObject payload = notification.getJSONObject("payload");
-                        notificationsValues.put(InboxDatabaseHelper.COLUMN_PAYLOAD, payload.toString());
-                        break;
-                    case "installId":
-                        String installId = notification.getString("installId");
-                        values.put(InboxDatabaseHelper.COLUMN_INSTALL_ID, installId);
-                        break;
-                    case "customId":
-                        String customId = notification.getString("customId");
-                        values.put(InboxDatabaseHelper.COLUMN_CUSTOM_ID, customId);
-                        break;
-                }
-            }
-
-            if (notificationsValues.size() <= 0) {
-                // JSON contains only notificationId
-                // Meaning we have the latest payload and states in DB
-                return notificationId;
-            }
-
-            database.beginTransactionNonExclusive();
+        synchronized (dbLock) {
             try {
-                database.update(
-                    InboxDatabaseHelper.TABLE_NOTIFICATIONS,
-                    notificationsValues,
-                    InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " =?",
-                    new String[] { notificationId }
-                );
-
-                if (values.size() > 0) {
-                    database.update(
-                        InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS,
-                        values,
-                        InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
-                        " =? and " +
-                        InboxDatabaseHelper.COLUMN_FETCHER_ID +
-                        " =?",
-                        new String[] { notificationId, Long.toString(fetcherId) }
-                    );
+                String notificationId = notification.getString("notificationId");
+                ContentValues notificationsValues = new ContentValues();
+                ContentValues values = new ContentValues();
+                for (String key : notification.keySet()) {
+                    switch (key) {
+                        case "sendId":
+                            String sendId = notification.getString("sendId");
+                            notificationsValues.put(InboxDatabaseHelper.COLUMN_SEND_ID, sendId);
+                            break;
+                        case Batch.Push.TITLE_KEY:
+                            String title = notification.getString(Batch.Push.TITLE_KEY);
+                            notificationsValues.put(InboxDatabaseHelper.COLUMN_TITLE, title);
+                            break;
+                        case Batch.Push.BODY_KEY:
+                            String body = notification.getString(Batch.Push.BODY_KEY);
+                            notificationsValues.put(InboxDatabaseHelper.COLUMN_BODY, body);
+                            break;
+                        case "read":
+                            boolean unread =
+                                !notification.reallyOptBoolean("read", false) &&
+                                !notification.reallyOptBoolean("opened", false);
+                            notificationsValues.put(InboxDatabaseHelper.COLUMN_UNREAD, unread ? 1 : 0);
+                            break;
+                        case "notificationTime":
+                            Date date = new Date(notification.getLong("notificationTime"));
+                            notificationsValues.put(InboxDatabaseHelper.COLUMN_DATE, date.getTime());
+                            break;
+                        case InboxDatabaseHelper.COLUMN_PAYLOAD:
+                            JSONObject payload = notification.getJSONObject("payload");
+                            notificationsValues.put(InboxDatabaseHelper.COLUMN_PAYLOAD, payload.toString());
+                            break;
+                        case "installId":
+                            String installId = notification.getString("installId");
+                            values.put(InboxDatabaseHelper.COLUMN_INSTALL_ID, installId);
+                            break;
+                        case "customId":
+                            String customId = notification.getString("customId");
+                            values.put(InboxDatabaseHelper.COLUMN_CUSTOM_ID, customId);
+                            break;
+                    }
                 }
 
-                database.setTransactionSuccessful();
-            } finally {
-                database.endTransaction();
-            }
+                if (notificationsValues.size() <= 0) {
+                    // JSON contains only notificationId
+                    // Meaning we have the latest payload and states in DB
+                    return notificationId;
+                }
 
-            return notificationId;
-        } catch (JSONException e) {
-            Logger.internal(TAG, "Could not parse sync payload", e);
+                database.beginTransactionNonExclusive();
+                try {
+                    database.update(
+                        InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                        notificationsValues,
+                        InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " =?",
+                        new String[] { notificationId }
+                    );
+
+                    if (values.size() > 0) {
+                        database.update(
+                            InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS,
+                            values,
+                            InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
+                            " =? and " +
+                            InboxDatabaseHelper.COLUMN_FETCHER_ID +
+                            " =?",
+                            new String[] { notificationId, Long.toString(fetcherId) }
+                        );
+                    }
+
+                    database.setTransactionSuccessful();
+                } finally {
+                    database.endTransaction();
+                }
+                return notificationId;
+            } catch (JSONException e) {
+                Logger.internal(TAG, "Could not parse sync payload", e);
+            }
+            return null;
         }
-        return null;
     }
 
     /**
      * Mark all notification received before a specified time as read
      *
-     * @param time
-     * @param fetcherId
-     * @return
+     * @param time The time
+     * @param fetcherId The fetcher identifier
+     * @return The number of updated rows
      */
     public int markAllAsRead(long time, long fetcherId) {
-        ContentValues values = new ContentValues();
-        values.put(InboxDatabaseHelper.COLUMN_UNREAD, 0);
+        synchronized (dbLock) {
+            ContentValues values = new ContentValues();
+            values.put(InboxDatabaseHelper.COLUMN_UNREAD, 0);
 
-        return database.update(
-            InboxDatabaseHelper.TABLE_NOTIFICATIONS,
-            values,
-            InboxDatabaseHelper.COLUMN_DATE +
-            " <= ?" +
-            " AND EXISTS (" +
-            " SELECT " +
-            InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
-            " FROM " +
-            InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
-            " WHERE " +
-            InboxDatabaseHelper.COLUMN_FETCHER_ID +
-            " = ?" +
-            " AND " +
-            InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
-            " = " +
-            InboxDatabaseHelper.TABLE_NOTIFICATIONS +
-            "." +
-            InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
-            ")",
-            new String[] { Long.toString(time), Long.toString(fetcherId) }
-        );
+            return database.update(
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                values,
+                InboxDatabaseHelper.COLUMN_DATE +
+                " <= ?" +
+                " AND EXISTS (" +
+                " SELECT " +
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
+                " FROM " +
+                InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS +
+                " WHERE " +
+                InboxDatabaseHelper.COLUMN_FETCHER_ID +
+                " = ?" +
+                " AND " +
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
+                " = " +
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS +
+                "." +
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID +
+                ")",
+                new String[] { Long.toString(time), Long.toString(fetcherId) }
+            );
+        }
     }
 
     /**
@@ -556,14 +572,16 @@ public final class InboxDatasource {
      * @param notificationID the notification identifier
      */
     public void markNotificationAsRead(String notificationID) {
-        ContentValues values = new ContentValues();
-        values.put(InboxDatabaseHelper.COLUMN_UNREAD, 0);
-        database.update(
-            InboxDatabaseHelper.TABLE_NOTIFICATIONS,
-            values,
-            InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " = ?",
-            new String[] { notificationID }
-        );
+        synchronized (dbLock) {
+            ContentValues values = new ContentValues();
+            values.put(InboxDatabaseHelper.COLUMN_UNREAD, 0);
+            database.update(
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                values,
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " = ?",
+                new String[] { notificationID }
+            );
+        }
     }
 
     /**
@@ -572,14 +590,16 @@ public final class InboxDatasource {
      * @param notificationID the notification identifier
      */
     public void markNotificationAsDeleted(String notificationID) {
-        ContentValues values = new ContentValues();
-        values.put(InboxDatabaseHelper.COLUMN_DELETED, 1);
-        database.update(
-            InboxDatabaseHelper.TABLE_NOTIFICATIONS,
-            values,
-            InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " = ?",
-            new String[] { notificationID }
-        );
+        synchronized (dbLock) {
+            ContentValues values = new ContentValues();
+            values.put(InboxDatabaseHelper.COLUMN_DELETED, 1);
+            database.update(
+                InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                values,
+                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " = ?",
+                new String[] { notificationID }
+            );
+        }
     }
 
     /**
@@ -589,34 +609,36 @@ public final class InboxDatasource {
      * @return boolean
      */
     public boolean deleteNotifications(List<String> notificationIds) {
-        if (notificationIds.size() <= 0) {
-            return false;
+        synchronized (dbLock) {
+            if (notificationIds.size() <= 0) {
+                return false;
+            }
+
+            String[] args = notificationIds.toArray(new String[0]);
+
+            database.beginTransactionNonExclusive();
+            try {
+                database.delete(
+                    InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                    InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " IN (" + createInClause(args.length) + ")",
+                    args
+                );
+
+                database.delete(
+                    InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS,
+                    InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " IN (" + createInClause(args.length) + ")",
+                    args
+                );
+
+                database.setTransactionSuccessful();
+            } catch (Exception e) {
+                Logger.internal(TAG, "Could not delete notifications", e);
+                return false;
+            } finally {
+                database.endTransaction();
+            }
+            return true;
         }
-
-        String[] args = notificationIds.toArray(new String[0]);
-
-        database.beginTransactionNonExclusive();
-        try {
-            database.delete(
-                InboxDatabaseHelper.TABLE_NOTIFICATIONS,
-                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " IN (" + createInClause(args.length) + ")",
-                args
-            );
-
-            database.delete(
-                InboxDatabaseHelper.TABLE_FETCHERS_NOTIFICATIONS,
-                InboxDatabaseHelper.COLUMN_NOTIFICATION_ID + " IN (" + createInClause(args.length) + ")",
-                args
-            );
-
-            database.setTransactionSuccessful();
-        } catch (Exception e) {
-            Logger.internal(TAG, "Could not delete notifications", e);
-            return false;
-        } finally {
-            database.endTransaction();
-        }
-        return true;
     }
 
     /**
@@ -624,40 +646,44 @@ public final class InboxDatasource {
      * Also remove related row in other tables
      */
     public boolean cleanDatabase() {
-        long expireTime = System.currentTimeMillis() - 7776000000L;
+        synchronized (dbLock) {
+            long expireTime = System.currentTimeMillis() - 7776000000L;
 
-        try (
-            Cursor cursor = database.query(
-                InboxDatabaseHelper.TABLE_NOTIFICATIONS,
-                new String[] { InboxDatabaseHelper.COLUMN_NOTIFICATION_ID },
-                InboxDatabaseHelper.COLUMN_DATE + " <= ?",
-                new String[] { Long.toString(expireTime) },
-                null,
-                null,
-                null,
-                null
-            )
-        ) {
-            List<String> idsToDelete = new ArrayList<>();
-            while (cursor.moveToNext()) {
-                String id = cursor.getString(cursor.getColumnIndexOrThrow(InboxDatabaseHelper.COLUMN_NOTIFICATION_ID));
-                if (!TextUtils.isEmpty(id)) {
-                    idsToDelete.add(id);
+            try (
+                Cursor cursor = database.query(
+                    InboxDatabaseHelper.TABLE_NOTIFICATIONS,
+                    new String[] { InboxDatabaseHelper.COLUMN_NOTIFICATION_ID },
+                    InboxDatabaseHelper.COLUMN_DATE + " <= ?",
+                    new String[] { Long.toString(expireTime) },
+                    null,
+                    null,
+                    null,
+                    null
+                )
+            ) {
+                List<String> idsToDelete = new ArrayList<>();
+                while (cursor.moveToNext()) {
+                    String id = cursor.getString(
+                        cursor.getColumnIndexOrThrow(InboxDatabaseHelper.COLUMN_NOTIFICATION_ID)
+                    );
+                    if (!TextUtils.isEmpty(id)) {
+                        idsToDelete.add(id);
+                    }
                 }
-            }
 
-            return deleteNotifications(idsToDelete);
-        } catch (Exception e) {
-            Logger.internal(TAG, "Could not clean database", e);
+                return deleteNotifications(idsToDelete);
+            } catch (Exception e) {
+                Logger.internal(TAG, "Could not clean database", e);
+            }
+            return false;
         }
-        return false;
     }
 
     /**
      * Parse a DB cursor to Notification object
      *
-     * @param cursor
-     * @return
+     * @param cursor The cursor
+     * @return Notification content
      */
     private InboxNotificationContentInternal parseNotification(Cursor cursor) {
         try {
@@ -710,8 +736,8 @@ public final class InboxDatasource {
     /**
      * Parse a DB cursor to Notification object
      *
-     * @param cursor
-     * @return
+     * @param cursor The cursor
+     * @return Notification content
      */
     private InboxCandidateNotificationInternal parseCandidateNotification(Cursor cursor) {
         return new InboxCandidateNotificationInternal(
@@ -723,8 +749,8 @@ public final class InboxDatasource {
     /**
      * Create a placeholder string for arguments substitution in IN clauses
      *
-     * @param length
-     * @return
+     * @param length The number of arguments
+     * @return The placeholder string
      */
     private String createInClause(int length) {
         if (length < 1) {

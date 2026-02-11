@@ -2,6 +2,7 @@ package com.batch.android.messaging.view.styled.cep
 
 import android.content.Context
 import android.text.TextUtils
+import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -12,7 +13,10 @@ import com.batch.android.messaging.view.extensions.px
 import com.batch.android.messaging.view.helper.StyleHelper
 import com.batch.android.module.MessagingModule
 
-class TextView(context: Context) : AppCompatTextView(context), Styleable {
+class TextView
+@JvmOverloads
+constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+    AppCompatTextView(context, attrs, defStyleAttr), Styleable {
 
     override fun applyComponentStyle(component: InAppComponent) {
 
@@ -43,6 +47,8 @@ class TextView(context: Context) : AppCompatTextView(context), Styleable {
         }
         setTextColor(StyleHelper.parseColor(component.color.getColorForTheme(context)))
         setTextSize(TypedValue.COMPLEX_UNIT_SP, component.fontSize.toFloat())
+        letterSpacing = 0f
+        setLineSpacing(0f, 1f)
 
         // Set text alignment
         gravity = component.textAlignment.toGravity()
