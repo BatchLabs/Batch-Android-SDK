@@ -36,4 +36,9 @@ public final class MetricRegistry {
     public static Observation registerNewDownloadImageDurationMetric() {
         return new Observation("sdk_download_image_duration").labelNames("type").register();
     }
+
+    // Monitor SDK initialization duration
+    public static final Observation sdkInitializationDuration = new Observation("sdk_initialization_duration")
+        .labelNames("platform")
+        .register();
 }

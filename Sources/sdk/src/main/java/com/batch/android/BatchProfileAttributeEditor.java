@@ -10,6 +10,7 @@ import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.UserModuleProvider;
 import com.batch.android.profile.ProfileDataHelper;
 import com.batch.android.profile.ProfileDataHelper.AttributeValidationException;
+import com.batch.android.profile.ProfileStringArrayAttribute;
 import com.batch.android.profile.ProfileUpdateOperation;
 import com.batch.android.user.AttributeType;
 import com.batch.android.user.InstallDataEditor;
@@ -195,6 +196,64 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
     }
 
     /**
+     * Set the profile topic preferences.
+     * <p>
+     * @param topics List of topics to set. Null to reset.
+     *               Must be a valid List of String not longer than 25 items.
+     *               String should be made of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 300 characters.
+     * @return This object instance, for method chaining.
+     */
+    public BatchProfileAttributeEditor setTopicPreferences(@Nullable List<String> topics) {
+        if (topics == null) {
+            this.profileUpdateOperation.setTopicPreferences(null);
+            return this;
+        }
+        try {
+            List<String> normalizedTopics = ProfileDataHelper.normalizeTopicPreferences(topics);
+            this.profileUpdateOperation.setTopicPreferences(normalizedTopics);
+        } catch (AttributeValidationException e) {
+            e.printErrorMessage(TAG, "topic_preferences");
+        }
+        return this;
+    }
+
+    /**
+     * Add topics to the profile topic preferences.
+     * <p>
+     * @param topics Topics to add.
+     *               Must be a valid List of String not longer than 25 items.
+     *               String should be made of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 300 characters.
+     * @return This object instance, for method chaining.
+     */
+    public BatchProfileAttributeEditor addToTopicPreferences(@NonNull List<String> topics) {
+        try {
+            List<String> normalizedTopics = ProfileDataHelper.normalizeTopicPreferences(topics);
+            this.profileUpdateOperation.addToTopicPreferences(normalizedTopics);
+        } catch (AttributeValidationException e) {
+            e.printErrorMessage(TAG, "topic_preferences");
+        }
+        return this;
+    }
+
+    /**
+     * Remove topics from the profile topic preferences.
+     *
+     * @param topics Topics to remove.
+     *               Must be a valid List of String not longer than 25 items.
+     *               String should be made of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 300 characters.
+     * @return This object instance, for method chaining.
+     */
+    public BatchProfileAttributeEditor removeFromTopicPreferences(@NonNull List<String> topics) {
+        try {
+            List<String> normalizedTopics = ProfileDataHelper.normalizeTopicPreferences(topics);
+            this.profileUpdateOperation.removeFromTopicPreferences(normalizedTopics);
+        } catch (AttributeValidationException e) {
+            e.printErrorMessage(TAG, "topic_preferences");
+        }
+        return this;
+    }
+
+    /**
      * Set a custom profile attribute for a key.
      *
      * @param key Attribute key, can't be null. It should be made of letters, numbers or underscores ([a-z0-9_]) and can't be longer than 30 characters.
@@ -348,7 +407,7 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
             ProfileDataHelper.validateStringArray(value);
             this.profileUpdateOperation.addAttribute(
                     normalizedKey,
-                    new UserAttribute(new ArrayList<>(value), AttributeType.STRING_ARRAY)
+                    new UserAttribute(new ProfileStringArrayAttribute(value), AttributeType.STRING_ARRAY)
                 );
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
@@ -394,7 +453,10 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
     public BatchProfileAttributeEditor addToArray(final @NonNull String key, final @NonNull String value) {
         try {
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
-            this.profileUpdateOperation.addToList(normalizedKey, new ArrayList<>(Collections.singletonList(value)));
+            this.profileUpdateOperation.addToCustomArrayAttribute(
+                    normalizedKey,
+                    new ArrayList<>(Collections.singletonList(value))
+                );
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
             return this;
@@ -413,7 +475,7 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
     public BatchProfileAttributeEditor addToArray(final @NonNull String key, final @NonNull List<String> values) {
         try {
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
-            this.profileUpdateOperation.addToList(normalizedKey, new ArrayList<>(values));
+            this.profileUpdateOperation.addToCustomArrayAttribute(normalizedKey, new ArrayList<>(values));
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
             return this;
@@ -435,7 +497,7 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
     public BatchProfileAttributeEditor removeFromArray(final @NonNull String key, final @NonNull String value) {
         try {
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
-            this.profileUpdateOperation.removeFromList(
+            this.profileUpdateOperation.removeFromCustomArrayAttribute(
                     normalizedKey,
                     new ArrayList<>(Collections.singletonList(value))
                 );
@@ -458,7 +520,7 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
     public BatchProfileAttributeEditor removeFromArray(final @NonNull String key, final @NonNull List<String> values) {
         try {
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
-            this.profileUpdateOperation.removeFromList(normalizedKey, new ArrayList<>(values));
+            this.profileUpdateOperation.removeFromCustomArrayAttribute(normalizedKey, new ArrayList<>(values));
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
             return this;

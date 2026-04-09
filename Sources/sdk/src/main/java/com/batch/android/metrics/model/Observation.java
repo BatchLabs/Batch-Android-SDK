@@ -35,6 +35,8 @@ public class Observation extends Metric<Observation> {
     protected Observation newChild(List<String> labels) {
         Observation observation = new Observation(name).labelNames(labelNames.toArray(new String[0]));
         observation.labelValues = labels;
+        observation.startTime = startTime;
+        observation.observing = observing;
         return observation;
     }
 

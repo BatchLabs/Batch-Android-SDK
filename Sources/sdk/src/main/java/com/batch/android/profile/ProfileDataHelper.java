@@ -5,6 +5,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.core.Logger;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -51,6 +52,21 @@ public class ProfileDataHelper {
      * Max size of an array of string
      */
     private static final int ATTR_STRING_ARRAY_MAX_SIZE = 25;
+
+    /**
+     * Max size for the topic preferences
+     */
+    private static final int TOPIC_PREFERENCE_MAX_SIZE = 25;
+
+    /**
+     * Topic preference max length
+     */
+    private static final int TOPIC_PREFERENCE_MAX_LENGTH = 300;
+
+    /**
+     * Topic preference pattern (lowercase only)
+     */
+    private static final Pattern TOPIC_PREFERENCE_PATTERN = Pattern.compile("^[a-z0-9_]+$");
     /**
      * The URL attribute max length authorized
      */
@@ -231,6 +247,45 @@ public class ProfileDataHelper {
     }
 
     /**
+     * Ensure topic preferences have the right format and return them in lowercase
+     *
+     * @param topics The topic preferences
+     * @return The normalized topics
+     * @throws AttributeValidationException Validation exception
+     */
+    @NonNull
+    public static List<String> normalizeTopicPreferences(@NonNull List<String> topics)
+        throws AttributeValidationException {
+        if (topics.isEmpty() || topics.size() > ATTR_STRING_ARRAY_MAX_SIZE) {
+            throw new AttributeValidationException(AttributeValidationException.Type.INVALID_TOPIC_PREFERENCES);
+        }
+        List<String> normalizedTopics = new ArrayList<>(topics.size());
+        for (String topic : topics) {
+            normalizedTopics.add(normalizeTopicPreference(topic));
+        }
+        return normalizedTopics;
+    }
+
+    /**
+     * Ensure a topic preference has the right format and return it in lowercase
+     *
+     * @param topic The topic preference
+     * @return The normalized topic
+     * @throws AttributeValidationException Validation exception
+     */
+    @NonNull
+    public static String normalizeTopicPreference(@Nullable String topic) throws AttributeValidationException {
+        if (topic == null || topic.trim().isEmpty() || topic.length() > TOPIC_PREFERENCE_MAX_LENGTH) {
+            throw new AttributeValidationException(AttributeValidationException.Type.INVALID_TOPIC_PREFERENCE);
+        }
+        String normalized = topic.toLowerCase(Locale.US);
+        if (!TOPIC_PREFERENCE_PATTERN.matcher(normalized).matches()) {
+            throw new AttributeValidationException(AttributeValidationException.Type.INVALID_TOPIC_PREFERENCE);
+        }
+        return normalized;
+    }
+
+    /**
      * Assert an attribute value is not null
      *
      * @param value the value to check
@@ -252,6 +307,8 @@ public class ProfileDataHelper {
             INVALID_CEP_STRING_ITEM,
             INVALID_MEP_STRING_ITEM,
             INVALID_STRING_ARRAY,
+            INVALID_TOPIC_PREFERENCE,
+            INVALID_TOPIC_PREFERENCES,
             NULL_VALUE,
         }
 
@@ -303,6 +360,26 @@ public class ProfileDataHelper {
                         "Array of string attributes must not be empty or longer than " +
                         ATTR_STRING_ARRAY_MAX_SIZE +
                         " items, only values of type String and must respect the string attribute limitations. Ignoring attribute '" +
+                        key +
+                        "'"
+                    );
+                    break;
+                case INVALID_TOPIC_PREFERENCE:
+                    Logger.error(
+                        tag,
+                        "Topics must be lowercase, match [a-z0-9_], and be no longer than " +
+                        TOPIC_PREFERENCE_MAX_LENGTH +
+                        " characters. Ignoring attribute '" +
+                        key +
+                        "'"
+                    );
+                    break;
+                case INVALID_TOPIC_PREFERENCES:
+                    Logger.error(
+                        tag,
+                        "Topic preferences must not be empty or longer than " +
+                        TOPIC_PREFERENCE_MAX_SIZE +
+                        " items. Ignoring attribute '" +
                         key +
                         "'"
                     );

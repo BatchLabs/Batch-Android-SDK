@@ -99,11 +99,11 @@ public abstract class Metric<Child> {
     }
 
     public boolean hasChanged() {
-        return values.size() > 0;
+        return !values.isEmpty();
     }
 
     public boolean hasChildren() {
-        return children.size() > 0;
+        return !children.isEmpty();
     }
 
     public String getName() {

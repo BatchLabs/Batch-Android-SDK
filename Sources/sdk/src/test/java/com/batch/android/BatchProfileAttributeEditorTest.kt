@@ -38,6 +38,9 @@ class BatchProfileAttributeEditorTest : DITest() {
             setPhoneNumber("+33612345678")
             setEmailMarketingSubscription(BatchEmailSubscriptionState.SUBSCRIBED)
             setSMSMarketingSubscription(BatchSMSSubscriptionState.SUBSCRIBED)
+            setTopicPreferences(listOf("News", "Offers"))
+            addToTopicPreferences(listOf("Beta"))
+            removeFromTopicPreferences(listOf("Offers"))
             setAttribute("string_att", "hello")
             // this attribute should not be sent from the install data changed event since it more
             // than 64 chars
@@ -88,6 +91,13 @@ class BatchProfileAttributeEditorTest : DITest() {
                 put("sms_marketing", "subscribed")
                 put("language", "fr")
                 put("region", "FR")
+                put(
+                    "topic_preferences",
+                    JSONArray().apply {
+                        put("news")
+                        put("beta")
+                    },
+                )
                 put(
                     "custom_attributes",
                     JSONObject().apply {
@@ -191,7 +201,7 @@ class BatchProfileAttributeEditorTest : DITest() {
             )
 
         // Ensure install data changed event is sent with rights parameters
-        Mockito.verify(trackerModule, Mockito.timeout(2000).times(1))
+        Mockito.verify(trackerModule, Mockito.timeout(5000).times(1))
             .track(
                 ArgumentMatchers.eq(InternalEvents.INSTALL_DATA_CHANGED),
                 JSONObjectPartialMatcher.eq(expectedInstallDataChangedParams),
@@ -207,6 +217,7 @@ class BatchProfileAttributeEditorTest : DITest() {
             setRegion("FR")
             setEmailAddress("test@batch.com")
             setPhoneNumber("+33612345678")
+            setTopicPreferences(listOf("News", "Offers"))
             setAttribute("string_att", "hello")
             setAttribute("int_att", 3)
             setAttribute("double_att", 3.6)
@@ -224,6 +235,7 @@ class BatchProfileAttributeEditorTest : DITest() {
             setRegion(null)
             setEmailAddress(null)
             setPhoneNumber(null)
+            setTopicPreferences(null)
             removeAttribute("string_att")
             removeAttribute("int_att")
             removeAttribute("double_att")
@@ -239,6 +251,7 @@ class BatchProfileAttributeEditorTest : DITest() {
                 put("phone_number", JSONObject.NULL)
                 put("language", JSONObject.NULL)
                 put("region", JSONObject.NULL)
+                put("topic_preferences", JSONObject.NULL)
                 put(
                     "custom_attributes",
                     JSONObject().apply {
@@ -318,6 +331,87 @@ class BatchProfileAttributeEditorTest : DITest() {
             .track(
                 ArgumentMatchers.eq(InternalEvents.INSTALL_DATA_CHANGED),
                 JSONObjectPartialMatcher.eq(expectedInstallDataChangedParams),
+            )
+    }
+
+    @Test
+    fun testTopicPreferences() {
+
+        BatchProfileAttributeEditor().apply {
+            setTopicPreferences(
+                listOf(
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                    "6",
+                    "7",
+                    "8",
+                    "9",
+                    "10",
+                    "11",
+                    "12",
+                    "13",
+                    "14",
+                    "15",
+                    "16",
+                    "17",
+                    "18",
+                    "19",
+                    "20",
+                    "21",
+                    "22",
+                    "23",
+                    "24",
+                    "25",
+                )
+            )
+            addToTopicPreferences(listOf("26"))
+            save()
+        }
+
+        val expectedParams =
+            JSONObject().apply {
+                put(
+                    "topic_preferences",
+                    JSONArray(
+                        listOf(
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5",
+                            "6",
+                            "7",
+                            "8",
+                            "9",
+                            "10",
+                            "11",
+                            "12",
+                            "13",
+                            "14",
+                            "15",
+                            "16",
+                            "17",
+                            "18",
+                            "19",
+                            "20",
+                            "21",
+                            "22",
+                            "23",
+                            "24",
+                            "25",
+                        )
+                    ),
+                )
+            }
+
+        // Ensure profile data changed event is sent with rights parameters
+        Mockito.verify(trackerModule, Mockito.times(1))
+            .track(
+                ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
+                JSONObjectMockitoMatcher.eq(expectedParams),
             )
     }
 

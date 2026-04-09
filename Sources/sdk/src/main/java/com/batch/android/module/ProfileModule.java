@@ -24,6 +24,7 @@ import com.batch.android.processor.Provide;
 import com.batch.android.processor.Singleton;
 import com.batch.android.profile.ProfileDataHelper;
 import com.batch.android.profile.ProfileDataSerializer;
+import com.batch.android.profile.ProfileStringArrayAttribute;
 import com.batch.android.profile.ProfileUpdateOperation;
 import com.batch.android.user.AttributeType;
 import com.batch.android.user.SQLUserDatasource;
@@ -200,7 +201,10 @@ public final class ProfileModule extends BatchModule {
         for (Map.Entry<String, Set<String>> entry : customTagCollections.entrySet()) {
             profileUpdateOperation.addAttribute(
                 entry.getKey(),
-                new UserAttribute(new ArrayList<>(entry.getValue()), AttributeType.STRING_ARRAY)
+                new UserAttribute(
+                    new ProfileStringArrayAttribute(new ArrayList<>(entry.getValue())),
+                    AttributeType.STRING_ARRAY
+                )
             );
         }
         // Send profile data changed

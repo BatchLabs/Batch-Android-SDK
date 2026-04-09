@@ -2,6 +2,9 @@ package com.batch.android.profile;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.batch.android.json.JSONArray;
+import com.batch.android.json.JSONException;
+import com.batch.android.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,18 +50,34 @@ public class ProfilePartialUpdateAttribute {
         return removed;
     }
 
-    public void putInAdded(List<String> elements) {
+    public void putInAdded(@NonNull List<String> elements) {
         if (this.added == null) {
             this.added = new ArrayList<>();
         }
         this.added.addAll(elements);
     }
 
-    public void putInRemoved(List<String> elements) {
+    public void putInRemoved(@NonNull List<String> elements) {
         if (this.removed == null) {
             this.removed = new ArrayList<>();
         }
         this.removed.addAll(elements);
+    }
+
+    public boolean isEmpty() {
+        return (added == null || added.isEmpty()) && (removed == null || removed.isEmpty());
+    }
+
+    @NonNull
+    public JSONObject getSerializedValue() throws JSONException {
+        JSONObject json = new JSONObject();
+        if (added != null && !added.isEmpty()) {
+            json.put("$add", new JSONArray(added));
+        }
+        if (removed != null && !removed.isEmpty()) {
+            json.put("$remove", new JSONArray(removed));
+        }
+        return json;
     }
 
     @NonNull

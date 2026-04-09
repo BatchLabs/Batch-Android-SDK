@@ -59,6 +59,8 @@ import com.batch.android.json.JSONObject;
 import com.batch.android.messaging.model.Message;
 import com.batch.android.messaging.parsing.PayloadParser;
 import com.batch.android.messaging.parsing.PayloadParsingException;
+import com.batch.android.metrics.MetricRegistry;
+import com.batch.android.metrics.model.Observation;
 import com.batch.android.module.BatchModule;
 import com.batch.android.module.MessagingModule;
 import com.batch.android.module.OptOutModule;
@@ -1842,7 +1844,7 @@ public final class Batch {
         final AtomicBoolean fromPush = new AtomicBoolean(false);
         final StringBuilder pushId = new StringBuilder();
         final RuntimeManager runtimeManager = RuntimeManagerProvider.get();
-
+        final Observation sdkInitializationMetric = MetricRegistry.sdkInitializationDuration.labels("android");
         boolean hasStarted = RuntimeManagerProvider
             .get()
             .changeState((state, config) -> {
@@ -1851,6 +1853,10 @@ public final class Batch {
                         "You must set the configuration before starting Batch. Please call setConfig on onCreate of your Application subclass"
                     );
                     return null;
+                }
+                if (state == State.OFF) {
+                    // Tracking initialization time
+                    sdkInitializationMetric.startTimer();
                 }
                 // Get the last stop if any (if we were background, not killed)
                 Long lastStop = runtimeManager.onStart();
@@ -2212,6 +2218,13 @@ public final class Batch {
 
             if (PushModule.isBackgroundRestricted(context)) {
                 Logger.info("The app is running in restricted backgrounding mode");
+            }
+        }
+        if (sdkInitializationMetric.isObserving()) {
+            if (hasStarted) {
+                sdkInitializationMetric.observeDuration();
+            } else {
+                sdkInitializationMetric.reset();
             }
         }
     }

@@ -11,6 +11,13 @@ import java.lang.reflect.Method;
  */
 public final class GooglePlayServicesHelper {
 
+    private static final String[] GOOGLE_PLAY_SERVICES_VERSION_CLASS_NAMES = {
+        "com.google.android.gms.common.GoogleApiAvailability",
+        "com.google.android.gms.common.GoogleApiAvailabilityLight",
+        "com.google.android.gms.common.GooglePlayServicesUtil",
+        "com.google.android.gms.common.GooglePlayServicesUtilLight",
+    };
+
     /**
      * The first version of the Google Play Services the contain Firebase Cloud Messaging methods
      */
@@ -89,16 +96,17 @@ public final class GooglePlayServicesHelper {
         }
 
         try {
-            // Get the class, throws ClassNotFoundException if not available
-            Class<?> clazz = Class.forName("com.google.android.gms.common.GoogleApiAvailability");
-            // Retrieve version
-            Field f = clazz.getField("GOOGLE_PLAY_SERVICES_VERSION_CODE");
-            libVersionCached = f.getInt(null);
-            return libVersionCached;
-        } catch (ClassNotFoundException e) {
+            for (String className : GOOGLE_PLAY_SERVICES_VERSION_CLASS_NAMES) {
+                try {
+                    Class<?> clazz = Class.forName(className);
+                    Field f = clazz.getField("GOOGLE_PLAY_SERVICES_VERSION_CODE");
+                    libVersionCached = f.getInt(null);
+                    return libVersionCached;
+                } catch (ClassNotFoundException | NoSuchFieldException ignored) {}
+            }
             return null;
         } catch (Exception e) {
-            Logger.error(PushModule.TAG, "Error while retrieving Google Play Services lib version", e);
+            Logger.internal(PushModule.TAG, "Error while retrieving Google Play Services lib version", e);
             return null;
         } finally {
             versionChecked = true;

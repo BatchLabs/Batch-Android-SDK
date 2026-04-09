@@ -5,7 +5,6 @@ import com.batch.android.json.JSONArray;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
 import com.batch.android.user.UserAttribute;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -13,11 +12,12 @@ import java.util.Map;
 public class ProfileDataSerializer {
 
     private static final String EMAIL_KEY = "email";
-    private static final String EMAIL_MARKETING = "email_marketing";
+    private static final String EMAIL_MARKETING_KEY = "email_marketing";
     private static final String PHONE_NUMBER_KEY = "phone_number";
-    private static final String SMS_MARKETING = "sms_marketing";
+    private static final String SMS_MARKETING_KEY = "sms_marketing";
     private static final String LANGUAGE_KEY = "language";
     private static final String REGION_KEY = "region";
+    private static final String TOPIC_PREFERENCES_KEY = "topic_preferences";
     private static final String CUSTOM_ATTRIBUTES_KEY = "custom_attributes";
 
     /**
@@ -31,39 +31,41 @@ public class ProfileDataSerializer {
     public static JSONObject serialize(@NonNull ProfileUpdateOperation profileUpdateOperation) throws JSONException {
         JSONObject serializedProfile = new JSONObject();
 
-        ProfileDeletableAttribute email = profileUpdateOperation.getEmail();
+        ProfileDeletableAttribute<String> email = profileUpdateOperation.getEmail();
         if (email != null) {
             serializedProfile.put(EMAIL_KEY, email.getSerializedValue());
         }
 
-        ProfileDeletableAttribute phoneNumber = profileUpdateOperation.getPhoneNumber();
+        ProfileDeletableAttribute<String> phoneNumber = profileUpdateOperation.getPhoneNumber();
         if (phoneNumber != null) {
             serializedProfile.put(PHONE_NUMBER_KEY, phoneNumber.getSerializedValue());
         }
 
-        ProfileDeletableAttribute language = profileUpdateOperation.getLanguage();
+        ProfileDeletableAttribute<String> language = profileUpdateOperation.getLanguage();
         if (language != null) {
             serializedProfile.put(LANGUAGE_KEY, language.getSerializedValue());
         }
 
-        ProfileDeletableAttribute region = profileUpdateOperation.getRegion();
+        ProfileDeletableAttribute<String> region = profileUpdateOperation.getRegion();
         if (region != null) {
             serializedProfile.put(REGION_KEY, region.getSerializedValue());
         }
 
         if (profileUpdateOperation.getEmailMarketing() != null) {
             serializedProfile.put(
-                EMAIL_MARKETING,
+                EMAIL_MARKETING_KEY,
                 profileUpdateOperation.getEmailMarketing().name().toLowerCase(Locale.US)
             );
         }
 
         if (profileUpdateOperation.getSMSMarketing() != null) {
             serializedProfile.put(
-                SMS_MARKETING,
+                SMS_MARKETING_KEY,
                 profileUpdateOperation.getSMSMarketing().name().toLowerCase(Locale.US)
             );
         }
+
+        serializedProfile.put(TOPIC_PREFERENCES_KEY, profileUpdateOperation.getTopicPreferences().toJSON());
 
         Map<String, UserAttribute> customAttributes = profileUpdateOperation.getCustomAttributes();
         if (!customAttributes.isEmpty()) {
@@ -73,15 +75,10 @@ public class ProfileDataSerializer {
                 false
             );
             for (Map.Entry<String, Object> attribute : serverAttributesRepresentation.entrySet()) {
-                if (attribute.getValue() instanceof List) {
-                    JSONArray jsonList = new JSONArray((Collection) attribute.getValue());
-                    serializedCustomAttributes.put(attribute.getKey(), jsonList);
-                } else if (attribute.getValue() instanceof ProfilePartialUpdateAttribute) {
+                if (attribute.getValue() instanceof ProfileStringArrayAttribute) {
                     serializedCustomAttributes.put(
                         attribute.getKey(),
-                        ProfileDataSerializer.serializePartialUpdateAttribute(
-                            (ProfilePartialUpdateAttribute) attribute.getValue()
-                        )
+                        ((ProfileStringArrayAttribute) attribute.getValue()).toJSON()
                     );
                 } else {
                     serializedCustomAttributes.put(

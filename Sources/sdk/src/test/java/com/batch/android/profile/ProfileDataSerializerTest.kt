@@ -36,10 +36,13 @@ class ProfileDataSerializerTest {
                 addAttribute("date_att", UserAttribute(Date(1596975143943L), AttributeType.DATE))
                 addAttribute(
                     "array_att",
-                    UserAttribute(listOf("michel", "bresil"), AttributeType.STRING_ARRAY),
+                    UserAttribute(
+                        ProfileStringArrayAttribute(listOf("michel", "bresil")),
+                        AttributeType.STRING_ARRAY,
+                    ),
                 )
-                addToList("array_partial", listOf("i", "don't"))
-                removeFromList("array_partial", listOf("know"))
+                addToCustomArrayAttribute("array_partial", listOf("i", "don't"))
+                removeFromCustomArrayAttribute("array_partial", listOf("know"))
             }
 
         val actual = ProfileDataSerializer.serialize(dataModel)

@@ -1,6 +1,8 @@
 package com.batch.android.profile;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -20,22 +22,14 @@ public class ProfileDataHelperTest {
         Assert.assertTrue(ProfileDataHelper.isNotValidEmail("inva\nlid@gmail.com"));
         Assert.assertTrue(ProfileDataHelper.isNotValidEmail("invalid@gmail .com"));
         Assert.assertTrue(ProfileDataHelper.isNotValidEmail("invalid@inva lid.gmail.com"));
-        Assert.assertTrue(
-            ProfileDataHelper.isNotValidEmail(
-                "testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest@gmail.com"
-            )
-        );
+        Assert.assertTrue(ProfileDataHelper.isNotValidEmail(buildStringOfLength(248).concat("@gmail.com")));
     }
 
     @Test
     public void testIsNotValidCustomUserID() {
         Assert.assertFalse(ProfileDataHelper.isNotValidCustomUserID("customId"));
         Assert.assertFalse(ProfileDataHelper.isNotValidCustomUserID(null));
-        Assert.assertTrue(
-            ProfileDataHelper.isNotValidCustomUserID(
-                "my_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_idmy_test_id_1111"
-            )
-        );
+        Assert.assertTrue(ProfileDataHelper.isNotValidCustomUserID(buildStringOfLength(1025)));
     }
 
     @Test
@@ -79,10 +73,42 @@ public class ProfileDataHelperTest {
         Assert.assertEquals("normalized_tag", ProfileDataHelper.normalizeTagValue("Normalized_Tag"));
         Assert.assertThrows(
             ProfileDataHelper.AttributeValidationException.class,
-            () ->
-                ProfileDataHelper.normalizeTagValue(
-                    "Pellentesque habitant morbi tristique senectus et netus et males !"
-                )
+            () -> ProfileDataHelper.normalizeTagValue(buildStringOfLength(65))
+        );
+    }
+
+    @Test
+    public void testNormalizeTopicPreference() throws ProfileDataHelper.AttributeValidationException {
+        Assert.assertEquals("news_updates", ProfileDataHelper.normalizeTopicPreference("News_Updates"));
+        Assert.assertThrows(
+            ProfileDataHelper.AttributeValidationException.class,
+            () -> ProfileDataHelper.normalizeTopicPreference("invalid topic")
+        );
+        Assert.assertThrows(
+            ProfileDataHelper.AttributeValidationException.class,
+            () -> ProfileDataHelper.normalizeTopicPreference(null)
+        );
+        Assert.assertThrows(
+            ProfileDataHelper.AttributeValidationException.class,
+            () -> ProfileDataHelper.normalizeTopicPreference(buildStringOfLength(301))
+        );
+    }
+
+    @Test
+    public void testNormalizeTopicPreferences() throws ProfileDataHelper.AttributeValidationException {
+        List<String> normalized = ProfileDataHelper.normalizeTopicPreferences(Arrays.asList("News_Updates", "topic2"));
+        Assert.assertEquals(Arrays.asList("news_updates", "topic2"), normalized);
+        Assert.assertThrows(
+            ProfileDataHelper.AttributeValidationException.class,
+            () -> ProfileDataHelper.normalizeTopicPreferences(Collections.emptyList())
+        );
+        Assert.assertThrows(
+            ProfileDataHelper.AttributeValidationException.class,
+            () -> ProfileDataHelper.normalizeTopicPreferences(Collections.nCopies(26, "topic"))
+        );
+        Assert.assertThrows(
+            ProfileDataHelper.AttributeValidationException.class,
+            () -> ProfileDataHelper.normalizeTopicPreferences(Arrays.asList("valid_topic", "invalid topic"))
         );
     }
 
@@ -106,28 +132,20 @@ public class ProfileDataHelperTest {
     @Test
     public void testIsNotValidMEPStringValue() throws ProfileDataHelper.AttributeValidationException {
         ProfileDataHelper.validateMEPStringValue("foo");
-        ProfileDataHelper.validateMEPStringValue("Pellentesque habitant morbi tristique senectus et netus et males");
+        ProfileDataHelper.validateMEPStringValue(buildStringOfLength(64));
         Assert.assertThrows(
             ProfileDataHelper.AttributeValidationException.class,
-            () ->
-                ProfileDataHelper.validateMEPStringValue(
-                    "Pellentesque habitant morbi tristique senectus et netus et males !"
-                )
+            () -> ProfileDataHelper.validateMEPStringValue(buildStringOfLength(65))
         );
     }
 
     @Test
     public void testValidateCEPStringValue() throws ProfileDataHelper.AttributeValidationException {
         ProfileDataHelper.validateCEPStringValue("foo");
-        ProfileDataHelper.validateCEPStringValue(
-            "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque."
-        );
+        ProfileDataHelper.validateCEPStringValue(buildStringOfLength(300));
         Assert.assertThrows(
             ProfileDataHelper.AttributeValidationException.class,
-            () ->
-                ProfileDataHelper.validateCEPStringValue(
-                    "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque !"
-                )
+            () -> ProfileDataHelper.validateCEPStringValue("")
         );
     }
 
@@ -136,15 +154,7 @@ public class ProfileDataHelperTest {
         ProfileDataHelper.validateStringArray(Arrays.asList("foo", "bar"));
         Assert.assertThrows(
             ProfileDataHelper.AttributeValidationException.class,
-            () ->
-                ProfileDataHelper.validateStringArray(
-                    Arrays.asList(
-                        "0",
-                        "1",
-                        "2",
-                        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque !"
-                    )
-                )
+            () -> ProfileDataHelper.validateStringArray(Arrays.asList("0", "1", "2", buildStringOfLength(301)))
         );
         Assert.assertThrows(
             ProfileDataHelper.AttributeValidationException.class,
@@ -180,5 +190,11 @@ public class ProfileDataHelperTest {
                     )
                 )
         );
+    }
+
+    private static String buildStringOfLength(int length) {
+        char[] chars = new char[length];
+        Arrays.fill(chars, 'a');
+        return new String(chars);
     }
 }

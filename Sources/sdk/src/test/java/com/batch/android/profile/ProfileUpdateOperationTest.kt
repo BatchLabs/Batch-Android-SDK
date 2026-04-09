@@ -16,17 +16,23 @@ class ProfileUpdateOperationTest {
         val profileUpdateOperation = ProfileUpdateOperation()
         profileUpdateOperation.addAttribute(
             "test",
-            UserAttribute(ArrayList(listOf("a")), AttributeType.STRING_ARRAY),
+            UserAttribute(ProfileStringArrayAttribute(listOf("a")), AttributeType.STRING_ARRAY),
         )
         Assert.assertTrue(profileUpdateOperation.customAttributes.containsKey("test"))
         Assert.assertEquals(
-            (profileUpdateOperation.customAttributes["test"]?.value as List<*>)[0],
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .attribute
+                .value
+                ?.get(0),
             "a",
         )
 
-        profileUpdateOperation.addToList("test", listOf("b"))
+        profileUpdateOperation.addToCustomArrayAttribute("test", listOf("b"))
         Assert.assertEquals(
-            (profileUpdateOperation.customAttributes["test"]?.value as List<*>)[1],
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .attribute
+                .value
+                ?.get(1),
             "b",
         )
     }
@@ -34,12 +40,13 @@ class ProfileUpdateOperationTest {
     @Test
     fun testAddToListFirst() {
         val profileUpdateOperation = ProfileUpdateOperation()
-        profileUpdateOperation.addToList("test", listOf("a"))
+        profileUpdateOperation.addToCustomArrayAttribute("test", listOf("a"))
         Assert.assertTrue(profileUpdateOperation.customAttributes.containsKey("test"))
 
         val value =
-            profileUpdateOperation.customAttributes["test"]?.value as ProfilePartialUpdateAttribute
-        Assert.assertEquals(value.added?.get(0), "a")
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .partialUpdates
+        Assert.assertEquals(value?.added?.get(0), "a")
     }
 
     @Test
@@ -50,50 +57,53 @@ class ProfileUpdateOperationTest {
         Assert.assertTrue(profileUpdateOperation.customAttributes.containsKey("test"))
 
         Assert.assertNull(profileUpdateOperation.customAttributes["test"]?.value)
-        profileUpdateOperation.addToList("test", ArrayList(listOf("a")))
+        profileUpdateOperation.addToCustomArrayAttribute("test", ArrayList(listOf("a")))
 
-        val value = profileUpdateOperation.customAttributes["test"]?.value as List<*>
-        Assert.assertEquals(value[0], "a")
+        val value =
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .attribute
+                .value
+        Assert.assertEquals("a", value?.get(0))
     }
 
     @Test
     fun testAddToListTwoTimes() {
         val profileUpdateOperation = ProfileUpdateOperation()
-        profileUpdateOperation.addToList("test", ArrayList(listOf("a")))
+        profileUpdateOperation.addToCustomArrayAttribute("test", ArrayList(listOf("a")))
         Assert.assertTrue(profileUpdateOperation.customAttributes.containsKey("test"))
         Assert.assertEquals(
             1,
-            (profileUpdateOperation.customAttributes["test"]?.value
-                    as ProfilePartialUpdateAttribute)
-                .added
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .partialUpdates
+                ?.added
                 ?.size,
         )
         Assert.assertEquals(
             "a",
-            (profileUpdateOperation.customAttributes["test"]?.value
-                    as ProfilePartialUpdateAttribute)
-                .added
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .partialUpdates
+                ?.added
                 ?.get(0),
         )
 
-        profileUpdateOperation.addToList("test", ArrayList(listOf("b")))
+        profileUpdateOperation.addToCustomArrayAttribute("test", ArrayList(listOf("b")))
         Assert.assertEquals(
             2,
-            (profileUpdateOperation.customAttributes["test"]?.value
-                    as ProfilePartialUpdateAttribute)
-                .added
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .partialUpdates
+                ?.added
                 ?.size,
         )
         Assert.assertEquals(
             "b",
-            (profileUpdateOperation.customAttributes["test"]?.value
-                    as ProfilePartialUpdateAttribute)
-                .added
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .partialUpdates
+                ?.added
                 ?.get(1),
         )
 
         Assert.assertThrows(AttributeValidationException::class.java) {
-            profileUpdateOperation.addToList(
+            profileUpdateOperation.addToCustomArrayAttribute(
                 "test",
                 ArrayList(
                     listOf(
@@ -127,9 +137,9 @@ class ProfileUpdateOperationTest {
         }
         Assert.assertEquals(
             2,
-            (profileUpdateOperation.customAttributes["test"]?.value
-                    as ProfilePartialUpdateAttribute)
-                .added
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .partialUpdates
+                ?.added
                 ?.size,
         )
     }
@@ -140,37 +150,46 @@ class ProfileUpdateOperationTest {
         val profileUpdateOperation = ProfileUpdateOperation()
         profileUpdateOperation.addAttribute(
             "test",
-            UserAttribute(ArrayList(listOf("a", "b")), AttributeType.STRING_ARRAY),
+            UserAttribute(ProfileStringArrayAttribute(listOf("a", "b")), AttributeType.STRING_ARRAY),
         )
         Assert.assertTrue(profileUpdateOperation.customAttributes.containsKey("test"))
         Assert.assertEquals(
-            (profileUpdateOperation.customAttributes["test"]?.value as List<*>).size,
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .attribute
+                .value
+                ?.size,
             2,
         )
 
-        profileUpdateOperation.removeFromList("test", ArrayList(listOf("b")))
+        profileUpdateOperation.removeFromCustomArrayAttribute("test", ArrayList(listOf("b")))
         Assert.assertEquals(
-            (profileUpdateOperation.customAttributes["test"]?.value as List<*>).size,
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .attribute
+                .value
+                ?.size,
             1,
         )
         Assert.assertEquals(
-            (profileUpdateOperation.customAttributes["test"]?.value as List<*>)[0],
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .attribute
+                .value
+                ?.get(0),
             "a",
         )
 
-        profileUpdateOperation.removeFromList("test", ArrayList(listOf("a")))
+        profileUpdateOperation.removeFromCustomArrayAttribute("test", ArrayList(listOf("a")))
         Assert.assertFalse(profileUpdateOperation.customAttributes.containsKey("test"))
     }
 
     @Test
     fun testRemoveFromListFirst() {
         val profileUpdateOperation = ProfileUpdateOperation()
-        profileUpdateOperation.removeFromList("test", listOf("a"))
+        profileUpdateOperation.removeFromCustomArrayAttribute("test", listOf("a"))
         Assert.assertTrue(profileUpdateOperation.customAttributes.containsKey("test"))
 
         val value =
-            profileUpdateOperation.customAttributes["test"]?.value as ProfilePartialUpdateAttribute
-        Assert.assertEquals(value.removed?.get(0), "a")
+            profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute
+        Assert.assertEquals(value.partialUpdates?.removed?.get(0), "a")
     }
 
     @Test
@@ -181,7 +200,7 @@ class ProfileUpdateOperationTest {
         Assert.assertTrue(profileUpdateOperation.customAttributes.containsKey("test"))
 
         Assert.assertNull(profileUpdateOperation.customAttributes["test"]?.value)
-        profileUpdateOperation.removeFromList("test", ArrayList(listOf("a")))
+        profileUpdateOperation.removeFromCustomArrayAttribute("test", ArrayList(listOf("a")))
 
         Assert.assertNull(profileUpdateOperation.customAttributes["test"]?.value)
     }
@@ -189,35 +208,35 @@ class ProfileUpdateOperationTest {
     @Test
     fun testRemoveFromListTwoTimes() {
         val profileUpdateOperation = ProfileUpdateOperation()
-        profileUpdateOperation.removeFromList("test", ArrayList(listOf("a")))
+        profileUpdateOperation.removeFromCustomArrayAttribute("test", ArrayList(listOf("a")))
         Assert.assertTrue(profileUpdateOperation.customAttributes.containsKey("test"))
 
         Assert.assertEquals(
             "a",
-            (profileUpdateOperation.customAttributes["test"]?.value
-                    as ProfilePartialUpdateAttribute)
-                .removed
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .partialUpdates
+                ?.removed
                 ?.get(0),
         )
 
-        profileUpdateOperation.removeFromList("test", ArrayList(listOf("b")))
+        profileUpdateOperation.removeFromCustomArrayAttribute("test", ArrayList(listOf("b")))
         Assert.assertEquals(
             2,
-            (profileUpdateOperation.customAttributes["test"]?.value
-                    as ProfilePartialUpdateAttribute)
-                .removed
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .partialUpdates
+                ?.removed
                 ?.size,
         )
         Assert.assertEquals(
             "b",
-            (profileUpdateOperation.customAttributes["test"]?.value
-                    as ProfilePartialUpdateAttribute)
-                .removed
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .partialUpdates
+                ?.removed
                 ?.get(1),
         )
 
         Assert.assertThrows(AttributeValidationException::class.java) {
-            profileUpdateOperation.removeFromList(
+            profileUpdateOperation.removeFromCustomArrayAttribute(
                 "test",
                 ArrayList(
                     listOf(
@@ -251,9 +270,9 @@ class ProfileUpdateOperationTest {
         }
         Assert.assertEquals(
             2,
-            (profileUpdateOperation.customAttributes["test"]?.value
-                    as ProfilePartialUpdateAttribute)
-                .removed
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .partialUpdates
+                ?.removed
                 ?.size,
         )
     }
@@ -261,15 +280,15 @@ class ProfileUpdateOperationTest {
     @Test
     fun testAddToAndRemoveFromList() {
         val profileUpdateOperation = ProfileUpdateOperation()
-        profileUpdateOperation.addToList("test", ArrayList(listOf("a")))
-        profileUpdateOperation.removeFromList("test", ArrayList(listOf("b")))
+        profileUpdateOperation.addToCustomArrayAttribute("test", ArrayList(listOf("a")))
+        profileUpdateOperation.removeFromCustomArrayAttribute("test", ArrayList(listOf("b")))
         Assert.assertTrue(profileUpdateOperation.customAttributes.containsKey("test"))
 
         val value =
-            profileUpdateOperation.customAttributes["test"]?.value as ProfilePartialUpdateAttribute
-        Assert.assertEquals(value.added?.size, 1)
-        Assert.assertEquals(value.added?.get(0), "a")
-        Assert.assertEquals(value.removed?.size, 1)
-        Assert.assertEquals(value.removed?.get(0), "b")
+            profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute
+        Assert.assertEquals(value.partialUpdates?.added?.size, 1)
+        Assert.assertEquals(value.partialUpdates?.added?.get(0), "a")
+        Assert.assertEquals(value.partialUpdates?.removed?.size, 1)
+        Assert.assertEquals(value.partialUpdates?.removed?.get(0), "b")
     }
 }

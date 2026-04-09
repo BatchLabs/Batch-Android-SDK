@@ -35,6 +35,7 @@ public class AsyncImageDownloadTask extends AsyncTask<String, Void, AsyncImageDo
     private static final String TAG = "AsyncImageDownloadTask";
     //region Inner classes/interfaces
 
+    // Image duration metric
     private final Observation downloadDurationMetric = MetricRegistry.registerNewDownloadImageDurationMetric();
 
     private MessagingError lastError = null;
@@ -95,10 +96,11 @@ public class AsyncImageDownloadTask extends AsyncTask<String, Void, AsyncImageDo
 
     @Override
     protected void onPreExecute() {
+        // Start observing
+        downloadDurationMetric.startTimer();
         ImageDownloadListener listener = weakListener.get();
         if (listener != null) {
             listener.onImageDownloadStart();
-            downloadDurationMetric.startTimer();
         }
     }
 
@@ -195,24 +197,20 @@ public class AsyncImageDownloadTask extends AsyncTask<String, Void, AsyncImageDo
     @Override
     protected void onPostExecute(@Nullable Result result) {
         ImageDownloadListener listener = weakListener.get();
-        if (listener != null) {
-            if (result != null) {
-                if (result instanceof GIFResult) {
-                    downloadDurationMetric.labelNames("gif").observeDuration();
-                } else {
-                    downloadDurationMetric.labelNames("image").observeDuration();
-                }
-                listener.onImageDownloadSuccess(result);
+        if (result != null) {
+            if (result instanceof GIFResult) {
+                downloadDurationMetric.labels("gif").observeDuration();
             } else {
-                downloadDurationMetric.observeDuration();
-                MetricRegistry.downloadingImageErrorCount.inc();
-                listener.onImageDownloadError(lastError != null ? lastError : MessagingError.UNKNOWN);
+                downloadDurationMetric.labels("image").observeDuration();
+            }
+            if (listener != null) {
+                listener.onImageDownloadSuccess(result);
             }
         } else {
-            // Since we start the timer according to the listener and its is a weak reference,
-            // it may have been garbage collected so we ensure the metric is observing before we stop it.
-            if (downloadDurationMetric.isObserving()) {
-                downloadDurationMetric.observeDuration();
+            downloadDurationMetric.reset();
+            MetricRegistry.downloadingImageErrorCount.inc();
+            if (listener != null) {
+                listener.onImageDownloadError(lastError != null ? lastError : MessagingError.UNKNOWN);
             }
         }
     }
