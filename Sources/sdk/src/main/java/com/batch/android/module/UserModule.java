@@ -57,6 +57,10 @@ public final class UserModule extends BatchModule {
     public static final String TAG = "User";
     public static final String PARAMETER_KEY_LABEL = "label";
     public static final String PARAMETER_KEY_DATA = "data";
+    // Specific changeset value to workaround profile migration
+    // when real changeset is 0.
+    public static final long ATC_CHANGESET_FOR_MIGRATIONS = -99L;
+
     private static final Pattern EVENT_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{1,30}$");
     private static final long LOCATION_UPDATE_MINIMUM_TIME_MS = 30000;
     private static final long CIPHER_FALLBACK_RESET_TIME_MS = 172800000L;
@@ -338,6 +342,16 @@ public final class UserModule extends BatchModule {
                     // If we don't have a transaction ID but have a changeset, start another send
                     if (changeset > 0) {
                         startSendWS(0);
+                    } else if (changeset == 0) {
+                        // Force calling ATC to check for profile migration when we got a project key
+                        String currentProjectKey = parameters.get(ParameterKeys.PROJECT_KEY);
+                        if (TextUtils.isEmpty(currentProjectKey)) {
+                            WebserviceLauncher.launchAttributesCheckWebservice(
+                                RuntimeManagerProvider.get(),
+                                ATC_CHANGESET_FOR_MIGRATIONS,
+                                ""
+                            );
+                        }
                     }
 
                     return;

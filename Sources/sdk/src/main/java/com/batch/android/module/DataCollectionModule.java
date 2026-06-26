@@ -111,34 +111,48 @@ public class DataCollectionModule extends BatchModule {
         super.batchDidStart();
         Context context = RuntimeManagerProvider.get().getContext();
         if (context != null) {
-            TaskExecutorProvider.get(context).submit(() -> this.systemParametersMayHaveChanged(context));
+            TaskExecutorProvider.get(context).submit(() -> this.systemParametersMayHaveChanged(context, false));
         }
     }
 
     // endregion
 
     /**
+     * Force to send a _NATIVE_DATA_CHANGED event with all parameters
+     */
+    public void forceSendingNativeDataChanged() {
+        Context context = RuntimeManagerProvider.get().getContext();
+        if (context != null) {
+            TaskExecutorProvider.get(context).submit(() -> this.systemParametersMayHaveChanged(context, true));
+        }
+    }
+
+    /**
      * Check if some system parameter values have changed.
      *
      * @param context Android's context
      */
-    private void systemParametersMayHaveChanged(@NonNull Context context) {
+    private void systemParametersMayHaveChanged(@NonNull Context context, boolean force) {
         SystemParameterRegistry registry = SystemParameterRegistryProvider.get(context);
         List<WatchedSystemParameter> parameters = registry.getWatchedParameters();
-        List<WatchedSystemParameter> hasChangedParameters = new ArrayList<>();
+
+        boolean anyParameterChanged = false;
+        List<WatchedSystemParameter> parametersToSend = new ArrayList<>();
         for (WatchedSystemParameter parameter : parameters) {
+            parametersToSend.add(parameter);
+            // Call hasChanged() on every parameter so that new values are persisted to SharedPreferences
             if (parameter.hasChanged()) {
-                if (parameter.isAllowed()) {
-                    hasChangedParameters.add(parameter);
-                }
+                anyParameterChanged = true;
             }
         }
-        if (!hasChangedParameters.isEmpty()) {
-            Logger.internal(TAG, "Some native data has changed, sending it.");
+        if (anyParameterChanged || force) {
+            // Send all native parameters when one has changed
+            // Also send not allowed parameter as null (remove)
+            Logger.internal(TAG, "Some native data has changed, sending all native data.");
             try {
-                sendNativeDataChangedEvent(SystemParameterHelper.serializeSystemParameters(hasChangedParameters));
+                sendNativeDataChangedEvent(SystemParameterHelper.serializeSystemParameters(parametersToSend));
             } catch (JSONException e) {
-                Logger.error(TAG, "Some natives data has changed but the serialization failed.", e);
+                Logger.error(TAG, "Some native data has changed but the serialization failed.", e);
             }
         } else {
             Logger.internal(TAG, "No native detection change");

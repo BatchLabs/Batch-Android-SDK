@@ -1,8 +1,6 @@
 package com.batch.android.push.formats;
 
-import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
-import android.os.Build;
 import android.view.View;
 import android.widget.RemoteViews;
 import androidx.annotation.NonNull;
@@ -105,7 +103,10 @@ public class APENFormat extends BaseFormat implements NotificationFormat {
 
     public RemoteViews generateExpandedView(@NonNull String packageName) {
         final RemoteViews view;
-        if (layoutType.shouldForceLayoutHeight()) {
+        if (layoutType.shouldForceLayoutHeight() && picture != null) {
+            // We ensure picture is not null in that case, as we don't want to show a blank image
+            // since the layout is force to 200dp from the xml and resizing the height
+            // of the layout cannot be done pre android 31 (setViewLayoutHeight)
             view = new RemoteViews(packageName, R.layout.com_batchsdk_notification_layout_apen_expanded_200dp);
         } else {
             view = new RemoteViews(packageName, R.layout.com_batchsdk_notification_layout_apen_expanded);

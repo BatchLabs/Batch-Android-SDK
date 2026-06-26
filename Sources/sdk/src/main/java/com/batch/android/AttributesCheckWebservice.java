@@ -6,6 +6,7 @@ import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.Parameters;
 import com.batch.android.core.TaskRunnable;
 import com.batch.android.json.JSONObject;
+import com.batch.android.module.UserModule;
 import com.batch.android.query.AttributesCheckQuery;
 import com.batch.android.query.Query;
 import com.batch.android.query.QueryType;
@@ -49,7 +50,7 @@ class AttributesCheckWebservice extends BatchQueryWebservice implements TaskRunn
         AttributesCheckWebserviceListener listener
     ) throws MalformedURLException {
         super(context, RequestType.POST, Parameters.ATTR_CHECK_WS_URL);
-        if (version <= 0) {
+        if (version <= 0 && version != UserModule.ATC_CHANGESET_FOR_MIGRATIONS) {
             throw new IllegalArgumentException("version <= 0");
         }
 

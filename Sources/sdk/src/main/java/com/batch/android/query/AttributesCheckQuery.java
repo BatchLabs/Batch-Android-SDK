@@ -3,6 +3,7 @@ package com.batch.android.query;
 import android.content.Context;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
+import com.batch.android.module.UserModule;
 
 /**
  * Query to check if the attributes have been received by the server
@@ -24,7 +25,7 @@ public class AttributesCheckQuery extends Query {
 
     public AttributesCheckQuery(Context context, long version, String transactionID) {
         super(context, QueryType.ATTRIBUTES_CHECK);
-        if (version <= 0) {
+        if (version <= 0 && version != UserModule.ATC_CHANGESET_FOR_MIGRATIONS) {
             throw new IllegalArgumentException("version <= 0");
         }
 

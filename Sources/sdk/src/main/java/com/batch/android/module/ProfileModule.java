@@ -8,6 +8,8 @@ import com.batch.android.Batch;
 import com.batch.android.BatchEventAttributes;
 import com.batch.android.BatchMigration;
 import com.batch.android.core.Logger;
+import com.batch.android.di.providers.CampaignManagerProvider;
+import com.batch.android.di.providers.DataCollectionModuleProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.SQLUserDatasourceProvider;
 import com.batch.android.di.providers.TaskExecutorProvider;
@@ -164,8 +166,13 @@ public final class ProfileModule extends BatchModule {
                         Logger.internal(TAG, "Custom Data migration has been explicitly disabled.");
                     } else {
                         Logger.internal(TAG, "Automatic custom data migration.");
+                        // Migrate custom data (_PROFILE_DATA_CHANGED)
                         TaskExecutorProvider.get(context).submit(() -> this.migrateCustomData(context));
                     }
+
+                    // In every case migrate native data (_NATIVE_DATA_CHANGED)
+                    // Or we could have some CEP install without default language/region/timezone
+                    DataCollectionModuleProvider.get().forceSendingNativeDataChanged();
                 });
         }
     }
@@ -179,8 +186,14 @@ public final class ProfileModule extends BatchModule {
         ProfileUpdateOperation profileUpdateOperation = new ProfileUpdateOperation();
 
         // Get custom language and region
-        profileUpdateOperation.setLanguage(UserModuleProvider.get().getLanguage(context));
-        profileUpdateOperation.setRegion(UserModuleProvider.get().getRegion(context));
+        String language = UserModuleProvider.get().getLanguage(context);
+        if (language != null) {
+            profileUpdateOperation.setLanguage(language);
+        }
+        String region = UserModuleProvider.get().getRegion(context);
+        if (region != null) {
+            profileUpdateOperation.setRegion(region);
+        }
 
         // Get custom attributes
         final SQLUserDatasource datasource = SQLUserDatasourceProvider.get(context);
