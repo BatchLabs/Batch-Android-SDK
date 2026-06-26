@@ -269,10 +269,11 @@ public final class SystemParameterHelper {
             if (paramKey == null) {
                 continue;
             }
-            serializedParameters.put(
-                paramKey,
-                parameter.getLastValue() != null ? parameter.getLastValue() : JSONObject.NULL
-            );
+            Object paramValue = JSONObject.NULL;
+            if (parameter.isAllowed() && parameter.getLastValue() != null) {
+                paramValue = parameter.getLastValue();
+            }
+            serializedParameters.put(paramKey, paramValue);
         }
         return serializedParameters;
     }

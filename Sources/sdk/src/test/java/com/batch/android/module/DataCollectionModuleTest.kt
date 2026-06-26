@@ -39,14 +39,18 @@ class DataCollectionModuleTest : DITest() {
         // Expected event payload
         val expectedParams =
             JSONObject().apply {
+                // Changed params
                 put("device_language", "en-US")
                 put("device_region", "US")
+
+                // Unchanged params that must also be present in the full snapshot
+                put("app_bundle_id", "com.batch.android.test")
             }
 
         // Start module (this will check for native changes)
         DataCollectionModuleProvider.get().batchDidStart()
 
-        // Verify event is triggered
+        // Verify a single event is triggered carrying all allowed native parameters
         Mockito.verify(trackerModule, Mockito.timeout(1000).times(1))
             .track(
                 ArgumentMatchers.eq(InternalEvents.NATIVE_DATA_CHANGED),

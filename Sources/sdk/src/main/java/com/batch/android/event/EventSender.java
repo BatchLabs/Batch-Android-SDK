@@ -91,10 +91,10 @@ public class EventSender implements RetryTimerListener {
             // If not already sending
             if (isSending.compareAndSet(false, true)) {
                 sendExecutor.submit(() -> {
-                    /*
-                     * Get events to send
-                     */
+                    // Get events to send
                     List<Event> events = listener.getEventsToSend();
+
+                    // Mark as no new event to send
                     hasNewEvents.set(false);
 
                     // If there's nothing to send, just stop here

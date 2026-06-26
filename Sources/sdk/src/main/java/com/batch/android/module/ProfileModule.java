@@ -9,6 +9,7 @@ import com.batch.android.BatchEventAttributes;
 import com.batch.android.BatchMigration;
 import com.batch.android.core.Logger;
 import com.batch.android.di.providers.CampaignManagerProvider;
+import com.batch.android.di.providers.DataCollectionModuleProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.SQLUserDatasourceProvider;
 import com.batch.android.di.providers.TaskExecutorProvider;
@@ -29,6 +30,7 @@ import com.batch.android.profile.ProfileUpdateOperation;
 import com.batch.android.user.AttributeType;
 import com.batch.android.user.SQLUserDatasource;
 import com.batch.android.user.UserAttribute;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -54,6 +56,7 @@ public final class ProfileModule extends BatchModule {
 
     /**
      * ProfileModule constructor
+     *
      * @param trackerModule The Batch Tracker Module
      */
     private ProfileModule(@NonNull TrackerModule trackerModule) {
@@ -62,6 +65,7 @@ public final class ProfileModule extends BatchModule {
 
     /**
      * DI access method
+     *
      * @return A new instance of the profile module
      */
     @Provide
@@ -84,6 +88,7 @@ public final class ProfileModule extends BatchModule {
 
     /**
      * Internal implementation of the identify method
+     *
      * @param identifier The custom user identifier
      */
     public void identify(@Nullable String identifier) {
@@ -122,23 +127,47 @@ public final class ProfileModule extends BatchModule {
 
     /**
      * Handle profile data changed
+     *
      * @param data The profile data model to handle
      */
-    public void handleProfileDataChanged(@NonNull ProfileUpdateOperation data) {
+    public boolean handleProfileDataChanged(@NonNull ProfileUpdateOperation data) {
         try {
             JSONObject params = ProfileDataSerializer.serialize(data);
             if (params.length() == 0) {
                 Logger.internal(TAG, "Trying to send an empty profile data changed event, aborting.");
-                return;
+                return true;
+            }
+            if (EventAttributesValidator.exceedsMaxPayloadSize(params.toString())) {
+                Logger.error(
+                    TAG,
+                    String.format(
+                        Locale.US,
+                        "BatchProfileAttributeEditor.save() rejected: payload exceeds the maximum allowed size (%d kB). No changes were applied.",
+                        EventAttributesValidator.MAX_PAYLOAD_SIZE_BYTES / 1024
+                    )
+                );
+                return false;
+            }
+            if (EventAttributesValidator.exceedsMaxPayloadSize(params.toString())) {
+                Logger.error(
+                    TAG,
+                    "Failed to save BatchProfileAttributeEditor operation: payload exceeds maximum size (" +
+                    EventAttributesValidator.MAX_PAYLOAD_SIZE_BYTES /
+                    1024 +
+                    " kB limit)."
+                );
+                return false;
             }
             trackerModule.track(InternalEvents.PROFILE_DATA_CHANGED, params);
         } catch (JSONException e) {
             Logger.error(TAG, "Sending profile data changed event failed.", e);
+            return false;
         }
+        return true;
     }
 
     /**
-     * Method called when we the project key has changed.
+     * Method called when the project key has changed.
      *
      * @param oldProjectKey The old project key bound to the App
      * @param newProjectKey The new project key bound to the App
@@ -172,8 +201,12 @@ public final class ProfileModule extends BatchModule {
                         Logger.internal(TAG, "Custom Data migration has been explicitly disabled.");
                     } else {
                         Logger.internal(TAG, "Automatic custom data migration.");
+                        // Migrate custom data (_PROFILE_DATA_CHANGED)
                         TaskExecutorProvider.get(context).submit(() -> this.migrateCustomData(context));
                     }
+                    // In every case migrate native data (_NATIVE_DATA_CHANGED)
+                    // Or we could have some CEP install without default language/region/timezone
+                    DataCollectionModuleProvider.get().forceSendingNativeDataChanged();
                 });
         }
     }
@@ -187,8 +220,14 @@ public final class ProfileModule extends BatchModule {
         ProfileUpdateOperation profileUpdateOperation = new ProfileUpdateOperation();
 
         // Get custom language and region
-        profileUpdateOperation.setLanguage(UserModuleProvider.get().getLanguage(context));
-        profileUpdateOperation.setRegion(UserModuleProvider.get().getRegion(context));
+        String language = UserModuleProvider.get().getLanguage(context);
+        if (language != null) {
+            profileUpdateOperation.setLanguage(language);
+        }
+        String region = UserModuleProvider.get().getRegion(context);
+        if (region != null) {
+            profileUpdateOperation.setRegion(region);
+        }
 
         // Get custom attributes
         final SQLUserDatasource datasource = SQLUserDatasourceProvider.get(context);

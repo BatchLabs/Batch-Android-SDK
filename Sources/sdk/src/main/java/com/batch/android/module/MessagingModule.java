@@ -379,7 +379,7 @@ public class MessagingModule extends BatchModule {
         MessagingActivity.startActivityForMessage(context, message);
     }
 
-    public void displayInAppMessage(@NonNull BatchInAppMessage message) {
+    public boolean displayInAppMessage(@NonNull BatchInAppMessage message) {
         Activity presentedActivity = RuntimeManagerProvider.get().getActivity();
         if (presentedActivity != null) {
             boolean shouldDisplayMessage = true;
@@ -393,14 +393,17 @@ public class MessagingModule extends BatchModule {
 
             if (shouldDisplayMessage) {
                 displayMessage(presentedActivity, message, false);
+                return true;
             } else {
                 Logger.internal(LocalCampaignsModule.TAG, "Developer prevented automatic In-App display");
+                return false;
             }
         } else {
             Logger.error(
                 LocalCampaignsModule.TAG,
                 "Could not find an activity to display on. Does the RuntimeManager ever had one?"
             );
+            return false;
         }
     }
 

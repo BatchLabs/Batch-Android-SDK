@@ -145,7 +145,7 @@ public class LocalCampaignsTrackerTest {
     }
 
     @Test
-    public void testCampaignLastOccurrence() throws ViewTrackerUnavailableException {
+    public void testCampaignLastOccurrence() throws ViewTrackerUnavailableException, InterruptedException {
         // Clear database
         appContext.deleteDatabase(LocalCampaignTrackDbHelper.DATABASE_NAME);
 
@@ -162,6 +162,9 @@ public class LocalCampaignsTrackerTest {
 
         // Tracked, time != 0
         Assert.assertNotSame(0, firstTrackTime);
+
+        // Ensure at least 1ms passes so the next timestamp is strictly greater
+        Thread.sleep(1);
 
         tracker.trackViewEvent(FAKE_CAMPAIGN_ID_1, "FAKE_CUSTOM_ID");
 

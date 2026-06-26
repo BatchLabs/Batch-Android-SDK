@@ -151,12 +151,18 @@ public class SystemParameterRegistry {
         SystemParameter bridgeVersion = new WatchedSystemParameter(
             context,
             SystemParameterShortName.BRIDGE_VERSION,
-            SystemParameterHelper::getBridgeVersion
+            () -> {
+                String version = SystemParameterHelper.getBridgeVersion();
+                return version.isEmpty() ? null : version;
+            }
         );
         SystemParameter pluginVersion = new WatchedSystemParameter(
             context,
             SystemParameterShortName.PLUGIN_VERSION,
-            SystemParameterHelper::getPluginVersion
+            () -> {
+                String version = SystemParameterHelper.getPluginVersion();
+                return version.isEmpty() ? null : version;
+            }
         );
 
         parameters.add(installId);

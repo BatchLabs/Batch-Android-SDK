@@ -17,6 +17,7 @@ import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.di.providers.TaskExecutorProvider;
 import com.batch.android.localcampaigns.CampaignManager;
 import com.batch.android.localcampaigns.model.LocalCampaign;
+import com.batch.android.localcampaigns.output.LandingOutput;
 import com.batch.android.localcampaigns.persistence.PersistenceException;
 import com.batch.android.localcampaigns.signal.EventTrackedSignal;
 import com.batch.android.localcampaigns.signal.NewSessionSignal;
@@ -265,10 +266,22 @@ public class LocalCampaignsModule extends BatchModule {
     }
 
     /**
-     * Display the local campaign message
+     * Display the local campaign message.
+     * Marks the campaign as pending display BEFORE any async dispatch (main thread +
+     * optional displayDelay) to prevent subsequent signals from electing the same campaign
+     * again while the view is being scheduled but the SQLite counter hasn't been incremented yet.
+     *
      * @param campaign to display
      */
     private void displayMessage(@NonNull LocalCampaign campaign) {
+        // Only landing outputs have an async display path (main thread + optional delay)
+        // that requires the pending guard. Action outputs execute synchronously and never
+        // call trackCampaignView, so marking them would block the campaign forever.
+        if (campaign.output instanceof LandingOutput) {
+            // Mark synchronously here — we are on the triggerExecutor (single thread), so this
+            // is guaranteed to be visible to the next isCampaignOverCapping check.
+            campaignManager.markCampaignAsPendingDisplay(campaign.id);
+        }
         campaign.generateOccurrenceID();
         campaign.displayMessage();
     }

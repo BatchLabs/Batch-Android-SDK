@@ -1,12 +1,16 @@
 package com.batch.android.event;
 
+import androidx.annotation.NonNull;
 import com.batch.android.BatchEventAttributes;
+import com.batch.android.json.JSONException;
+import com.batch.android.json.JSONObject;
 import com.batch.android.user.AttributeType;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -16,7 +20,7 @@ import java.util.regex.Pattern;
 public class EventAttributesValidator {
 
     /**
-     * Class that hold a human readable error.
+     * Class that hold a human-readable error.
      */
     private static class ValidationError {
 
@@ -71,6 +75,8 @@ public class EventAttributesValidator {
         }
     }
 
+    public static final int MAX_PAYLOAD_SIZE_BYTES = 25 * 1024;
+
     private static final int LABEL_MAX_LENGTH = 200;
     private static final int TAG_MAX_LENGTH = 64;
     private static final int TAGS_MAX_COUNT = 10;
@@ -84,11 +90,31 @@ public class EventAttributesValidator {
         return attributeNameRegexp.matcher(eventName).matches();
     }
 
+    public static boolean exceedsMaxPayloadSize(@NonNull String serializedPayload) {
+        return serializedPayload.getBytes(StandardCharsets.UTF_8).length > MAX_PAYLOAD_SIZE_BYTES;
+    }
+
     public static List<String> computeValidationErrors(BatchEventAttributes eventData) {
         List<String> errors = new ArrayList<>();
         List<ValidationError> validationErrors = visitObject(eventData, new Breadcrumbs(new ArrayList<>()));
         for (ValidationError validationError : validationErrors) {
             errors.add(validationError.render());
+        }
+        if (errors.isEmpty()) {
+            try {
+                JSONObject serialized = EventAttributesSerializer.serialize(eventData);
+                if (exceedsMaxPayloadSize(serialized.toString())) {
+                    errors.add(
+                        String.format(
+                            Locale.US,
+                            "<attributes root>: payload exceeds the maximum allowed size (%d kB)",
+                            MAX_PAYLOAD_SIZE_BYTES / 1024
+                        )
+                    );
+                }
+            } catch (JSONException ignored) {
+                // serialization errors are caught later by the caller
+            }
         }
         return errors;
     }

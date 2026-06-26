@@ -6,6 +6,7 @@ import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.TaskRunnable;
 import com.batch.android.core.domain.DomainURLBuilder;
 import com.batch.android.event.Event;
+import com.batch.android.event.ProfileIdentifyDeduplicator;
 import com.batch.android.json.JSONObject;
 import com.batch.android.query.Query;
 import com.batch.android.query.TrackingQuery;
@@ -57,7 +58,13 @@ final class TrackerWebservice extends BatchQueryWebservice implements TaskRunnab
     protected List<Query> getQueries() {
         List<Query> queries = new ArrayList<>(1);
 
-        queries.add(new TrackingQuery(applicationContext, events));
+        // Remove useless duplicated _PROFILE_IDENTIFY events.
+        // Doing this here, since event are still in db and should be deleted when
+        // success callback is called
+        List<Event> deduplicatedEvents = ProfileIdentifyDeduplicator.deduplicate(events);
+
+        // Add events to query for serialization
+        queries.add(new TrackingQuery(applicationContext, deduplicatedEvents));
 
         return queries;
     }

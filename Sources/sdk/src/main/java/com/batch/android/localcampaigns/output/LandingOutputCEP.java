@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 import androidx.annotation.NonNull;
 import com.batch.android.core.Logger;
+import com.batch.android.di.providers.CampaignManagerProvider;
 import com.batch.android.di.providers.MessagingModuleProvider;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.json.JSONObject;
@@ -42,6 +43,7 @@ public class LandingOutputCEP extends LandingOutput {
                             LocalCampaignsModule.TAG,
                             "Application is in background, skipping message display"
                         );
+                        CampaignManagerProvider.get().unmarkCampaignAsPendingDisplay(campaign.id);
                         return;
                     }
                     super.displayMessage(campaign);

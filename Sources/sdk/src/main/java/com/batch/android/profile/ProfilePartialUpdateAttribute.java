@@ -55,6 +55,7 @@ public class ProfilePartialUpdateAttribute {
             this.added = new ArrayList<>();
         }
         this.added.addAll(elements);
+        this.added = ProfileDataHelper.deduplicateKeepLast(this.added);
     }
 
     public void putInRemoved(@NonNull List<String> elements) {
@@ -62,6 +63,7 @@ public class ProfilePartialUpdateAttribute {
             this.removed = new ArrayList<>();
         }
         this.removed.addAll(elements);
+        this.removed = ProfileDataHelper.deduplicateKeepLast(this.removed);
     }
 
     public boolean isEmpty() {

@@ -404,10 +404,11 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
     public BatchProfileAttributeEditor setAttribute(final @NonNull String key, final @NonNull List<String> value) {
         try {
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
-            ProfileDataHelper.validateStringArray(value);
+            List<String> deduped = ProfileDataHelper.deduplicateKeepLast(value);
+            ProfileDataHelper.validateStringArray(deduped);
             this.profileUpdateOperation.addAttribute(
                     normalizedKey,
-                    new UserAttribute(new ProfileStringArrayAttribute(value), AttributeType.STRING_ARRAY)
+                    new UserAttribute(new ProfileStringArrayAttribute(deduped), AttributeType.STRING_ARRAY)
                 );
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
@@ -532,14 +533,20 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
     }
 
     /**
-     * Save all of the pending changes made in that editor.
+     * Save all the pending changes made in that editor.
+     * <p>
      * Note if Batch is not started, your changes will be enqueue until it start.
      * Once you called "save", you need to get a new editor in order to make further changes.
      * <p>
      * This action cannot be undone.
+     * <p>
+     * The pending changes on the editor cannot weigh more than 25kB or the entire
+     * request will be rejected.
      */
     public void save() {
-        super.save();
-        ProfileModuleProvider.get().handleProfileDataChanged(this.profileUpdateOperation);
+        if (ProfileModuleProvider.get().handleProfileDataChanged(this.profileUpdateOperation)) {
+            // Handle MEP compat only when CEP event pass validation
+            super.save();
+        }
     }
 }

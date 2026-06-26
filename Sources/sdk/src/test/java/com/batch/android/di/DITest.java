@@ -3,6 +3,7 @@ package com.batch.android.di;
 import android.content.Context;
 import com.batch.android.Batch;
 import com.batch.android.di.providers.RuntimeManagerProvider;
+import com.batch.android.module.UserModule;
 import com.batch.android.runtime.State;
 import org.junit.After;
 import org.junit.Before;
@@ -19,6 +20,7 @@ public class DITest {
 
     @After
     public void tearDown() {
+        UserModule.resetApplyQueueForTesting();
         DI.reset();
     }
 

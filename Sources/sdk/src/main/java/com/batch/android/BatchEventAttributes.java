@@ -218,7 +218,7 @@ public class BatchEventAttributes {
     /**
      * Validate the event data.
      *
-     * @return A list of human readable errors as strings if the event data does not validates successfully, An empty list if not. If the data does not validate, Batch will refuse to track an event with it.
+     * @return A list of human-readable errors as strings if the event data does not validate successfully, An empty list if not. If the data does not validate, Batch will refuse to track an event with it.
      */
     public List<String> validateEventAttributes() {
         return EventAttributesValidator.computeValidationErrors(this);

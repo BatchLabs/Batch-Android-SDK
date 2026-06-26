@@ -9,12 +9,16 @@ import com.batch.android.event.InternalEvents
 import com.batch.android.json.JSONArray
 import com.batch.android.json.JSONObject
 import com.batch.android.module.TrackerModule
+import com.batch.android.profile.ProfileUpdateOperation
+import com.batch.android.user.AttributeType
+import com.batch.android.user.UserAttribute
 import java.net.URI
 import java.util.Date
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
+import org.powermock.reflect.Whitebox
 
 @RunWith(AndroidJUnit4::class)
 @SmallTest
@@ -412,6 +416,248 @@ class BatchProfileAttributeEditorTest : DITest() {
             .track(
                 ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
                 JSONObjectMockitoMatcher.eq(expectedParams),
+            )
+    }
+
+    @Test
+    fun testAddToArrayAfterRemoveAttributeDeduplicates() {
+        BatchProfileAttributeEditor().apply {
+            removeAttribute("arr")
+            addToArray("arr", listOf("a", "b", "a"))
+            save()
+        }
+
+        val expectedParams =
+            JSONObject().apply {
+                put(
+                    "custom_attributes",
+                    JSONObject().apply {
+                        put(
+                            "arr.a",
+                            JSONArray().apply {
+                                put("b")
+                                put("a")
+                            },
+                        )
+                    },
+                )
+            }
+
+        Mockito.verify(trackerModule, Mockito.times(1))
+            .track(
+                ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
+                JSONObjectPartialMatcher.eq(expectedParams),
+            )
+    }
+
+    @Test
+    fun testAddToArrayAfterRemoveAttributeWith26ItemsOneDuplicateIsAccepted() {
+        // 26 inputs but the first is repeated at the end — dedup yields 25 unique items
+        val items = (1..25).map { it.toString() } + listOf("1")
+        BatchProfileAttributeEditor().apply {
+            removeAttribute("arr")
+            addToArray("arr", items)
+            save()
+        }
+
+        val expectedArray =
+            JSONArray().apply {
+                (2..25).forEach { put(it.toString()) }
+                put("1")
+            }
+        val expectedParams =
+            JSONObject().apply {
+                put("custom_attributes", JSONObject().apply { put("arr.a", expectedArray) })
+            }
+
+        Mockito.verify(trackerModule, Mockito.times(1))
+            .track(
+                ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
+                JSONObjectPartialMatcher.eq(expectedParams),
+            )
+    }
+
+    @Test
+    fun testSetAttributeWith26ItemsOneDuplicateIsAccepted() {
+        // 26 inputs but the first is repeated at the end → dedup yields 25 unique items
+        val items = (1..25).map { it.toString() } + listOf("1")
+        BatchProfileAttributeEditor().apply {
+            setAttribute("arr", items)
+            save()
+        }
+
+        val expectedArray =
+            JSONArray().apply {
+                // "1" moved to last position (last-wins); items 2..25 keep their order
+                (2..25).forEach { put(it.toString()) }
+                put("1")
+            }
+        val expectedParams =
+            JSONObject().apply {
+                put("custom_attributes", JSONObject().apply { put("arr.a", expectedArray) })
+            }
+
+        Mockito.verify(trackerModule, Mockito.times(1))
+            .track(
+                ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
+                JSONObjectPartialMatcher.eq(expectedParams),
+            )
+    }
+
+    @Test
+    fun testArrayAttributeDeduplication() {
+        BatchProfileAttributeEditor().apply {
+            // Full set: spec example — last occurrence wins
+            setAttribute("arr_set", listOf("d", "e", "d", "a", "f", "a"))
+            // Partial add with duplicates
+            addToArray("arr_add", listOf("a", "b", "a"))
+            // Partial remove with duplicates
+            removeFromArray("arr_remove", listOf("x", "y", "x"))
+            save()
+        }
+
+        val expectedParams =
+            JSONObject().apply {
+                put(
+                    "custom_attributes",
+                    JSONObject().apply {
+                        put(
+                            "arr_set.a",
+                            JSONArray().apply {
+                                put("e")
+                                put("d")
+                                put("f")
+                                put("a")
+                            },
+                        )
+                        put(
+                            "arr_add.a",
+                            JSONObject().apply {
+                                put(
+                                    "\$add",
+                                    JSONArray().apply {
+                                        put("b")
+                                        put("a")
+                                    },
+                                )
+                            },
+                        )
+                        put(
+                            "arr_remove.a",
+                            JSONObject().apply {
+                                put(
+                                    "\$remove",
+                                    JSONArray().apply {
+                                        put("y")
+                                        put("x")
+                                    },
+                                )
+                            },
+                        )
+                    },
+                )
+            }
+
+        Mockito.verify(trackerModule, Mockito.times(1))
+            .track(
+                ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
+                JSONObjectPartialMatcher.eq(expectedParams),
+            )
+    }
+
+    @Test
+    fun testTopicPreferencesDeduplication() {
+        // Full set path: case-folding creates duplicates that are deduplicated
+        BatchProfileAttributeEditor().apply {
+            setTopicPreferences(listOf("Sport", "news", "sport"))
+            save()
+        }
+
+        val expectedSetParams =
+            JSONObject().apply {
+                put(
+                    "topic_preferences",
+                    JSONArray().apply {
+                        put("news")
+                        put("sport")
+                    },
+                )
+            }
+
+        Mockito.verify(trackerModule, Mockito.times(1))
+            .track(
+                ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
+                JSONObjectMockitoMatcher.eq(expectedSetParams),
+            )
+
+        Mockito.clearInvocations(trackerModule)
+
+        // Partial add path: duplicates within a single call and across two calls
+        BatchProfileAttributeEditor().apply {
+            addToTopicPreferences(listOf("sport", "news", "sport"))
+            // Second call: "News" normalizes to "news" — already in $add, moves to end
+            addToTopicPreferences(listOf("News"))
+            save()
+        }
+
+        val expectedAddParams =
+            JSONObject().apply {
+                put(
+                    "topic_preferences",
+                    JSONObject().apply {
+                        put(
+                            "\$add",
+                            JSONArray().apply {
+                                put("sport")
+                                put("news")
+                            },
+                        )
+                    },
+                )
+            }
+
+        Mockito.verify(trackerModule, Mockito.times(1))
+            .track(
+                ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
+                JSONObjectMockitoMatcher.eq(expectedAddParams),
+            )
+    }
+
+    /**
+     * Ensure that an oversized profile payload blocks the entire save: neither the CEP event nor
+     * the legacy install event should be sent.
+     *
+     * CEP strings are capped at 300 chars by the editor's own validation, so we bypass it via
+     * Whitebox to inject 1300-char values directly into profileUpdateOperation — the same technique
+     * used in ProfileModuleTest. Language is set through the public API so that super.save() would
+     * have had something to commit if not blocked, making this a clean atomicity proof.
+     */
+    @Test
+    fun testSaveRejectedWhenPayloadTooLarge() {
+        val editor = BatchProfileAttributeEditor()
+        editor.setLanguage("fr")
+
+        // Inject oversized attributes directly, bypassing editor validation.
+        val profileUpdateOperation: ProfileUpdateOperation =
+            Whitebox.getInternalState(editor, "profileUpdateOperation")
+        repeat(20) { i ->
+            profileUpdateOperation.addAttribute(
+                "attr_$i",
+                UserAttribute("a".repeat(1300), AttributeType.STRING),
+            )
+        }
+
+        editor.save()
+
+        Mockito.verify(trackerModule, Mockito.never())
+            .track(
+                ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
+                ArgumentMatchers.any(JSONObject::class.java),
+            )
+        Mockito.verify(trackerModule, Mockito.after(500).never())
+            .track(
+                ArgumentMatchers.eq(InternalEvents.INSTALL_DATA_CHANGED),
+                ArgumentMatchers.any(JSONObject::class.java),
             )
     }
 

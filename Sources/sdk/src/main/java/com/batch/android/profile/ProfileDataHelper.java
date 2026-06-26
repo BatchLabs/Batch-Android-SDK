@@ -3,10 +3,12 @@ package com.batch.android.profile;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.batch.android.core.Logger;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -56,7 +58,8 @@ public class ProfileDataHelper {
     /**
      * Max size for the topic preferences
      */
-    private static final int TOPIC_PREFERENCE_MAX_SIZE = 25;
+    @VisibleForTesting
+    protected static final int TOPIC_PREFERENCE_MAX_SIZE = 25;
 
     /**
      * Topic preference max length
@@ -205,6 +208,23 @@ public class ProfileDataHelper {
     }
 
     /**
+     * Deduplicates a list of strings, keeping the last occurrence of each value and preserving
+     * insertion order. Example: [d,e,d,a,f,a] → [e,d,f,a].
+     *
+     * @param values The list to deduplicate
+     * @return A new list with duplicates removed (last occurrence wins)
+     */
+    @NonNull
+    public static List<String> deduplicateKeepLast(@NonNull List<String> values) {
+        LinkedHashSet<String> seen = new LinkedHashSet<>();
+        for (String value : values) {
+            seen.remove(value);
+            seen.add(value);
+        }
+        return new ArrayList<>(seen);
+    }
+
+    /**
      * Whether the given List of string attribute is valid for the CEP
      *
      * @param values The value to check
@@ -256,14 +276,15 @@ public class ProfileDataHelper {
     @NonNull
     public static List<String> normalizeTopicPreferences(@NonNull List<String> topics)
         throws AttributeValidationException {
-        if (topics.isEmpty() || topics.size() > ATTR_STRING_ARRAY_MAX_SIZE) {
-            throw new AttributeValidationException(AttributeValidationException.Type.INVALID_TOPIC_PREFERENCES);
-        }
         List<String> normalizedTopics = new ArrayList<>(topics.size());
         for (String topic : topics) {
             normalizedTopics.add(normalizeTopicPreference(topic));
         }
-        return normalizedTopics;
+        List<String> deduped = deduplicateKeepLast(normalizedTopics);
+        if (deduped.isEmpty() || deduped.size() > ATTR_STRING_ARRAY_MAX_SIZE) {
+            throw new AttributeValidationException(AttributeValidationException.Type.INVALID_TOPIC_PREFERENCES);
+        }
+        return deduped;
     }
 
     /**

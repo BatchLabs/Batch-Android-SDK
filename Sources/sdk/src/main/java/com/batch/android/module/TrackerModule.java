@@ -274,6 +274,8 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
         } catch (ViewTrackerUnavailableException e) {
             Logger.internal(TAG, "View tracker not available, not tracking view");
             return;
+        } finally {
+            campaignManager.unmarkCampaignAsPendingDisplay(campaignID);
         }
 
         try {

@@ -11,6 +11,11 @@ import org.junit.Test
 class EventAttributesValidatorTest {
 
     @Test
+    fun testMaxPayloadSizeConstant() {
+        Assert.assertEquals(25 * 1024, EventAttributesValidator.MAX_PAYLOAD_SIZE_BYTES)
+    }
+
+    @Test
     fun testIsEventNameValid() {
         Assert.assertFalse(EventAttributesValidator.isEventNameValid("invalid event name"))
         Assert.assertFalse(EventAttributesValidator.isEventNameValid("invalid-event-name"))
@@ -303,6 +308,55 @@ class EventAttributesValidatorTest {
             }
         errors = EventAttributesValidator.computeValidationErrors(eventData)
         Assert.assertTrue(errors.isEmpty())
+    }
+
+    @Test
+    fun testPayloadSizeExceeded() {
+        // 20 string-array attributes × 25 items × 300-char strings serializes well above 25 kB
+        val attrs =
+            BatchEventAttributes().apply {
+                val largeList = (1..25).map { "a".repeat(300) }
+                for (i in 0 until 20) {
+                    putStringList("attr_$i", largeList)
+                }
+            }
+        val errors = EventAttributesValidator.computeValidationErrors(attrs)
+        Assert.assertEquals(1, errors.size)
+        Assert.assertTrue(errors[0].contains("payload exceeds the maximum allowed size"))
+    }
+
+    @Test
+    fun testPayloadSizeValid() {
+        // 20 string-array attributes × 25 items × 46-char strings serializes to ~24 kB, just under
+        // the 25 kB limit
+        val attrs =
+            BatchEventAttributes().apply {
+                val list = (1..25).map { "a".repeat(46) }
+                for (i in 0 until 20) {
+                    putStringList("attr_$i", list)
+                }
+            }
+        val errors = EventAttributesValidator.computeValidationErrors(attrs)
+        Assert.assertTrue(errors.isEmpty())
+    }
+
+    @Test
+    fun testPayloadSizeNotCheckedWhenStructureInvalid() {
+        // A structurally invalid payload (label too long) should report the structure
+        // error only — the size check must not run alongside it.
+        val longLabel = "a".repeat(201)
+        val attrs =
+            BatchEventAttributes().apply {
+                put("\$label", longLabel)
+                // Also bulk up the payload so it would fail the size check if it ran
+                val largeList = (1..25).map { "a".repeat(300) }
+                for (i in 0 until 20) {
+                    putStringList("attr_$i", largeList)
+                }
+            }
+        val errors = EventAttributesValidator.computeValidationErrors(attrs)
+        Assert.assertEquals(1, errors.size)
+        Assert.assertTrue(errors[0].contains("cannot be longer than 200 characters"))
     }
 
     @Test

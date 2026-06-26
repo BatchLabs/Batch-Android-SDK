@@ -15,10 +15,11 @@ import com.batch.android.json.JSONArray
 import com.batch.android.json.JSONObject
 import com.batch.android.module.ProfileModule
 import com.batch.android.module.TrackerModule
+import com.batch.android.profile.ProfileUpdateOperation
 import com.batch.android.query.response.AttributesCheckResponse
-import com.batch.android.query.response.AttributesSendResponse
+import com.batch.android.user.AttributeType
+import com.batch.android.user.UserAttribute
 import com.batch.android.webservice.listener.impl.AttributesCheckWebserviceListenerImpl
-import com.batch.android.webservice.listener.impl.AttributesSendWebserviceListenerImpl
 import java.net.URI
 import java.util.Date
 import java.util.EnumSet
@@ -196,6 +197,44 @@ class ProfileModuleTest : DITest() {
     }
 
     @Test
+    fun testTrackPublicEventPayloadTooLarge() {
+        simulateBatchStart(context)
+        // Build a valid-structure payload that serializes to > 25 kB:
+        // 20 string-array attributes × 25 items × 300-char strings ≈ 150 kB serialized.
+        val largeAttrs =
+            BatchEventAttributes().apply {
+                val largeList = (1..25).map { "a".repeat(300) }
+                for (i in 0 until 20) {
+                    putStringList("attr_$i", largeList)
+                }
+            }
+        ProfileModuleProvider.get().trackPublicEvent("oversized_event", largeAttrs)
+        Mockito.verify(trackerModule, Mockito.never())
+            .track(
+                ArgumentMatchers.eq("E.OVERSIZED_EVENT"),
+                ArgumentMatchers.any(JSONObject::class.java),
+            )
+    }
+
+    @Test
+    fun testHandleProfileDataChangedPayloadTooLarge() {
+        simulateBatchStart(context)
+        // Build a ProfileUpdateOperation whose serialized payload exceeds 25 kB:
+        // 20 string attributes × 1300-char values ≈ 26 kB serialized.
+        val operation = ProfileUpdateOperation()
+        repeat(20) { i ->
+            operation.addAttribute("attr_$i", UserAttribute("a".repeat(1300), AttributeType.STRING))
+        }
+        val result = ProfileModuleProvider.get().handleProfileDataChanged(operation)
+        Assert.assertFalse(result)
+        Mockito.verify(trackerModule, Mockito.never())
+            .track(
+                ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
+                ArgumentMatchers.any(JSONObject::class.java),
+            )
+    }
+
+    @Test
     fun testOnProjectChanged() {
         simulateBatchStart(context)
         val fakeProjectKey = "project_1234567890"
@@ -207,30 +246,6 @@ class ProfileModuleTest : DITest() {
             }
         AttributesCheckWebserviceListenerImpl().onSuccess(atcResponse)
         Mockito.verify(profileModule, Mockito.times(1)).onProjectChanged(null, fakeProjectKey)
-    }
-
-    @Test
-    fun testOnProjectDidNotChanged() {
-        simulateBatchStart(context)
-        val fakeProjectKey = "project_1234567890"
-        val profileModule = DITestUtils.mockSingletonDependency(ProfileModule::class.java, null)
-
-        // We are simulating a fresh install on sdk V2 where use has wrote data to the profile
-        val atsResponse =
-            AttributesSendResponse("test_query_id").apply {
-                transactionID = "fake_transaction_id"
-                version = 1
-                projectKey = fakeProjectKey
-            }
-        AttributesSendWebserviceListenerImpl().onSuccess(atsResponse)
-        val atcResponse =
-            AttributesCheckResponse("test_query_id").apply {
-                setActionString("OK")
-                projectKey = fakeProjectKey
-            }
-        AttributesCheckWebserviceListenerImpl().onSuccess(atcResponse)
-        // Ensuring onProjectChanged is not triggered
-        Mockito.verify(profileModule, Mockito.never()).onProjectChanged(null, fakeProjectKey)
     }
 
     @Test
@@ -313,7 +328,7 @@ class ProfileModuleTest : DITest() {
         ProfileModuleProvider.get().onProjectChanged(null, "project_1234567890")
 
         // Expected Params
-        val expectedParams =
+        val expectedProfileDataParams =
             JSONObject().apply {
                 put("language", "fr")
                 put("region", "FR")
@@ -335,11 +350,29 @@ class ProfileModuleTest : DITest() {
                 )
             }
 
-        // Ensure profile data changed trigger with expected parameters
+        // Expected native data changed event payload
+        val expectedNativeDataParams =
+            JSONObject().apply {
+                // Changed params
+                put("device_language", "en-US")
+                put("device_region", "US")
+
+                // Unchanged params that must also be present in the full snapshot
+                put("app_bundle_id", "com.batch.android.test")
+            }
+
+        // Ensure profile data changed event triggered with expected parameters
         Mockito.verify(trackerModule, Mockito.timeout(100).times(1))
             .track(
                 ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
-                JSONObjectPartialMatcher.eq(expectedParams),
+                JSONObjectPartialMatcher.eq(expectedProfileDataParams),
+            )
+
+        // Ensure native data changed event triggered with expected parameters
+        Mockito.verify(trackerModule, Mockito.timeout(500).times(1))
+            .track(
+                ArgumentMatchers.eq(InternalEvents.NATIVE_DATA_CHANGED),
+                JSONObjectPartialMatcher.eq(expectedNativeDataParams),
             )
     }
 

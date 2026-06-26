@@ -146,6 +146,16 @@ public class CampaignManager {
     @NonNull
     private final Map<String, SyncedJITResult> syncedJITCampaignsCached = new HashMap<>();
 
+    /**
+     * Set of campaign IDs that have been elected for display but whose SQLite view counter
+     * has not yet been incremented (i.e. onViewShown has not fired yet).
+     * This prevents the race condition where displayMessage posts asynchronously to the main
+     * thread (with an optional displayDelay), leaving a window where subsequent signals would
+     * see count=0 in SQLite and elect the same campaign again before the first view is tracked.
+     */
+    @NonNull
+    private final Set<String> pendingDisplayCampaignIds = Collections.synchronizedSet(new HashSet<>());
+
     public CampaignManager(@NonNull LocalCampaignsTracker viewTracker) {
         this.viewTracker = viewTracker;
     }
@@ -606,6 +616,14 @@ public class CampaignManager {
             return false;
         }
 
+        // A campaign already scheduled for display (SQLite counter not yet incremented) must be
+        // skipped during election to prevent duplicate displays caused by displayDelay or
+        // main-thread dispatch latency.
+        if (pendingDisplayCampaignIds.contains(campaign.id)) {
+            Logger.internal(TAG, "Campaign " + campaign.id + " is pending display, skipping election.");
+            return false;
+        }
+
         // Exclude campaigns that are over the view capping
         try {
             if (isCampaignOverCapping(campaign, false)) {
@@ -869,6 +887,29 @@ public class CampaignManager {
      * The default minimum delay is defined by the constant
      * {@link #MIN_DELAY_BETWEEN_JIT_SYNC}.</p>
      */
+    /**
+     * Marks a campaign as pending display.
+     * Must be called synchronously before any async dispatch (Handler.postDelayed, main thread post)
+     * so that isCampaignOverCapping sees the campaign as already scheduled, preventing duplicate
+     * displays caused by the race condition between displayMessage and the SQLite view counter
+     * increment (which only happens after onViewShown).
+     *
+     * @param campaignId The unique identifier of the campaign being displayed
+     */
+    public void markCampaignAsPendingDisplay(@NonNull String campaignId) {
+        pendingDisplayCampaignIds.add(campaignId);
+    }
+
+    /**
+     * Removes a campaign from the pending display set.
+     * Must be called after the SQLite view counter has been incremented (i.e. after trackCampaignView).
+     *
+     * @param campaignId The unique identifier of the campaign that was displayed
+     */
+    public void unmarkCampaignAsPendingDisplay(@NonNull String campaignId) {
+        pendingDisplayCampaignIds.remove(campaignId);
+    }
+
     public void setNextAvailableJITTimestampWithDefaultDelay() {
         setNextAvailableJITTimestampWithCustomDelay(MIN_DELAY_BETWEEN_JIT_SYNC);
     }

@@ -1,5 +1,8 @@
 package com.batch.android.profile;
 
+import static com.batch.android.profile.ProfileDataHelper.TOPIC_PREFERENCE_MAX_SIZE;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -102,14 +105,36 @@ public class ProfileDataHelperTest {
             ProfileDataHelper.AttributeValidationException.class,
             () -> ProfileDataHelper.normalizeTopicPreferences(Collections.emptyList())
         );
+        // 26 distinct topics — still too large after dedup
+        List<String> tooManyDistinct = new ArrayList<>();
+        for (int i = 0; i < (TOPIC_PREFERENCE_MAX_SIZE + 1); i++) {
+            tooManyDistinct.add("topic_" + i);
+        }
         Assert.assertThrows(
             ProfileDataHelper.AttributeValidationException.class,
-            () -> ProfileDataHelper.normalizeTopicPreferences(Collections.nCopies(26, "topic"))
+            () -> ProfileDataHelper.normalizeTopicPreferences(tooManyDistinct)
         );
         Assert.assertThrows(
             ProfileDataHelper.AttributeValidationException.class,
             () -> ProfileDataHelper.normalizeTopicPreferences(Arrays.asList("valid_topic", "invalid topic"))
         );
+    }
+
+    @Test
+    public void testNormalizeTopicPreferencesDeduplicates() throws ProfileDataHelper.AttributeValidationException {
+        // Case-folding duplicates are merged, last occurrence wins
+        List<String> result = ProfileDataHelper.normalizeTopicPreferences(Arrays.asList("Sport", "News", "sport"));
+        Assert.assertEquals(Arrays.asList("news", "sport"), result);
+
+        // 26 topics but 2 are duplicates — dedup brings to 25, which is valid
+        List<String> topics = new ArrayList<>();
+        for (int i = 0; i < TOPIC_PREFERENCE_MAX_SIZE; i++) {
+            topics.add("topic_" + i);
+        }
+        topics.add("topic_0"); // duplicate of first
+        List<String> deduped = ProfileDataHelper.normalizeTopicPreferences(topics);
+        Assert.assertEquals(25, deduped.size());
+        Assert.assertEquals("topic_0", deduped.get(deduped.size() - 1)); // moved to end
     }
 
     @Test
@@ -189,6 +214,33 @@ public class ProfileDataHelperTest {
                         "25"
                     )
                 )
+        );
+    }
+
+    @Test
+    public void testDeduplicateKeepLast() {
+        // Spec example: last occurrence wins and the value is repositioned there
+        Assert.assertEquals(
+            Arrays.asList("e", "d", "f", "a"),
+            ProfileDataHelper.deduplicateKeepLast(Arrays.asList("d", "e", "d", "a", "f", "a"))
+        );
+
+        // No duplicates — order preserved
+        Assert.assertEquals(
+            Arrays.asList("a", "b", "c"),
+            ProfileDataHelper.deduplicateKeepLast(Arrays.asList("a", "b", "c"))
+        );
+
+        // All same — single element
+        Assert.assertEquals(
+            Collections.singletonList("a"),
+            ProfileDataHelper.deduplicateKeepLast(Arrays.asList("a", "a", "a"))
+        );
+
+        // Single element — unchanged
+        Assert.assertEquals(
+            Collections.singletonList("x"),
+            ProfileDataHelper.deduplicateKeepLast(Collections.singletonList("x"))
         );
     }
 

@@ -75,6 +75,52 @@ class ProfileStringArrayAttributeTest {
     }
 
     @Test
+    fun testSetAttributeDeduplicatesKeepingLastOccurrence() {
+        val attribute = ProfileStringArrayAttribute()
+        attribute.setAttribute(listOf("d", "e", "d", "a", "f", "a"))
+        Assert.assertEquals(listOf("e", "d", "f", "a"), attribute.attribute.value)
+    }
+
+    @Test
+    fun testConstructorDeduplicates() {
+        val attribute = ProfileStringArrayAttribute(listOf("a", "b", "a", "c"))
+        Assert.assertEquals(listOf("b", "a", "c"), attribute.attribute.value)
+    }
+
+    @Test
+    fun testAddToArrayOnExistingAttributeDeduplicates() {
+        val attribute = ProfileStringArrayAttribute()
+        attribute.setAttribute(listOf("a", "b"))
+        // "a" already present — it moves to the end (last occurrence wins)
+        attribute.addToArray(listOf("a", "c"))
+        Assert.assertEquals(listOf("b", "a", "c"), attribute.attribute.value)
+    }
+
+    @Test
+    fun testAddToArrayNewAttributeDeduplicates() {
+        val attribute = ProfileStringArrayAttribute()
+        attribute.addToArray(listOf("a", "b", "a"))
+        Assert.assertEquals(listOf("b", "a"), attribute.partialUpdates?.added)
+    }
+
+    @Test
+    fun testRemoveFromArrayNewAttributeDeduplicates() {
+        val attribute = ProfileStringArrayAttribute()
+        attribute.removeFromArray(listOf("a", "b", "a"))
+        Assert.assertEquals(listOf("b", "a"), attribute.partialUpdates?.removed)
+    }
+
+    @Test
+    fun testAddToArrayAfterShouldDeleteDeduplicates() {
+        // Simulate removeAttribute then addToArray: attribute starts in shouldDelete state
+        val attribute = ProfileStringArrayAttribute(null as List<String>?)
+        Assert.assertTrue(attribute.attribute.shouldDelete())
+        attribute.addToArray(listOf("a", "b", "a"))
+        Assert.assertEquals(listOf("b", "a"), attribute.attribute.value)
+        Assert.assertFalse(attribute.attribute.shouldDelete())
+    }
+
+    @Test
     fun testIsEmpty() {
         val attribute = ProfileStringArrayAttribute()
         Assert.assertTrue(attribute.isEmpty)

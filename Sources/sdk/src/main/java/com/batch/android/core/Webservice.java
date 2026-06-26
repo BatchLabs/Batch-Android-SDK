@@ -489,7 +489,7 @@ public abstract class Webservice {
 
                 if (isResponseValid(responseCode)) {
                     /// If URL was build with `canCheckOriginalDomainAvailability` to override current domain so success means that the original domain is now available
-                    String host = buildURL().getHost();
+                    String host = builder.build().getHost();
                     if (domainManager.isOriginalDomain(host) && !domainManager.isCurrentDomain(host)) {
                         domainManager.resetDomainToOriginal();
                     }

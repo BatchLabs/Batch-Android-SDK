@@ -17,7 +17,7 @@ public class ProfileStringArrayAttribute {
     public ProfileStringArrayAttribute() {}
 
     public ProfileStringArrayAttribute(@Nullable List<String> value) {
-        attribute.setValue(value);
+        attribute.setValue(value != null ? ProfileDataHelper.deduplicateKeepLast(value) : null);
     }
 
     public ProfileStringArrayAttribute(@NonNull ProfileStringArrayAttribute profileStringArrayAttribute) {
@@ -41,7 +41,7 @@ public class ProfileStringArrayAttribute {
      * @param value The new value
      */
     public void setAttribute(@Nullable List<String> value) {
-        attribute.setValue(value);
+        attribute.setValue(value != null ? ProfileDataHelper.deduplicateKeepLast(value) : null);
     }
 
     /**
@@ -55,15 +55,17 @@ public class ProfileStringArrayAttribute {
         if (attribute.getValue() != null) {
             List<String> updatedList = new ArrayList<>(attribute.getValue());
             updatedList.addAll(values);
-            ProfileDataHelper.validateStringArray(updatedList);
-            attribute.setValue(updatedList);
+            List<String> deduped = ProfileDataHelper.deduplicateKeepLast(updatedList);
+            ProfileDataHelper.validateStringArray(deduped);
+            attribute.setValue(deduped);
             return;
         }
 
         // Case: we have null value (removeAttribute has been called beforehand)
         if (attribute.shouldDelete()) {
-            ProfileDataHelper.validateStringArray(values);
-            attribute.setValue(values);
+            List<String> deduped = ProfileDataHelper.deduplicateKeepLast(values);
+            ProfileDataHelper.validateStringArray(deduped);
+            attribute.setValue(deduped);
             return;
         }
 
@@ -78,8 +80,9 @@ public class ProfileStringArrayAttribute {
         }
 
         // Case: attribute doesn't exist
-        ProfileDataHelper.validateStringArray(values);
-        this.partialUpdates = new ProfilePartialUpdateAttribute(values);
+        List<String> deduped = ProfileDataHelper.deduplicateKeepLast(values);
+        ProfileDataHelper.validateStringArray(deduped);
+        this.partialUpdates = new ProfilePartialUpdateAttribute(deduped);
     }
 
     /**
@@ -108,8 +111,9 @@ public class ProfileStringArrayAttribute {
         }
 
         // Case: attribute doesn't exist
-        ProfileDataHelper.validateStringArray(values);
-        this.partialUpdates = new ProfilePartialUpdateAttribute(null, values);
+        List<String> deduped = ProfileDataHelper.deduplicateKeepLast(values);
+        ProfileDataHelper.validateStringArray(deduped);
+        this.partialUpdates = new ProfilePartialUpdateAttribute(null, deduped);
     }
 
     /**

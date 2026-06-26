@@ -3,6 +3,7 @@ package com.batch.android.localcampaigns.output;
 import androidx.annotation.NonNull;
 import com.batch.android.BatchInAppMessage;
 import com.batch.android.core.Logger;
+import com.batch.android.di.providers.CampaignManagerProvider;
 import com.batch.android.di.providers.MessagingModuleProvider;
 import com.batch.android.json.JSONException;
 import com.batch.android.json.JSONObject;
@@ -49,7 +50,10 @@ public class LandingOutput extends LocalCampaign.Output {
                 customPayload
             );
 
-            messagingModule.displayInAppMessage(message);
+            if (!messagingModule.displayInAppMessage(message)) {
+                CampaignManagerProvider.get().unmarkCampaignAsPendingDisplay(campaign.id);
+                return false;
+            }
             return true;
         } catch (JSONException e) {
             Logger.internal(LocalCampaignsModule.TAG, "Landing Output: Could not copy custom payload", e);

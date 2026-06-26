@@ -12,8 +12,9 @@ plugins {
 base { archivesName.set("Batch") }
 
 android {
-    compileSdk = libs.versions.androidCompileSdk.get().toInt()
-
+    compileSdk {
+        version = release(libs.versions.androidCompileSdk.get().toInt()) { minorApiLevel = 0 }
+    }
     resourcePrefix = libs.versions.batchResourcePrefix.get()
     namespace = libs.versions.batchNamespace.get()
     testNamespace = libs.versions.batchTestNamespace.get()

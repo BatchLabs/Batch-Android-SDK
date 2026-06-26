@@ -280,6 +280,36 @@ public class CampaignManagerTest {
     }
 
     @Test
+    public void testPendingDisplayPreventsReElection()
+        throws NoSuchFieldException, IllegalAccessException, ViewTrackerUnavailableException, JSONException {
+        reloadCampaigns();
+
+        final String campaignName = "next_session_triggered_campaign";
+        LocalCampaign campaign = null;
+        for (LocalCampaign currCampaign : campaignManager.getCampaignList()) {
+            if (campaignName.equals(currCampaign.id)) {
+                campaign = currCampaign;
+                break;
+            }
+        }
+        assertNotNull(campaign);
+
+        // The campaign is eligible while no display is in flight.
+        assertTrue(campaignManager.isCampaignDisplayable(campaign));
+
+        // Once elected for display, the campaign is marked as pending before the async dispatch.
+        // It must then be skipped during election to avoid a duplicate display while the SQLite
+        // view counter has not been incremented yet.
+        campaignManager.markCampaignAsPendingDisplay(campaign.id);
+        assertFalse(campaignManager.isCampaignDisplayable(campaign));
+
+        // Clearing the pending flag (display aborted, or view finally tracked) makes the campaign
+        // eligible again. This guards against the campaign being suppressed forever.
+        campaignManager.unmarkCampaignAsPendingDisplay(campaign.id);
+        assertTrue(campaignManager.isCampaignDisplayable(campaign));
+    }
+
+    @Test
     public void testGlobalCapping()
         throws JSONException, NoSuchFieldException, IllegalAccessException, ViewTrackerUnavailableException {
         String customUserId = "test_user_id";
