@@ -135,6 +135,7 @@ public final class ParameterKeys
     public final static String PUSH_APP_VERSION_KEY						= "push.appversion";
     public final static String PUSH_NOTIF_TYPE							= "push.notiftype";
     public final static String PUSH_NOTIF_LAST_AUTH_STATUS_SENT		    = "push.notif.last_auth_status_sent";
+    public final static String PUSH_PAYLOAD_SIGNATURE_SECRET_KEY		= "push.payload.signature.secret";
 
     public final static String USER_DATA_CHANGESET						= "user_profile.data.version";
     public final static String USER_DATA_TRANSACTION_ID					= "user_profile.data.transactionID";

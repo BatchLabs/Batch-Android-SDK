@@ -1,4 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- firebase-messaging 25+ and its dependencies require minSdk 23, irrelevant for Robolectric tests -->
+    <uses-sdk tools:overrideLibrary="com.google.firebase.messaging,com.google.firebase.installations,com.google.firebase.installations.interop,com.google.firebase,com.google.firebase.components,com.google.android.gms.cloudmessaging,com.google.android.gms.base,com.google.android.gms.tasks,com.google.android.gms.common" />
 
     <uses-permission android:name="android.permission.INTERNET" />
 

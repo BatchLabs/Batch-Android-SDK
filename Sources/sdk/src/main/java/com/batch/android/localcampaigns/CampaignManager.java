@@ -672,7 +672,11 @@ public class CampaignManager {
             return false;
         }
 
-        if (cappings.getSession() != null && viewTracker.getSessionViewsCount() >= cappings.getSession()) {
+        int pendingViews = pendingDisplayCampaignIds.size();
+
+        if (
+            cappings.getSession() != null && viewTracker.getSessionViewsCount() + pendingViews >= cappings.getSession()
+        ) {
             Logger.internal(TAG, "Session capping has been reached");
             return true;
         }
@@ -683,7 +687,11 @@ public class CampaignManager {
                 if (timeBasedCapping.getDuration() != null && timeBasedCapping.getViews() != null) {
                     long timestamp = dateProvider.getCurrentDate().getTime() - (timeBasedCapping.getDuration() * 1000);
                     try {
-                        if (viewTracker.getNumberOfViewEventsSince(timestamp) >= timeBasedCapping.getViews()) {
+                        if (
+                            viewTracker.getNumberOfViewEventsSince(timestamp) +
+                            pendingViews >=
+                            timeBasedCapping.getViews()
+                        ) {
                             Logger.internal(TAG, "Time-based cappings have been reached");
                             return true;
                         }
@@ -882,12 +890,6 @@ public class CampaignManager {
     }
 
     /**
-     * Sets the next available timestamp for Just-In-Time (JIT) synchronization
-     * using the default minimum delay.
-     * The default minimum delay is defined by the constant
-     * {@link #MIN_DELAY_BETWEEN_JIT_SYNC}.</p>
-     */
-    /**
      * Marks a campaign as pending display.
      * Must be called synchronously before any async dispatch (Handler.postDelayed, main thread post)
      * so that isCampaignOverCapping sees the campaign as already scheduled, preventing duplicate
@@ -910,6 +912,12 @@ public class CampaignManager {
         pendingDisplayCampaignIds.remove(campaignId);
     }
 
+    /**
+     * Sets the next available timestamp for Just-In-Time (JIT) synchronization
+     * using the default minimum delay.
+     * The default minimum delay is defined by the constant
+     * {@link #MIN_DELAY_BETWEEN_JIT_SYNC}.</p>
+     */
     public void setNextAvailableJITTimestampWithDefaultDelay() {
         setNextAvailableJITTimestampWithCustomDelay(MIN_DELAY_BETWEEN_JIT_SYNC);
     }

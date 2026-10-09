@@ -150,7 +150,7 @@ class CEPPayloadParserTest {
                             put("i", true)
                         },
                     ),
-                "BTN_1" to Action("batch.dismiss", null),
+                "BTN_1" to Action("batch.dismiss", JSONObject()),
                 "BTN_2" to Action("batch.clipboard", JSONObject().apply { put("t", "PROMO_CODE") }),
             ),
         )

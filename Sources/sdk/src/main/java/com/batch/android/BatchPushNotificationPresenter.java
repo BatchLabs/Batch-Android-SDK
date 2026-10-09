@@ -26,9 +26,11 @@ import com.batch.android.core.NotificationAuthorizationStatus;
 import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.PushImageCache;
 import com.batch.android.core.PushNotificationType;
+import com.batch.android.core.PushPayloadSigner;
 import com.batch.android.core.ReflectionHelper;
 import com.batch.android.di.providers.BatchNotificationChannelsManagerProvider;
 import com.batch.android.di.providers.EventDispatcherModuleProvider;
+import com.batch.android.di.providers.KVUserPreferencesStorageProvider;
 import com.batch.android.di.providers.MessagingModuleProvider;
 import com.batch.android.di.providers.OptOutModuleProvider;
 import com.batch.android.di.providers.ParametersProvider;
@@ -149,6 +151,8 @@ public class BatchPushNotificationPresenter {
         if (!BatchPushHelper.canDisplayPush(context, batchData)) {
             return;
         }
+
+        PushPayloadSigner.signPushExtras(KVUserPreferencesStorageProvider.get(context), extras);
 
         if (trySendLandingToForegroundApp(context, extras, batchData)) {
             return;

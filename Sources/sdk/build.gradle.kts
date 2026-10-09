@@ -176,6 +176,8 @@ dependencies {
     testImplementation(libs.androidx.appcompat)
     testImplementation(libs.kotlin.test)
 
+    testImplementation(libs.firebase.messaging)
+
     testImplementation(libs.robolectric)
     testImplementation(libs.powermock.module.junit4)
     testImplementation(libs.powermock.module.junit4.rule)

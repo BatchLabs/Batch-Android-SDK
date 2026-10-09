@@ -414,7 +414,8 @@ object CEPPayloadParser {
 
         for (key in payload.keys()) {
             payload.getJSONObject(key).let {
-                result[key] = Action(it.getString("action"), it.optJSONObject("params"))
+                result[key] =
+                    Action(it.getString("action"), it.optJSONObject("params") ?: JSONObject())
             }
         }
         return result.toMap()

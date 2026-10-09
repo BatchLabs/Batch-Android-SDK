@@ -140,6 +140,13 @@ public class InternalPushData {
     public static final String BATCH_BUNDLE_KEY = "com.batch";
 
     /**
+     * Key under which the signature of the {@link #BATCH_BUNDLE_KEY} value is stored in a push bundle.
+     * Used to authenticate that a payload carried by an intent was produced by this SDK installation
+     * and not forged by a third-party app. See {@link com.batch.android.core.PushPayloadSigner}.
+     */
+    public static final String SIGNATURE_BUNDLE_KEY = "com.batch.signature";
+
+    /**
      * Push Payload
      */
     private final JSONObject payload;

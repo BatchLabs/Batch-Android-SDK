@@ -11,7 +11,7 @@ import com.batch.android.annotation.PublicSDK;
 public class BatchPushRegistration {
 
     /**
-     * The Push registration provider. Might be FCM-Token or HMS.
+     * The Push registration provider. Might be FCM-Token, FCM-FID or HMS.
      */
     @NonNull
     private final String provider;
@@ -49,9 +49,9 @@ public class BatchPushRegistration {
     }
 
     /**
-     * Get the Push registration provider. Might be FCM-Token or HMS.
+     * Get the Push registration provider. Might be FCM-Token, FCM-FID or HMS.
      *
-     * @return The Push registration provider. Might be FCM-Token or HMS.
+     * @return The Push registration provider. Might be FCM-Token, FCM-FID or HMS.
      */
     @NonNull
     public String getProvider() {
@@ -60,6 +60,8 @@ public class BatchPushRegistration {
 
     /**
      * Get the registration Push Token (also known as registration id).
+     * <p>
+     * For the FCM-FID provider, this is the Firebase Installation ID.
      *
      * @return The Push Token.
      */

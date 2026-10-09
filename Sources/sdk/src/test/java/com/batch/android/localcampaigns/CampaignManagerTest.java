@@ -351,6 +351,32 @@ public class CampaignManagerTest {
     }
 
     @Test
+    public void testGlobalCappingCountsPendingDisplays()
+        throws JSONException, NoSuchFieldException, IllegalAccessException {
+        // Load cappings from the json local campaign response (2/session & 1/h)
+        reloadCampaigns();
+
+        final BatchDate fakeCurrentDate = new UTCDate(0);
+        Field dateProviderField = CampaignManager.class.getDeclaredField("dateProvider");
+        dateProviderField.setAccessible(true);
+        dateProviderField.set(campaignManager, (DateProvider) () -> fakeCurrentDate);
+        tracker.setDateProvider(() -> fakeCurrentDate);
+
+        assertFalse(campaignManager.isOverGlobalCappings());
+
+        // A campaign has been elected and is being displayed, but its view is not yet persisted to
+        // SQLite (async). It must still count towards the global cappings so that another campaign
+        // triggered in the meantime cannot bypass the 1/h time-based cap.
+        campaignManager.markCampaignAsPendingDisplay("pending_campaign_id");
+        assertTrue(campaignManager.isOverGlobalCappings());
+
+        // Once the view has been tracked and the pending flag cleared, the count comes from the
+        // tracker instead, without double counting.
+        campaignManager.unmarkCampaignAsPendingDisplay("pending_campaign_id");
+        assertFalse(campaignManager.isOverGlobalCappings());
+    }
+
+    @Test
     public void testGracePeriod()
         throws NoSuchFieldException, IllegalAccessException, ViewTrackerUnavailableException, JSONException {
         reloadCampaigns();

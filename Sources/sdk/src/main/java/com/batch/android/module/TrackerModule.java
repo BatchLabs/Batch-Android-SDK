@@ -75,6 +75,11 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
     private final AtomicBoolean isFlushing = new AtomicBoolean(false);
 
     /**
+     * Executor responsible for persisting local campaign view events to SQLite off the main thread.
+     */
+    private final ExecutorService viewTrackExecutor = Executors.newSingleThreadExecutor(new NamedThreadFactory());
+
+    /**
      * Event sender instance
      */
     private EventSender sender;
@@ -261,34 +266,39 @@ public final class TrackerModule extends BatchModule implements EventSenderListe
     public void trackCampaignView(@NonNull String campaignID, @NonNull JSONObject eventData) {
         ViewTracker vt = campaignManager.getViewTracker();
         if (vt == null) {
+            campaignManager.unmarkCampaignAsPendingDisplay(campaignID);
             return;
         }
         Context context = RuntimeManagerProvider.get().getContext();
         if (context == null) {
+            campaignManager.unmarkCampaignAsPendingDisplay(campaignID);
             return;
         }
         String customUserId = UserModuleProvider.get().getCustomID(context);
-        ViewTracker.CountedViewEvent ev;
-        try {
-            ev = vt.trackViewEvent(campaignID, customUserId);
-        } catch (ViewTrackerUnavailableException e) {
-            Logger.internal(TAG, "View tracker not available, not tracking view");
-            return;
-        } finally {
-            campaignManager.unmarkCampaignAsPendingDisplay(campaignID);
-        }
 
-        try {
-            JSONObject params = new JSONObject();
-            params.put("ed", eventData);
-            params.put("count", ev.count);
-            params.put("last", ev.lastOccurrence);
-            params.put("id", ev.campaignID);
+        viewTrackExecutor.execute(() -> {
+            ViewTracker.CountedViewEvent ev;
+            try {
+                ev = vt.trackViewEvent(campaignID, customUserId);
+            } catch (ViewTrackerUnavailableException e) {
+                Logger.internal(TAG, "View tracker not available, not tracking view");
+                return;
+            } finally {
+                campaignManager.unmarkCampaignAsPendingDisplay(campaignID);
+            }
 
-            track(InternalEvents.LOCAL_CAMPAIGN_VIEWED, params);
-        } catch (JSONException e) {
-            Logger.internal(TAG, "Could not track " + InternalEvents.LOCAL_CAMPAIGN_VIEWED, e);
-        }
+            try {
+                JSONObject params = new JSONObject();
+                params.put("ed", eventData);
+                params.put("count", ev.count);
+                params.put("last", ev.lastOccurrence);
+                params.put("id", ev.campaignID);
+
+                track(InternalEvents.LOCAL_CAMPAIGN_VIEWED, params);
+            } catch (JSONException e) {
+                Logger.internal(TAG, "Could not track " + InternalEvents.LOCAL_CAMPAIGN_VIEWED, e);
+            }
+        });
     }
 
     /**

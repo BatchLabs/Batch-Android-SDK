@@ -1,6 +1,8 @@
 package com.batch.android.push;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.PushRegistrationProvider;
@@ -22,6 +24,8 @@ public class PushRegistrationProviderFactory {
     private static final String TAG = "PushRegistrationProviderFactory";
     private static final String COMPONENT_SENTINEL_VALUE = "com.batch.android.push.PushRegistrationRegistrar";
     private static final String COMPONENT_KEY_PREFIX = "com.batch.android.push:";
+    private static final String FCM_INSTALLATION_ID_ENABLED_METADATA_NAME =
+        "firebase_messaging_installation_id_enabled";
     private final Context context;
 
     public PushRegistrationProviderFactory(@NonNull Context context) {
@@ -31,7 +35,7 @@ public class PushRegistrationProviderFactory {
     /**
      * Get the registration provider.
      * <p>
-     * This method only support FCM Token provider or external push provider (like our hms plugin).
+     * This method only support FCM FID provider, FCM Token provider or external push provider (like our hms plugin).
      * <p>
      * A provider's decision is final. If it then fails its availability check, another provider will NOT be picked.
      * Thus, looking at the manifest to take this decision isn't the Provider's responsibility, but this Factory's.
@@ -51,6 +55,10 @@ public class PushRegistrationProviderFactory {
                 Logger.info(PushModule.TAG, "Registration ID/Push Token: Using " + provider.getClass().getSimpleName());
                 return provider;
             }
+        }
+        if (isFCMInstallationIdRegistrationEnabled()) {
+            Logger.internal(TAG, "Using FCM-FID provider");
+            return new FCMFidRegistrationProvider();
         }
         if (isFCMTokenApiAvailable()) {
             Logger.internal(TAG, "Using FCM-Token provider");
@@ -78,6 +86,37 @@ public class PushRegistrationProviderFactory {
             FirebaseMessaging.class.getMethod("getToken");
             return true;
         } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Verify if the app opted into FCM registration using the Firebase Installation ID
+     * (firebase-messaging >= 25.1.0).
+     * <p>
+     * When the manifest flag is set, the legacy token API is disabled app-wide and calling
+     * getToken throws. We never set this flag ourselves, since it would break other push SDKs
+     * still relying on the token API.
+     *
+     * @return true if the FID registration APIs are available and enabled by the app
+     */
+    private boolean isFCMInstallationIdRegistrationEnabled() {
+        if (!FCMAbstractRegistrationProvider.isFirebaseMessagingPresent()) {
+            return false;
+        }
+        try {
+            FirebaseMessaging.class.getMethod("register");
+        } catch (NoSuchMethodException e) {
+            // Older firebase-messaging versions ignore the flag and still support the token API
+            return false;
+        }
+        try {
+            ApplicationInfo appInfo = context
+                .getPackageManager()
+                .getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            return appInfo.metaData != null && appInfo.metaData.getBoolean(FCM_INSTALLATION_ID_ENABLED_METADATA_NAME);
+        } catch (Exception e) {
+            Logger.internal(TAG, "Could not read the FCM installation ID manifest flag", e);
             return false;
         }
     }
