@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.annotation.PublicSDK;
 import com.batch.android.core.InternalPushData;
+import com.batch.android.core.PushPayloadSigner;
 import com.batch.android.json.JSONObject;
 import com.google.firebase.messaging.RemoteMessage;
 import java.util.ArrayList;
@@ -160,6 +161,10 @@ public class BatchPushPayload implements PushUserActionSource {
     /**
      * Serialize this instance into a {@link Bundle}.<br/>
      * Note that you'll need to use {@link #payloadFromBundle(Bundle)} with the intent's extras to read it back.
+     * <p>
+     * The payload is signed so that Batch displays the landing it carries. Signing needs Batch to be started: from a
+     * push service with the app in the background, call {@link Batch#onServiceCreate(android.content.Context, boolean)}
+     * first, or use {@link Batch.Push#makePendingIntent(android.content.Context, Intent, Bundle)} instead.
      *
      * @param bundle Bundle instance to serialize this in
      */
@@ -169,12 +174,16 @@ public class BatchPushPayload implements PushUserActionSource {
             throw new IllegalArgumentException("Bundle cannot be null");
         }
 
-        bundle.putBundle(Batch.Push.PAYLOAD_KEY, rawData);
+        bundle.putBundle(Batch.Push.PAYLOAD_KEY, makeSignedRawData());
     }
 
     /**
      * Serialize this instance into an {@link Intent}. Note that you'll need to use {@link #payloadFromBundle(Bundle)} with the intent's extras to read it back.<br/>
      * This method WILL NOT fill the intent in a format that {@link #payloadFromReceiverIntent(Intent)} understands.
+     * <p>
+     * The payload is signed so that Batch displays the landing it carries. Signing needs Batch to be started: from a
+     * push service with the app in the background, call {@link Batch#onServiceCreate(android.content.Context, boolean)}
+     * first, or use {@link Batch.Push#makePendingIntent(android.content.Context, Intent, Bundle)} instead.
      *
      * @param intent Intent instance to serialize this in
      */
@@ -184,7 +193,14 @@ public class BatchPushPayload implements PushUserActionSource {
             throw new IllegalArgumentException("Intent cannot be null");
         }
 
-        intent.putExtra(Batch.Push.PAYLOAD_KEY, rawData);
+        intent.putExtra(Batch.Push.PAYLOAD_KEY, makeSignedRawData());
+    }
+
+    @NonNull
+    private Bundle makeSignedRawData() {
+        final Bundle signed = new Bundle(rawData);
+        PushPayloadSigner.signPushExtras((Context) null, signed);
+        return signed;
     }
 
     //endregion

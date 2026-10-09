@@ -39,6 +39,7 @@ import com.batch.android.core.Logger;
 import com.batch.android.core.NotificationPermissionHelper;
 import com.batch.android.core.ParameterKeys;
 import com.batch.android.core.Parameters;
+import com.batch.android.core.PushPayloadSigner;
 import com.batch.android.core.TaskRunnable;
 import com.batch.android.di.providers.DisplayReceiptModuleProvider;
 import com.batch.android.di.providers.ParametersProvider;
@@ -477,6 +478,18 @@ public class PushModule extends BatchModule {
      * @param openIntent       the intent of the notification the will be triggered when the user clicks on it
      */
     public void appendBatchData(Bundle pushIntentExtras, Intent openIntent) {
+        appendBatchData(null, pushIntentExtras, openIntent);
+    }
+
+    /**
+     * Context-aware variant of {@link #appendBatchData(Bundle, Intent)}. Callers holding a context must pass it: the
+     * SDK's own is null while Batch is stopped, which is when notifications are usually built.
+     *
+     * @param context          context used to sign the payload, or null to fall back to the SDK's own
+     * @param pushIntentExtras the intent extras from GCM, that origined this push
+     * @param openIntent       the intent of the notification the will be triggered when the user clicks on it
+     */
+    public void appendBatchData(@Nullable Context context, Bundle pushIntentExtras, Intent openIntent) {
         try {
             InternalPushData data = InternalPushData.getPushDataForReceiverBundle(pushIntentExtras);
             if (data == null) {
@@ -486,6 +499,8 @@ public class PushModule extends BatchModule {
                 );
                 return;
             }
+
+            PushPayloadSigner.signPushExtras(context, pushIntentExtras);
 
             IntentParser.putPushExtrasToIntent(pushIntentExtras, data, openIntent);
         } catch (Exception e) {
@@ -525,7 +540,7 @@ public class PushModule extends BatchModule {
     ) {
         final Intent launchIntent = new Intent(intent);
         launchIntent.setAction("batch_" + Long.toString(System.currentTimeMillis()));
-        Batch.Push.appendBatchData(pushIntentExtras, launchIntent);
+        appendBatchData(context, pushIntentExtras, launchIntent);
 
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

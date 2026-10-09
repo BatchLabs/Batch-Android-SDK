@@ -5,10 +5,12 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import com.batch.android.annotation.PublicSDK;
+import com.batch.android.core.PushPayloadSigner;
 import com.batch.android.di.providers.ActionModuleProvider;
 import com.batch.android.json.JSONObject;
 import java.util.ArrayList;
@@ -107,6 +109,12 @@ public class BatchNotificationAction {
             }
             if (pushPayload != null) {
                 pushPayload.writeToIntentExtras(actionIntent);
+                // Re-sign: writeToIntentExtras only signs when Batch is started.
+                final Bundle actionPayload = actionIntent.getBundleExtra(Batch.Push.PAYLOAD_KEY);
+                if (actionPayload != null) {
+                    PushPayloadSigner.signPushExtras(context, actionPayload);
+                    actionIntent.putExtra(Batch.Push.PAYLOAD_KEY, actionPayload);
+                }
             }
 
             int actionIntentFlags = PendingIntent.FLAG_ONE_SHOT;

@@ -153,6 +153,8 @@ dependencies {
     testImplementation("androidx.test.ext:truth:1.5.0")
     testImplementation("androidx.appcompat:appcompat:${androidXLibraryVersion}")
 
+    testImplementation("com.google.firebase:firebase-messaging:22.0.0")
+
     testImplementation("org.robolectric:robolectric:4.9.2")
     testImplementation("org.powermock:powermock-module-junit4:2.0.9")
     testImplementation("org.powermock:powermock-module-junit4-rule:2.0.9")

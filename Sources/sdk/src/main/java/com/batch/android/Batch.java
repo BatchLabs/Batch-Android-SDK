@@ -40,6 +40,7 @@ import com.batch.android.di.providers.BatchNotificationChannelsManagerProvider;
 import com.batch.android.di.providers.DataCollectionModuleProvider;
 import com.batch.android.di.providers.EventDispatcherModuleProvider;
 import com.batch.android.di.providers.InboxFetcherInternalProvider;
+import com.batch.android.di.providers.KVUserPreferencesStorageProvider;
 import com.batch.android.di.providers.LocalBroadcastManagerProvider;
 import com.batch.android.di.providers.MessagingModuleProvider;
 import com.batch.android.di.providers.OptOutModuleProvider;
@@ -1979,6 +1980,16 @@ public final class Batch {
                         if (intentParser.hasLanding()) {
                             if (intentParser.isLandingAlreadyShown()) {
                                 Logger.internal("Trying to display an already shown landing message");
+                            } else if (
+                                !intentParser.isPayloadAuthentic(KVUserPreferencesStorageProvider.get(context))
+                            ) {
+                                // The launcher activity is exported, so any app can start it with a crafted
+                                // intent carrying a forged landing. Only display landings whose payload was
+                                // signed by this SDK installation when the notification was built.
+                                Logger.internal(
+                                    "Ignoring a landing message whose payload is missing a valid signature: " +
+                                    "it did not originate from a Batch notification."
+                                );
                             } else {
                                 final BatchMessage message = intentParser.getLanding();
                                 if (message != null) {
@@ -2280,8 +2291,12 @@ public final class Batch {
             );
 
         if (hasChanged) {
-            // Directly stop if we can
-            if (!TaskExecutorProvider.get(RuntimeManagerProvider.get().getContext()).isBusy()) {
+            // Directly stop if we can.
+            final Context context = RuntimeManagerProvider.get().getContext();
+            final TaskExecutor taskExecutor = context != null
+                ? TaskExecutorProvider.get(context)
+                : TaskExecutorProvider.getSingleton();
+            if (taskExecutor == null || !taskExecutor.isBusy()) {
                 Logger.internal("onStop, should stop directly : true");
                 doStop();
             } else {

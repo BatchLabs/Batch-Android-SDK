@@ -3,9 +3,12 @@ package com.batch.android;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.batch.android.core.InternalPushData;
+import com.batch.android.core.KVUserPreferencesStorage;
 import com.batch.android.core.Logger;
+import com.batch.android.core.PushPayloadSigner;
 
 /**
  * Intent parser to retrieve promo code and other data
@@ -169,6 +172,23 @@ public final class IntentParser {
             return;
         }
         intent.putExtra(ALREADY_SHOWN_LANDING_KEY, true);
+    }
+
+    /**
+     * Whether the payload carried by this intent has a valid signature, proving it originated from a
+     * Batch notification built by this SDK installation rather than being forged by a third-party app
+     * launching an exported activity with a crafted intent.
+     * <p>
+     * Must be checked before auto-displaying a landing read from an activity intent.
+     *
+     * @return true if the payload is authentic
+     */
+    public boolean isPayloadAuthentic(@NonNull KVUserPreferencesStorage storage) {
+        if (payload == null) {
+            Logger.internal(TAG, "isPayloadAuthentic : No valid payload in intent");
+            return false;
+        }
+        return PushPayloadSigner.isPushExtrasAuthentic(storage, payload.getPushBundle());
     }
 
     /**
