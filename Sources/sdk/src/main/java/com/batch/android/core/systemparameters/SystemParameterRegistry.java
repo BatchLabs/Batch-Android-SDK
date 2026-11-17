@@ -165,6 +165,12 @@ public class SystemParameterRegistry {
             }
         );
 
+        SystemParameter sdkVersion = new WatchedSystemParameter(
+            context,
+            SystemParameterShortName.SDK_VERSION,
+            SystemParameterHelper::getSdkVersion
+        );
+
         parameters.add(installId);
         parameters.add(deviceInstallDate);
         parameters.add(bundleName);
@@ -186,6 +192,7 @@ public class SystemParameterRegistry {
         parameters.add(lastUpdateDate);
         parameters.add(bridgeVersion);
         parameters.add(pluginVersion);
+        parameters.add(sdkVersion);
     }
 
     /**

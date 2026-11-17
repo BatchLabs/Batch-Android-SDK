@@ -2,6 +2,7 @@ package com.batch.android.profile;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.batch.android.BatchEmailOpenTrackingConsent;
 import com.batch.android.BatchEmailSubscriptionState;
 import com.batch.android.BatchSMSSubscriptionState;
 import com.batch.android.user.AttributeType;
@@ -26,6 +27,12 @@ public class ProfileUpdateOperation {
      */
     @Nullable
     private BatchEmailSubscriptionState emailMarketing;
+
+    /**
+     * Profile related email open tracking consent
+     */
+    @Nullable
+    private BatchEmailOpenTrackingConsent emailOpenTrackingConsent;
 
     /**
      * Profile related phone number
@@ -95,6 +102,23 @@ public class ProfileUpdateOperation {
      */
     public void setEmailMarketing(@NonNull BatchEmailSubscriptionState emailMarketing) {
         this.emailMarketing = emailMarketing;
+    }
+
+    /**
+     * Get the email open tracking consent
+     * @return The email open tracking consent
+     */
+    @Nullable
+    public BatchEmailOpenTrackingConsent getEmailOpenTrackingConsent() {
+        return emailOpenTrackingConsent;
+    }
+
+    /**
+     * Set an email open tracking consent
+     * @param emailOpenTrackingConsent The email open tracking consent
+     */
+    public void setEmailOpenTrackingConsent(@NonNull BatchEmailOpenTrackingConsent emailOpenTrackingConsent) {
+        this.emailOpenTrackingConsent = emailOpenTrackingConsent;
     }
 
     /**
@@ -207,6 +231,11 @@ public class ProfileUpdateOperation {
     public void removeFromTopicPreferences(@NonNull List<String> topics)
         throws ProfileDataHelper.AttributeValidationException {
         this.topicPreferences.removeFromArray(topics);
+        List<String> fullList = this.topicPreferences.getAttribute().getValue();
+        if (fullList != null && fullList.isEmpty()) {
+            // The server ignores an empty topic list: send a reset instead, or the previous topics would stay
+            this.topicPreferences.setAttribute(null);
+        }
     }
 
     /**
@@ -250,22 +279,31 @@ public class ProfileUpdateOperation {
      */
     public void removeFromCustomArrayAttribute(@NonNull String key, @NonNull List<String> values)
         throws ProfileDataHelper.AttributeValidationException {
+        // Validate the removed values once, whatever is pending, so an invalid call is always
+        // rejected. Duplicates are removed first, as for addToArray.
+        List<String> dedupedValues = ProfileDataHelper.deduplicateKeepLast(values);
+        ProfileDataHelper.validateStringArray(dedupedValues);
+
         UserAttribute targetAttribute = this.customAttributes.get(key);
 
         if (targetAttribute != null && targetAttribute.value instanceof ProfileStringArrayAttribute) {
             ProfileStringArrayAttribute targetArrayAttribute = (ProfileStringArrayAttribute) targetAttribute.value;
             ProfileStringArrayAttribute updatedArrayAttribute = new ProfileStringArrayAttribute(targetArrayAttribute);
-            updatedArrayAttribute.removeFromArray(values);
-            if (updatedArrayAttribute.isEmpty()) {
+            updatedArrayAttribute.removeFromArray(dedupedValues);
+            List<String> fullArray = updatedArrayAttribute.getAttribute().getValue();
+            if (fullArray != null && fullArray.isEmpty()) {
+                // The array set in this editor is now empty: delete the attribute instead of
+                // sending nothing, which would leave the previous value on the server.
+                this.removeAttribute(key);
+            } else if (updatedArrayAttribute.isEmpty()) {
                 this.customAttributes.remove(key);
             } else {
                 updatedArrayAttribute.validate();
                 this.customAttributes.put(key, new UserAttribute(updatedArrayAttribute, AttributeType.STRING_ARRAY));
             }
         } else if (targetAttribute == null || targetAttribute.value != null) {
-            ProfileDataHelper.validateStringArray(values);
             ProfileStringArrayAttribute arrayAttribute = new ProfileStringArrayAttribute();
-            arrayAttribute.removeFromArray(values);
+            arrayAttribute.removeFromArray(dedupedValues);
             UserAttribute newAttribute = new UserAttribute(arrayAttribute, AttributeType.STRING_ARRAY);
             this.customAttributes.put(key, newAttribute);
         }

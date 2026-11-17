@@ -244,6 +244,15 @@ public final class SystemParameterHelper {
     }
 
     /**
+     * Get the batch sdk version
+     * @return The batch sdk version
+     */
+    @NonNull
+    public static String getSdkVersion() {
+        return Parameters.SDK_VERSION;
+    }
+
+    /**
      * Get the batch sdk messaging api level
      * @return The batch sdk messaging api level
      */

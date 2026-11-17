@@ -7,6 +7,7 @@ import com.batch.android.Batch
 import com.batch.android.JSONObjectMockitoMatcher
 import com.batch.android.JSONObjectPartialMatcher
 import com.batch.android.WebserviceParameterUtils
+import com.batch.android.core.Parameters
 import com.batch.android.core.systemparameters.SystemParameterShortName
 import com.batch.android.di.DITest
 import com.batch.android.di.DITestUtils
@@ -45,6 +46,7 @@ class DataCollectionModuleTest : DITest() {
 
                 // Unchanged params that must also be present in the full snapshot
                 put("app_bundle_id", "com.batch.android.test")
+                put("sdk_version", Parameters.SDK_VERSION)
             }
 
         // Start module (this will check for native changes)
@@ -121,6 +123,8 @@ class DataCollectionModuleTest : DITest() {
     fun testConfigureDataPrivacyForIds() {
         // Check default disabled param are not is ids
         WebserviceParameterUtils.getWebserviceIdsAsJson(context).apply {
+            // SDK version is already in the webservices URL
+            Assert.assertFalse(has(SystemParameterShortName.SDK_VERSION.shortName))
             Assert.assertFalse(has(SystemParameterShortName.DEVICE_BRAND.shortName))
             Assert.assertFalse(has(SystemParameterShortName.DEVICE_MODEL.shortName))
             Assert.assertFalse(getJSONObject("data_collection").getBoolean("geoip"))

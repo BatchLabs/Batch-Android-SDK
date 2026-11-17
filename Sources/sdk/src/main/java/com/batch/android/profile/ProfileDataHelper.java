@@ -23,7 +23,7 @@ public class ProfileDataHelper {
     /**
      * The email max length authorized
      */
-    private static final int EMAIL_MAX_LENGTH = 256;
+    public static final int EMAIL_MAX_LENGTH = 256;
 
     /**
      * Valid email pattern
@@ -150,6 +150,18 @@ public class ProfileDataHelper {
      */
     public static boolean isNotValidRegion(@Nullable String region) {
         return region != null && region.trim().length() < 2;
+    }
+
+    /**
+     * Ensure the given double attribute can be written as JSON.
+     *
+     * @param value The value to check
+     * @throws AttributeValidationException If the value is NaN or infinite
+     */
+    public static void validateDouble(double value) throws AttributeValidationException {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            throw new AttributeValidationException(AttributeValidationException.Type.INVALID_DOUBLE);
+        }
     }
 
     /**
@@ -330,6 +342,7 @@ public class ProfileDataHelper {
             INVALID_STRING_ARRAY,
             INVALID_TOPIC_PREFERENCE,
             INVALID_TOPIC_PREFERENCES,
+            INVALID_DOUBLE,
             NULL_VALUE,
         }
 
@@ -342,10 +355,7 @@ public class ProfileDataHelper {
         public void printErrorMessage(String tag, String key) {
             switch (this.errorType) {
                 case NULL_VALUE:
-                    Logger.error(
-                        tag,
-                        "setAttribute cannot be used with a null value. Ignoring attribute '" + key + "'"
-                    );
+                    Logger.error(tag, "A null value cannot be used here. Ignoring attribute '" + key + "'");
                     break;
                 case INVALID_KEY:
                     Logger.error(
@@ -394,6 +404,9 @@ public class ProfileDataHelper {
                         key +
                         "'"
                     );
+                    break;
+                case INVALID_DOUBLE:
+                    Logger.error(tag, "Double attributes can't be NaN or infinite. Ignoring attribute '" + key + "'");
                     break;
                 case INVALID_TOPIC_PREFERENCES:
                     Logger.error(

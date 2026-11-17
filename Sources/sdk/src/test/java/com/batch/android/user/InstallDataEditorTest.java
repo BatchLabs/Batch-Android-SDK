@@ -158,9 +158,9 @@ public class InstallDataEditorTest extends DITest {
     @Test
     public void testUserOperationsStacked() throws Exception {
         UserModule module = DITestUtils.mockSingletonDependency(UserModule.class, null);
-        InstallDataEditor editor = Batch.Profile.editor();
-        editor.setAttribute("dummy", "value").save();
-        editor.setAttribute("dummy", "value").save();
+        // An editor can only be saved once, so each save uses its own editor
+        Batch.Profile.editor().setAttribute("dummy", "value").save();
+        Batch.Profile.editor().setAttribute("dummy", "value").save();
         Batch.Profile.editor().setAttribute("dummy", "value").save();
 
         Field fieldQueues = UserModule.class.getDeclaredField("operationQueues");

@@ -13,6 +13,7 @@ public class ProfileDataSerializer {
 
     private static final String EMAIL_KEY = "email";
     private static final String EMAIL_MARKETING_KEY = "email_marketing";
+    private static final String EMAIL_OPEN_TRACKING_CONSENT_KEY = "email_open_tracking_consent";
     private static final String PHONE_NUMBER_KEY = "phone_number";
     private static final String SMS_MARKETING_KEY = "sms_marketing";
     private static final String LANGUAGE_KEY = "language";
@@ -55,6 +56,13 @@ public class ProfileDataSerializer {
             serializedProfile.put(
                 EMAIL_MARKETING_KEY,
                 profileUpdateOperation.getEmailMarketing().name().toLowerCase(Locale.US)
+            );
+        }
+
+        if (profileUpdateOperation.getEmailOpenTrackingConsent() != null) {
+            serializedProfile.put(
+                EMAIL_OPEN_TRACKING_CONSENT_KEY,
+                profileUpdateOperation.getEmailOpenTrackingConsent().name().toLowerCase(Locale.US)
             );
         }
 

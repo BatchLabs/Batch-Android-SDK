@@ -41,6 +41,7 @@ class BatchProfileAttributeEditorTest : DITest() {
             setEmailAddress("test@batch.com")
             setPhoneNumber("+33612345678")
             setEmailMarketingSubscription(BatchEmailSubscriptionState.SUBSCRIBED)
+            setEmailOpenTrackingConsent(BatchEmailOpenTrackingConsent.GRANTED)
             setSMSMarketingSubscription(BatchSMSSubscriptionState.SUBSCRIBED)
             setTopicPreferences(listOf("News", "Offers"))
             addToTopicPreferences(listOf("Beta"))
@@ -92,6 +93,7 @@ class BatchProfileAttributeEditorTest : DITest() {
                 put("email", "test@batch.com")
                 put("phone_number", "+33612345678")
                 put("email_marketing", "subscribed")
+                put("email_open_tracking_consent", "granted")
                 put("sms_marketing", "subscribed")
                 put("language", "fr")
                 put("region", "FR")
@@ -620,6 +622,236 @@ class BatchProfileAttributeEditorTest : DITest() {
             .track(
                 ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
                 JSONObjectMockitoMatcher.eq(expectedAddParams),
+            )
+    }
+
+    @Test
+    fun testRemovingLastItemOfSetArrayDeletesAttribute() {
+        BatchProfileAttributeEditor().apply {
+            setAttribute("arr", listOf("a"))
+            removeFromArray("arr", "a")
+            save()
+        }
+
+        verifyProfileDataChanged(customAttributes(JSONObject().put("arr", JSONObject.NULL)))
+    }
+
+    @Test
+    fun testRemovingLastItemAddedAfterRemoveAttributeKeepsDelete() {
+        BatchProfileAttributeEditor().apply {
+            removeAttribute("arr")
+            addToArray("arr", "a")
+            removeFromArray("arr", "a")
+            save()
+        }
+
+        verifyProfileDataChanged(customAttributes(JSONObject().put("arr", JSONObject.NULL)))
+    }
+
+    @Test
+    fun testRemoveFromArrayAfterRemoveAttributeKeepsDelete() {
+        BatchProfileAttributeEditor().apply {
+            removeAttribute("arr")
+            removeFromArray("arr", "a")
+            save()
+        }
+
+        verifyProfileDataChanged(customAttributes(JSONObject().put("arr", JSONObject.NULL)))
+    }
+
+    @Test
+    fun testAddThenRemoveSameItemKeepsOnlyRemove() {
+        BatchProfileAttributeEditor().apply {
+            addToArray("arr", "a")
+            removeFromArray("arr", "a")
+            save()
+        }
+
+        verifyProfileDataChanged(
+            customAttributes(
+                JSONObject().put("arr.a", JSONObject().put("\$remove", JSONArray().put("a")))
+            )
+        )
+    }
+
+    @Test
+    fun testRemoveThenAddSameItemKeepsOnlyAdd() {
+        BatchProfileAttributeEditor().apply {
+            removeFromArray("arr", "a")
+            addToArray("arr", "a")
+            save()
+        }
+
+        verifyProfileDataChanged(
+            customAttributes(
+                JSONObject().put("arr.a", JSONObject().put("\$add", JSONArray().put("a")))
+            )
+        )
+    }
+
+    @Test
+    fun testRemoveCancelsOnlyTheMatchingAddedItem() {
+        BatchProfileAttributeEditor().apply {
+            addToArray("arr", listOf("a", "b"))
+            removeFromArray("arr", "a")
+            save()
+        }
+
+        verifyProfileDataChanged(
+            customAttributes(
+                JSONObject()
+                    .put(
+                        "arr.a",
+                        JSONObject()
+                            .put("\$add", JSONArray().put("b"))
+                            .put("\$remove", JSONArray().put("a")),
+                    )
+            )
+        )
+    }
+
+    @Test
+    fun testRemoveFromArraySetRejectsInvalidValues() {
+        // An invalid removal is rejected even when the array was set in this editor,
+        // so the set is kept instead of being emptied into a delete
+        BatchProfileAttributeEditor().apply {
+            setAttribute("arr", listOf("a"))
+            removeFromArray("arr", listOf("a", ""))
+            save()
+        }
+
+        verifyProfileDataChanged(customAttributes(JSONObject().put("arr.a", JSONArray().put("a"))))
+    }
+
+    @Test
+    fun testRemoveFromArrayWith26ItemsOneDuplicateIsAccepted() {
+        // Duplicates are removed before the 25 items limit is checked, as for addToArray
+        val items = (1..25).map { it.toString() } + "1"
+        BatchProfileAttributeEditor().apply {
+            removeFromArray("arr", items)
+            save()
+        }
+
+        val expected = JSONArray()
+        ((2..25).map { it.toString() } + "1").forEach { expected.put(it) }
+        verifyProfileDataChanged(
+            customAttributes(JSONObject().put("arr.a", JSONObject().put("\$remove", expected)))
+        )
+    }
+
+    @Test
+    fun testTopicPreferencesOppositePartialUpdatesCancel() {
+        BatchProfileAttributeEditor().apply {
+            addToTopicPreferences(listOf("news"))
+            removeFromTopicPreferences(listOf("news"))
+            save()
+        }
+
+        verifyProfileDataChanged(
+            JSONObject()
+                .put("topic_preferences", JSONObject().put("\$remove", JSONArray().put("news")))
+        )
+
+        Mockito.clearInvocations(trackerModule)
+
+        BatchProfileAttributeEditor().apply {
+            removeFromTopicPreferences(listOf("news"))
+            addToTopicPreferences(listOf("news"))
+            save()
+        }
+
+        verifyProfileDataChanged(
+            JSONObject()
+                .put("topic_preferences", JSONObject().put("\$add", JSONArray().put("news")))
+        )
+    }
+
+    @Test
+    fun testTopicPreferencesEmptiedListResetsThem() {
+        // The server ignores an empty topic list, so emptying the list must send a reset
+        BatchProfileAttributeEditor().apply {
+            setTopicPreferences(listOf("news"))
+            removeFromTopicPreferences(listOf("news"))
+            save()
+        }
+
+        verifyProfileDataChanged(JSONObject().put("topic_preferences", JSONObject.NULL))
+
+        Mockito.clearInvocations(trackerModule)
+
+        // Same when the list comes from an add after a reset
+        BatchProfileAttributeEditor().apply {
+            setTopicPreferences(null)
+            addToTopicPreferences(listOf("news"))
+            removeFromTopicPreferences(listOf("news"))
+            save()
+        }
+
+        verifyProfileDataChanged(JSONObject().put("topic_preferences", JSONObject.NULL))
+    }
+
+    @Test
+    fun testDoubleAttributeRejectsNaNAndInfinity() {
+        // NaN and infinity are ignored on their own call, and the rest of the editor is still saved
+        BatchProfileAttributeEditor().apply {
+            setAttribute("nan", Double.NaN)
+            setAttribute("inf", Double.POSITIVE_INFINITY)
+            setAttribute("neg_inf", Double.NEGATIVE_INFINITY)
+            setAttribute("accepted", 3.5)
+            save()
+        }
+
+        verifyProfileDataChanged(customAttributes(JSONObject().put("accepted.f", 3.5)))
+    }
+
+    @Test
+    fun testNullListsAreIgnored() {
+        // Kotlin refuses null for these @NonNull parameters: call them through reflection, like
+        // Java code would. Each call must be logged and ignored instead of throwing, and the rest
+        // of the editor must still be saved.
+        val editor = BatchProfileAttributeEditor()
+        val list = List::class.java
+        val string = String::class.java
+        listOf(
+                editor.javaClass.getMethod("setAttribute", string, list) to
+                    arrayOf<Any?>("arr", null),
+                editor.javaClass.getMethod("addToArray", string, list) to
+                    arrayOf<Any?>("arr", null),
+                editor.javaClass.getMethod("removeFromArray", string, list) to
+                    arrayOf<Any?>("arr", null),
+                editor.javaClass.getMethod("addToTopicPreferences", list) to arrayOf<Any?>(null),
+                editor.javaClass.getMethod("removeFromTopicPreferences", list) to
+                    arrayOf<Any?>(null),
+            )
+            .forEach { (method, args) -> method.invoke(editor, *args) }
+
+        editor.setAttribute("accepted", "value")
+        editor.save()
+
+        verifyProfileDataChanged(customAttributes(JSONObject().put("accepted.s", "value")))
+    }
+
+    @Test
+    fun testSaveTwiceSendsChangesOnce() {
+        // The editor is consumed by the first save: a second one must not send the changes again
+        BatchProfileAttributeEditor().apply {
+            setAttribute("string_att", "hello")
+            save()
+            save()
+        }
+
+        verifyProfileDataChanged(customAttributes(JSONObject().put("string_att.s", "hello")))
+    }
+
+    private fun customAttributes(attributes: JSONObject): JSONObject =
+        JSONObject().put("custom_attributes", attributes)
+
+    /** Verify the exact _PROFILE_DATA_CHANGED payload, so an unexpected key fails the test. */
+    private fun verifyProfileDataChanged(expected: JSONObject) {
+        Mockito.verify(trackerModule, Mockito.times(1))
+            .track(
+                ArgumentMatchers.eq(InternalEvents.PROFILE_DATA_CHANGED),
+                JSONObjectMockitoMatcher.eq(expected),
             )
     }
 

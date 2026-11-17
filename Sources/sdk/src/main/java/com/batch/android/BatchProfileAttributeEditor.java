@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Batch Profile Attribute Editor
@@ -45,6 +46,11 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
      * Internal SDK model of an omnichannel profile
      */
     private final ProfileUpdateOperation profileUpdateOperation = new ProfileUpdateOperation();
+
+    /**
+     * Whether save() has already been called on this editor
+     */
+    private final AtomicBoolean saved = new AtomicBoolean(false);
 
     /**
      * Constructor
@@ -117,7 +123,9 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
         if (ProfileDataHelper.isNotValidEmail(email)) {
             Logger.error(
                 TAG,
-                "setEmail called with invalid email format. Please ensure to respect the following regex: .@.\\..* and 128 char max length. "
+                "setEmail called with invalid email format. Please ensure to respect the following regex: .@.\\..* and " +
+                ProfileDataHelper.EMAIL_MAX_LENGTH +
+                " char max length. "
             );
             return this;
         }
@@ -135,6 +143,18 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
      */
     public BatchProfileAttributeEditor setEmailMarketingSubscription(@NonNull BatchEmailSubscriptionState state) {
         this.profileUpdateOperation.setEmailMarketing(state);
+        return this;
+    }
+
+    /**
+     * Set the profile email open tracking consent.
+     * <p>
+     * When denied, Batch will not track email opens for this profile.
+     * @param consent State of the consent
+     * @return This object instance, for method chaining.
+     */
+    public BatchProfileAttributeEditor setEmailOpenTrackingConsent(@NonNull BatchEmailOpenTrackingConsent consent) {
+        this.profileUpdateOperation.setEmailOpenTrackingConsent(consent);
         return this;
     }
 
@@ -227,6 +247,7 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
      */
     public BatchProfileAttributeEditor addToTopicPreferences(@NonNull List<String> topics) {
         try {
+            ProfileDataHelper.assertNotNull(topics);
             List<String> normalizedTopics = ProfileDataHelper.normalizeTopicPreferences(topics);
             this.profileUpdateOperation.addToTopicPreferences(normalizedTopics);
         } catch (AttributeValidationException e) {
@@ -245,6 +266,7 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
      */
     public BatchProfileAttributeEditor removeFromTopicPreferences(@NonNull List<String> topics) {
         try {
+            ProfileDataHelper.assertNotNull(topics);
             List<String> normalizedTopics = ProfileDataHelper.normalizeTopicPreferences(topics);
             this.profileUpdateOperation.removeFromTopicPreferences(normalizedTopics);
         } catch (AttributeValidationException e) {
@@ -282,6 +304,8 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
     public BatchProfileAttributeEditor setAttribute(final @NonNull String key, final double value) {
         try {
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
+            // NaN and infinity can't be written as JSON: they would make the whole save fail
+            ProfileDataHelper.validateDouble(value);
             this.profileUpdateOperation.addAttribute(normalizedKey, new UserAttribute(value, AttributeType.DOUBLE));
         } catch (AttributeValidationException e) {
             e.printErrorMessage(TAG, key);
@@ -403,6 +427,7 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
      */
     public BatchProfileAttributeEditor setAttribute(final @NonNull String key, final @NonNull List<String> value) {
         try {
+            ProfileDataHelper.assertNotNull(value);
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
             List<String> deduped = ProfileDataHelper.deduplicateKeepLast(value);
             ProfileDataHelper.validateStringArray(deduped);
@@ -475,6 +500,7 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
      */
     public BatchProfileAttributeEditor addToArray(final @NonNull String key, final @NonNull List<String> values) {
         try {
+            ProfileDataHelper.assertNotNull(values);
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
             this.profileUpdateOperation.addToCustomArrayAttribute(normalizedKey, new ArrayList<>(values));
         } catch (AttributeValidationException e) {
@@ -520,6 +546,7 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
      */
     public BatchProfileAttributeEditor removeFromArray(final @NonNull String key, final @NonNull List<String> values) {
         try {
+            ProfileDataHelper.assertNotNull(values);
             String normalizedKey = ProfileDataHelper.normalizeAttributeKey(key);
             this.profileUpdateOperation.removeFromCustomArrayAttribute(normalizedKey, new ArrayList<>(values));
         } catch (AttributeValidationException e) {
@@ -544,6 +571,14 @@ public class BatchProfileAttributeEditor extends InstallDataEditor {
      * request will be rejected.
      */
     public void save() {
+        // An editor can only be saved once: saving it again would send the same changes again
+        if (!saved.compareAndSet(false, true)) {
+            Logger.error(
+                TAG,
+                "save() has already been called on this editor. Please get a new one with Batch.Profile.editor() to make further changes."
+            );
+            return;
+        }
         if (ProfileModuleProvider.get().handleProfileDataChanged(this.profileUpdateOperation)) {
             // Handle MEP compat only when CEP event pass validation
             super.save();

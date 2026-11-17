@@ -1,6 +1,7 @@
 package com.batch.android.profile
 
 import androidx.test.filters.SmallTest
+import com.batch.android.BatchEmailOpenTrackingConsent
 import com.batch.android.BatchEmailSubscriptionState
 import com.batch.android.BatchSMSSubscriptionState
 import com.batch.android.json.JSONArray
@@ -24,6 +25,7 @@ class ProfileDataSerializerTest {
                 setLanguage("fr")
                 setRegion("FR")
                 setEmailMarketing(BatchEmailSubscriptionState.SUBSCRIBED)
+                setEmailOpenTrackingConsent(BatchEmailOpenTrackingConsent.GRANTED)
                 setPhoneNumber("+33612345678")
                 setSMSMarketing(BatchSMSSubscriptionState.SUBSCRIBED)
                 addAttribute("string_att", UserAttribute("hello", AttributeType.STRING))
@@ -51,6 +53,7 @@ class ProfileDataSerializerTest {
         Assert.assertEquals("fr", actual.getString("language"))
         Assert.assertEquals("FR", actual.getString("region"))
         Assert.assertEquals("subscribed", actual.getString("email_marketing"))
+        Assert.assertEquals("granted", actual.getString("email_open_tracking_consent"))
         Assert.assertEquals("subscribed", actual.getString("sms_marketing"))
         Assert.assertEquals("+33612345678", actual.getString("phone_number"))
 
@@ -92,6 +95,21 @@ class ProfileDataSerializerTest {
         Assert.assertEquals(JSONObject.NULL, actual.get("language"))
         Assert.assertEquals(JSONObject.NULL, actual.get("region"))
         Assert.assertEquals(JSONObject.NULL, actual.get("phone_number"))
+    }
+
+    @Test
+    fun testSerializeEmailOpenTrackingConsent() {
+        val denied =
+            ProfileUpdateOperation().apply {
+                setEmailOpenTrackingConsent(BatchEmailOpenTrackingConsent.DENIED)
+            }
+        Assert.assertEquals(
+            "denied",
+            ProfileDataSerializer.serialize(denied).getString("email_open_tracking_consent"),
+        )
+
+        val notSet = ProfileDataSerializer.serialize(ProfileUpdateOperation())
+        Assert.assertFalse(notSet.has("email_open_tracking_consent"))
     }
 
     @Test

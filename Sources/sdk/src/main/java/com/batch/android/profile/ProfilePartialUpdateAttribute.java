@@ -51,6 +51,8 @@ public class ProfilePartialUpdateAttribute {
     }
 
     public void putInAdded(@NonNull List<String> elements) {
+        // Adding an item cancels a pending removal of that same item: the last call wins
+        this.removed = cancelPending(this.removed, elements);
         if (this.added == null) {
             this.added = new ArrayList<>();
         }
@@ -59,11 +61,28 @@ public class ProfilePartialUpdateAttribute {
     }
 
     public void putInRemoved(@NonNull List<String> elements) {
+        // Removing an item cancels a pending addition of that same item: the last call wins
+        this.added = cancelPending(this.added, elements);
         if (this.removed == null) {
             this.removed = new ArrayList<>();
         }
         this.removed.addAll(elements);
         this.removed = ProfileDataHelper.deduplicateKeepLast(this.removed);
+    }
+
+    /**
+     * Cancel the given elements in a pending list, without modifying it.
+     *
+     * @return The remaining items, or null if none is left so the matching key is not serialized
+     */
+    @Nullable
+    private static List<String> cancelPending(@Nullable List<String> list, @NonNull List<String> elements) {
+        if (list == null) {
+            return null;
+        }
+        List<String> remaining = new ArrayList<>(list);
+        remaining.removeAll(elements);
+        return remaining.isEmpty() ? null : remaining;
     }
 
     public boolean isEmpty() {

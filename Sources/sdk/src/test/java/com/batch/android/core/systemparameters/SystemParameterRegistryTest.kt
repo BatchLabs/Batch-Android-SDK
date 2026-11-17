@@ -22,7 +22,7 @@ class SystemParameterRegistryTest : DITest() {
     fun testGetWatchedParameters() {
         val registry =
             SystemParameterRegistryProvider.get(ApplicationProvider.getApplicationContext())
-        Assert.assertEquals(17, registry.watchedParameters.size)
+        Assert.assertEquals(18, registry.watchedParameters.size)
     }
 
     @Test

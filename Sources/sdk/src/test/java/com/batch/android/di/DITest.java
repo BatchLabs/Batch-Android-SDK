@@ -1,6 +1,7 @@
 package com.batch.android.di;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import com.batch.android.Batch;
 import com.batch.android.di.providers.RuntimeManagerProvider;
 import com.batch.android.module.UserModule;
@@ -15,6 +16,10 @@ public class DITest {
 
     @Before
     public void setUp() {
+        // Load Robolectric's native SQLite on the test thread. Otherwise the first load can happen
+        // on the UserModule apply queue, which tearDown() interrupts: Robolectric never retries an
+        // interrupted load, so every SQLite test after it fails with an UnsatisfiedLinkError.
+        SQLiteDatabase.create(null).close();
         DI.reset();
     }
 

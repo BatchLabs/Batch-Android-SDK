@@ -177,8 +177,40 @@ class ProfileUpdateOperationTest {
             "a",
         )
 
+        // Emptying an array set in the same operation turns it into a delete
         profileUpdateOperation.removeFromCustomArrayAttribute("test", ArrayList(listOf("a")))
-        Assert.assertFalse(profileUpdateOperation.customAttributes.containsKey("test"))
+        Assert.assertEquals(
+            AttributeType.DELETED,
+            profileUpdateOperation.customAttributes["test"]?.type,
+        )
+        Assert.assertNull(profileUpdateOperation.customAttributes["test"]?.value)
+    }
+
+    @Test
+    fun testRemoveLastItemAddedAfterRemoveAttribute() {
+        val profileUpdateOperation = ProfileUpdateOperation()
+        profileUpdateOperation.removeAttribute("test")
+        profileUpdateOperation.addToCustomArrayAttribute("test", ArrayList(listOf("a")))
+        profileUpdateOperation.removeFromCustomArrayAttribute("test", ArrayList(listOf("a")))
+
+        Assert.assertEquals(
+            AttributeType.DELETED,
+            profileUpdateOperation.customAttributes["test"]?.type,
+        )
+        Assert.assertNull(profileUpdateOperation.customAttributes["test"]?.value)
+    }
+
+    @Test
+    fun testAddThenRemoveSameItemFromList() {
+        val profileUpdateOperation = ProfileUpdateOperation()
+        profileUpdateOperation.addToCustomArrayAttribute("test", ArrayList(listOf("a")))
+        profileUpdateOperation.removeFromCustomArrayAttribute("test", ArrayList(listOf("a")))
+
+        val value =
+            (profileUpdateOperation.customAttributes["test"]?.value as ProfileStringArrayAttribute)
+                .partialUpdates
+        Assert.assertNull(value?.added)
+        Assert.assertEquals(listOf("a"), value?.removed)
     }
 
     @Test

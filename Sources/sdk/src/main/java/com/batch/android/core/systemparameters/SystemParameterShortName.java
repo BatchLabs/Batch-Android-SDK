@@ -56,7 +56,12 @@ public enum SystemParameterShortName {
      */
     BRIDGE_VERSION("brv", "bridge_version"),
 
-    PLUGIN_VERSION("plv", "plugin_version");
+    PLUGIN_VERSION("plv", "plugin_version"),
+
+    /**
+     * Not sent in webservice ids, the SDK version is already in their URL
+     */
+    SDK_VERSION("sdv", "sdk_version");
 
     /**
      * Unique short name.

@@ -4,6 +4,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import com.batch.android.core.systemparameters.SystemParameter;
 import com.batch.android.core.systemparameters.SystemParameterRegistry;
+import com.batch.android.core.systemparameters.SystemParameterShortName;
 import com.batch.android.di.providers.DataCollectionModuleProvider;
 import com.batch.android.di.providers.SystemParameterRegistryProvider;
 import com.batch.android.json.JSONObject;
@@ -44,6 +45,10 @@ public class WebserviceParameterUtils {
         // Adding system parameters entries
         SystemParameterRegistry systemParameterRegistry = SystemParameterRegistryProvider.get(context);
         for (SystemParameter parameter : systemParameterRegistry.getParameters()) {
+            // SDK version is already in the webservices URL
+            if (parameter.getShortName() == SystemParameterShortName.SDK_VERSION) {
+                continue;
+            }
             // Ensure this data is allowed to be send
             if (parameter.isAllowed()) {
                 String val = parameter.getValue();
